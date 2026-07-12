@@ -1,0 +1,156 @@
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../assets/devrig-logo-dark.png">
+  <img src="../assets/devrig-logo-light.png" alt="devrig" width="420">
+</picture>
+
+**모든 저장소를 하나의 rig로 — AI 지원 멀티 레포 개발 워크스페이스 템플릿.**
+
+[![Use this template](https://img.shields.io/badge/Use%20this-template-22D3EE?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
+[![License: MIT](https://img.shields.io/badge/License-MIT-3B82F6?style=flat-square)](../LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-8B5CF6?style=flat-square)](../CONTRIBUTING.md)
+
+[English](../README.md) · [简体中文](README.zh-CN.md) · [Español](README.es.md) · [हिन्दी](README.hi.md) · [Português](README.pt-BR.md) · [日本語](README.ja.md) · [Français](README.fr.md) · **한국어** · [සිංහල](README.si.md)
+
+</div>
+
+---
+
+## devrig란?
+
+devrig는 *메타 레포*입니다. 프로젝트의 모든 저장소와 그 사이를 넘나들며
+개발하는 데 쓰이는 AI 툴링을 하나의 폴더에 담습니다. 이 저장소는 툴링만
+버전 관리합니다 — 프로젝트 저장소들은 `setup.sh`가 나란히 클론하며 추적되지
+않습니다. 모든 설정은 단 하나의 **`.setup`** 파일에서 이루어집니다.
+
+| | 제공되는 것 |
+|---|---|
+| 🧠 | **AI 워크플로우 스킬** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (에이전트 독립적으로 `.agents/skills/`에 위치, Claude Code용 심볼릭 링크, opencode도 설정됨) |
+| 🔍 | **[semble](https://github.com/MinishLab/semble)** — grep과 파일 읽기 대신 에이전트가 MCP로 사용하는 시맨틱 코드 검색 |
+| ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code의 토큰을 절약하는 명령어 프록시 |
+| 🎫 | **Linear MCP** — 스킬과 연동된 이슈 트래킹 |
+| 🛡️ | **보호 브랜치 git 훅** — 어떤 저장소에서도 기본 브랜치에 실수로 커밋/푸시하지 않도록 차단 |
+| 📚 | **`knowledge/`** — AI 툴링이 색인하고 기록하는 markdown 지식 베이스 뼈대(아키텍처, ADR, 설계 문서, 런북) |
+| 🖥️ | **자동 생성되는 VS Code 멀티 루트 워크스페이스** — 모든 저장소를 한 창에서 |
+
+## 빠른 시작
+
+1. **[Use this template](https://github.com/lakpriya1s/devrig/generate)**을 클릭해 `your-org/your-project-workspace`를 만듭니다.
+2. 클론한 뒤 **`.setup`**을 편집합니다 — 프로젝트 이름, GitHub org, 저장소 목록, 티켓 접두사, 기본 브랜치, 기능 토글.
+3. 실행:
+
+   ```bash
+   ./setup.sh
+   ```
+
+4. 이 폴더에서 `claude`를 실행하고 작업을 시작하세요.
+
+그다음 Claude Code 안에서 `/mcp`를 실행해 **linear** 서버를 인증하고
+(1회성 OAuth, **semble**은 인증 불필요), rtk 훅이 적용되도록 Claude Code를
+한 번 재시작하세요.
+
+## 🤖 AI 에이전트로 시작하기
+
+방금 이 템플릿으로 워크스페이스를 만드셨나요? 아래 내용을 AI 코딩
+에이전트(Claude Code, Cursor, opencode 등)에 붙여넣고 나머지 설정을 함께
+마무리하세요:
+
+```text
+devrig 템플릿(https://github.com/lakpriya1s/devrig)으로 워크스페이스를
+만들었습니다. 설정을 도와주세요:
+
+1. README.md, AGENTS.md, .setup을 읽고 워크스페이스를 파악해 주세요.
+2. 프로젝트 이름, GitHub org, 저장소 목록, 티켓 접두사, 기본 브랜치를
+   저에게 물어본 뒤 .setup에 채워 주세요.
+3. ./setup.sh를 실행하고 지적된 문제를 함께 해결해 주세요.
+4. AGENTS.md의 Systems 표를 채워 주세요 — 저장소마다 한 줄(역할, 스택).
+5. 저장소마다 .agents/skills/code-review/references/<repo>.md에 리뷰
+   레퍼런스를, .agents/skills/write-doc/references/<repo>.md에 문서
+   레퍼런스를 작성해 주세요 (_example-repo.md 스캐폴드를 복사하고 모든
+   사실을 코드에서 검증).
+6. create-ticket의 컨벤션 표를 제 Linear 워크스페이스와 대조해 주세요.
+7. 개인화 작업을 태스크 브랜치에 커밋하고 PR을 열어 주세요.
+```
+
+## setup.sh가 하는 일
+
+`setup.sh`는 멱등합니다 — 언제든 다시 실행해 모든 저장소와 도구를 업데이트할 수 있습니다:
+
+1. 사전 요구사항 확인(`git`, 인증된 `gh`; semble 활성화 시 `uv` 설치).
+2. `REPOS`의 각 저장소를 나란히 클론(깨끗한 기본 브랜치 체크아웃은 fast-forward)하고, `.git/info/exclude`로 이 저장소의 git status에서 제외.
+3. 이 저장소와 클론된 모든 저장소에 보호 브랜치 git 훅 설치.
+4. `.mcp.json` / `opencode.json`을 `.setup` 토글에 수렴(직접 추가한 MCP 서버는 보존)시키고 `.claude/settings.local.json` 생성.
+5. semble을 설치하고 저장소별 검색 인덱스를 예열.
+6. rtk를 설치하고 Claude Code 훅 등록.
+7. VS Code용 `<project>.code-workspace` 생성(이미 있으면 건너뛰므로 커스터마이즈해 커밋해도 안전).
+
+## 커스터마이징 체크리스트
+
+첫 `setup.sh` 실행 후 개인화 커밋을 만드세요:
+
+- [ ] `.setup` — 실제 값 입력(예시 값 그대로면 setup.sh가 실행을 거부합니다).
+- [ ] `AGENTS.md` — **Systems** 표(저장소마다 한 줄: 역할, 스택)와 **Testing** 섹션 작성. 모든 스킬이 읽는 단일 정보원입니다.
+- [ ] `.agents/skills/code-review/references/`와 `.agents/skills/write-doc/references/` — 저장소마다 레퍼런스 파일 하나(`_example-repo.md` 복사). 없어도 동작하지만 있으면 훨씬 정밀해집니다.
+- [ ] `.agents/skills/create-ticket/SKILL.md` — "컨벤션" 표를 Linear 워크스페이스(팀, 프로젝트, 라벨)와 대조.
+- [ ] 토글로 비활성화한 것들 삭제·조정(예: Linear를 쓰지 않으면 `CLAUDE.md`에서 linear 관련 내용 제거).
+
+## 구조
+
+| 경로 | 설명 |
+|---|---|
+| `.setup` | 프로젝트 설정 — 모든 도구가 읽는 단 하나의 파일 |
+| `setup.sh` | 멱등한 부트스트랩/업데이트 스크립트 |
+| `AGENTS.md` | 에이전트 독립적 단일 정보원(시스템, 브랜치 규칙, 컨벤션) |
+| `CLAUDE.md` | Claude Code 전용 내용; `AGENTS.md`를 임포트 |
+| `.agents/skills/` | 표준 워크플로우 스킬(에이전트 독립적) |
+| `.claude/` | Claude Code 설정, 에이전트, 스킬 심볼릭 링크 |
+| `.opencode/` | opencode 에이전트 및 플러그인 설정 |
+| `.mcp.json` / `opencode.json` | MCP 서버(linear, semble) |
+| `git-hooks/` | 보호 브랜치 pre-commit / pre-push 훅 |
+| `knowledge/` | markdown 지식 베이스(아키텍처, 결정, 설계, 런북, 제품, 릴리스) |
+| `<repo>/` (미추적) | `setup.sh`가 클론하는 프로젝트 저장소 |
+
+## 스킬 추가하기
+
+[`.agents/skills/_template/README.md`](../.agents/skills/_template/README.md)를 참고하세요.
+요약: `.agents/skills/<name>/SKILL.md`를 만들고 `.claude/skills/`에 심볼릭
+링크한 뒤 `CLAUDE.md`에 등록합니다.
+
+## 지식 베이스
+
+새 설계 문서, 아키텍처 노트, ADR, 런북은 markdown으로 PR을 통해
+[`knowledge/`](../knowledge/)에 들어갑니다 — semble이 색인하므로 에이전트는
+코드를 찾듯 설계 컨텍스트를 찾습니다. 이 저장소 규모를 넘어서면 별도의
+`<project>-knowledge` 저장소로 push하고, `.setup`의 `REPOS`에 추가한 뒤
+여기 폴더를 삭제하고 `AGENTS.md`의 포인터를 업데이트하세요.
+
+## 문제 해결
+
+- **setup 후 `semble`이나 `uv`를 찾을 수 없음** — 새 셸을 열고(PATH가 갱신됨) `./setup.sh`를 다시 실행하세요.
+- **Claude에 Linear 도구가 없음** — `/mcp`를 실행해 linear 서버의 OAuth 흐름을 완료하세요.
+- **rtk가 동작하지 않음** — Claude Code를 재시작하고 `rtk gain`으로 명령어가 프록시되는지 확인하세요.
+- **저장소가 업데이트되지 않음** — `setup.sh`는 로컬 변경이 있거나 태스크 브랜치에 있는 저장소는 건드리지 않습니다. 깨끗한 기본 브랜치 체크아웃만 fast-forward합니다.
+- **setup.sh가 "edit .setup first"라고 함** — `.setup`이 예시 값(`PROJECT_NAME="acme"`)인 동안은 실행을 거부합니다.
+
+## 기여하기
+
+devrig는 사용하는 팀이 늘수록 좋아집니다. 버그 리포트, 새로운 범용 스킬,
+문서 개선, 그리고 **README 번역**을 환영합니다 —
+[CONTRIBUTING.md](../CONTRIBUTING.md)를 확인하세요. devrig가 팀의 셋업
+시간을 아껴줬다면 ⭐ 하나가 다른 사람들의 발견을 돕습니다.
+
+## 라이선스와 인용
+
+[MIT 라이선스](../LICENSE)로 배포됩니다.
+
+작업물이나 저술에 devrig를 사용하셨다면 인용해 주시면 감사하겠습니다 —
+GitHub의 **"Cite this repository"** 버튼([`CITATION.cff`](../CITATION.cff)
+기반)에 상세 정보가 있습니다. 또는:
+
+> Senevirathna, L. (2026). *devrig: a multi-repo AI dev workspace template.*
+> https://github.com/lakpriya1s/devrig
+
+<div align="center">
+<sub>프로덕션 멀티 레포 워크스페이스에서 탄생 · <img src="../assets/devrig-icon.png" width="14" alt=""> devrig</sub>
+</div>

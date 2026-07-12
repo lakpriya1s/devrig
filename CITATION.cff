@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use devrig, please cite it as below."
+title: "devrig: a multi-repo AI dev workspace template"
+type: software
+authors:
+  - family-names: Senevirathna
+    given-names: Lakpriya
+repository-code: "https://github.com/lakpriya1s/devrig"
+url: "https://github.com/lakpriya1s/devrig"
+license: MIT
+date-released: 2026-07-13
+keywords:
+  - ai
+  - developer-tools
+  - workspace
+  - claude-code
+  - mcp
+  - template
