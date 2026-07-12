@@ -1,0 +1,22 @@
+#!/bin/sh
+# Blocks direct pushes to protected branches. Installed workspace-wide via
+# core.hooksPath (see setup.sh). Bypass in a genuine emergency: git push --no-verify
+# stdin: <local ref> <local sha> <remote ref> <remote sha> per ref being pushed
+#
+# The protected default branch comes from DEFAULT_BRANCH in the workspace
+# .setup file (parsed, not sourced — .setup uses bash arrays and this hook
+# must stay POSIX sh). main and master are always protected as well.
+HOOKS_DIR="$(cd "$(dirname "$0")" && pwd)"
+DEFAULT_BRANCH="$(sed -n 's/^DEFAULT_BRANCH="\{0,1\}\([^"# ]*\)"\{0,1\}.*/\1/p' "$HOOKS_DIR/../.setup" 2>/dev/null | head -n 1)"
+[ -n "$DEFAULT_BRANCH" ] || DEFAULT_BRANCH=dev
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    "refs/heads/$DEFAULT_BRANCH"|refs/heads/main|refs/heads/master)
+      branch="${remote_ref#refs/heads/}"
+      echo "✗ Direct push to '$branch' is not allowed. Open a PR instead." >&2
+      exit 1
+      ;;
+  esac
+done
+exit 0

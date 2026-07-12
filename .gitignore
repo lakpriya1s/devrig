@@ -1,0 +1,6 @@
+.DS_Store
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+debug-logs/
+# Cloned project repos are excluded via .git/info/exclude (written by setup.sh)
+# so this file stays free of project-specific names.

@@ -1,0 +1,21 @@
+#!/bin/sh
+# Blocks direct commits on protected branches. Installed workspace-wide via
+# core.hooksPath (see setup.sh). Bypass in a genuine emergency: git commit --no-verify
+#
+# The protected default branch comes from DEFAULT_BRANCH in the workspace
+# .setup file (parsed, not sourced — .setup uses bash arrays and this hook
+# must stay POSIX sh). main and master are always protected as well.
+HOOKS_DIR="$(cd "$(dirname "$0")" && pwd)"
+DEFAULT_BRANCH="$(sed -n 's/^DEFAULT_BRANCH="\{0,1\}\([^"# ]*\)"\{0,1\}.*/\1/p' "$HOOKS_DIR/../.setup" 2>/dev/null | head -n 1)"
+[ -n "$DEFAULT_BRANCH" ] || DEFAULT_BRANCH=dev
+
+branch="$(git symbolic-ref --short HEAD 2>/dev/null)"
+case "$branch" in
+  "$DEFAULT_BRANCH"|main|master)
+    echo "✗ Direct commits on '$branch' are not allowed." >&2
+    echo "  Create a task branch first: git checkout -b <ticket-id>-<type>-<short-title>" >&2
+    echo "  (or run /raise-pr in Claude Code — it moves your changes onto a task branch)" >&2
+    exit 1
+    ;;
+esac
+exit 0
