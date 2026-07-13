@@ -9,8 +9,8 @@ description: >
 
 # My Skill
 
-> Project values (ticket prefix, default branch, repo list) come from `.setup`
-> and `AGENTS.md` at the workspace root — read them; never assume.
+> Project values (ticket prefix, default branch, repo list) come from
+> `devrig.toml` and `AGENTS.md` at the workspace root — read them; never assume.
 > Keep this line in every skill so it stays portable across projects.
 
 ## Usage

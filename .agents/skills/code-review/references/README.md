@@ -1,6 +1,6 @@
 # Per-repo review references
 
-Write **one file per repo** in your `.setup` `REPOS` list, named
+Write **one file per repo** in your `devrig.toml` `repos` list, named
 `<repo>.md` (e.g. `acme-api.md`). The code-review skill loads the file for
 the repo under review; if it's missing, the review falls back to generic
 checks and notes the gap.

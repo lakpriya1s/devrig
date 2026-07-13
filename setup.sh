@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # devrig workspace setup.
-# Clones your project repos (from .setup) and installs the AI tooling
+# Clones your project repos (from devrig.toml) and installs the AI tooling
 # (semble, rtk, MCP config, protected-branch git hooks).
 # Idempotent — safe to re-run at any time to update everything.
 #
@@ -14,9 +14,10 @@ warn() { printf '\033[1;33mwarn:\033[0m %s\n' "$*"; }
 fail() { printf '\033[1;31merror:\033[0m %s\n' "$*" >&2; exit 1; }
 
 # --- 0. Interactive config wizard (first run only) -----------------------------
-# Only runs when .setup still has the shipped example values (PROJECT_NAME=acme)
-# AND we're attached to a terminal. Otherwise setup.sh expects .setup to already
-# be filled in (e.g. by hand, or by an AI agent per the README's kickstart prompt).
+# Only runs when devrig.toml still has the shipped example values (name=acme)
+# AND we're attached to a terminal. Otherwise setup.sh expects devrig.toml to
+# already be filled in (by hand, or by an AI agent per the README's kickstart
+# prompt).
 
 ask_yes_no() {
   local prompt="$1" default="$2" ans hint
@@ -50,29 +51,57 @@ ask_choice() {
   echo "${opts[$idx]}"
 }
 
-write_setup_file() {
-  local repos_str=""
-  [ "${#REPOS[@]}" -gt 0 ] && repos_str="${REPOS[*]}"
-  cat > "$WORKSPACE_DIR/.setup" <<EOF
-# devrig configuration
+# Writes devrig.toml from the current in-memory config values. Values are
+# handed to python3 via env vars (not argv), so nothing needs shell-argv
+# escaping; python does its own TOML string escaping.
+write_config_file() {
+  local repos_joined="" r
+  for r in ${REPOS[@]+"${REPOS[@]}"}; do
+    repos_joined="${repos_joined}${r}"$'\n'
+  done
+
+  DEVRIG_PROJECT_NAME="$PROJECT_NAME" \
+  DEVRIG_GITHUB_ORG="$GITHUB_ORG" \
+  DEVRIG_REPOS="$repos_joined" \
+  DEVRIG_ISSUE_TRACKER="$ISSUE_TRACKER" \
+  DEVRIG_TICKET_PREFIX="$TICKET_PREFIX" \
+  DEVRIG_DEFAULT_BRANCH="$DEFAULT_BRANCH" \
+  DEVRIG_ENABLE_SEMBLE="$ENABLE_SEMBLE" \
+  DEVRIG_ENABLE_RTK="$ENABLE_RTK" \
+  DEVRIG_ENABLE_GIT_HOOKS="$ENABLE_GIT_HOOKS" \
+  python3 - "$WORKSPACE_DIR/devrig.toml" <<'PY'
+import os, sys
+
+def esc(s):
+    return s.replace("\\", "\\\\").replace('"', '\\"')
+
+path = sys.argv[1]
+env = os.environ
+repos = [r for r in env.get("DEVRIG_REPOS", "").split("\n") if r]
+repos_toml = ", ".join(f'"{esc(r)}"' for r in repos)
+
+content = f'''# devrig configuration
 #
 # Edit these values for your project, then run ./setup.sh — or just run
 # ./setup.sh first and answer its prompts; it writes this file for you.
-# This file is sourced by setup.sh and the git hooks — keep it valid shell
-# (no spaces around \`=\`, arrays in parentheses).
 
-PROJECT_NAME="$PROJECT_NAME"                # short lowercase name; names the generated .code-workspace file
-GITHUB_ORG="$GITHUB_ORG"               # GitHub org (or username) that owns your repos
-REPOS=($repos_str)          # repos setup.sh clones side-by-side; use REPOS=() for none
-ISSUE_TRACKER="$ISSUE_TRACKER"              # linear | jira | other — controls which tracker MCP server gets wired up
-TICKET_PREFIX="$TICKET_PREFIX"                 # ticket prefix, e.g. AC-123
-DEFAULT_BRANCH="$DEFAULT_BRANCH"               # protected default branch of your repos
+[project]
+name = "{esc(env["DEVRIG_PROJECT_NAME"])}"              # short lowercase name; names the generated .code-workspace file
+github_org = "{esc(env["DEVRIG_GITHUB_ORG"])}"          # GitHub org (or username) that owns your repos
+repos = [{repos_toml}]  # repos setup.sh clones side-by-side; use [] for none
+issue_tracker = "{esc(env["DEVRIG_ISSUE_TRACKER"])}"    # linear | jira | other — controls which tracker MCP server gets wired up
+ticket_prefix = "{esc(env["DEVRIG_TICKET_PREFIX"])}"    # ticket prefix, e.g. AC-123
+default_branch = "{esc(env["DEVRIG_DEFAULT_BRANCH"])}"  # protected default branch of your repos
 
-# Feature toggles
-ENABLE_SEMBLE=$ENABLE_SEMBLE                 # semantic code search, wired to agents via MCP
-ENABLE_RTK=$ENABLE_RTK                    # token-optimizing command proxy for Claude Code
-ENABLE_GIT_HOOKS=$ENABLE_GIT_HOOKS              # block direct commits/pushes to protected branches
-EOF
+[features]
+semble = {env["DEVRIG_ENABLE_SEMBLE"]}         # semantic code search, wired to agents via MCP
+rtk = {env["DEVRIG_ENABLE_RTK"]}               # token-optimizing command proxy for Claude Code
+git_hooks = {env["DEVRIG_ENABLE_GIT_HOOKS"]}   # block direct commits/pushes to protected branches
+'''
+
+with open(path, "w") as f:
+    f.write(content)
+PY
 }
 
 prompt_for_config() {
@@ -120,27 +149,63 @@ prompt_for_config() {
   ENABLE_RTK=$(ask_yes_no "Enable rtk (token-optimizing proxy for Claude Code)?" true)
   ENABLE_GIT_HOOKS=$(ask_yes_no "Enable protected-branch git hooks?" true)
 
-  write_setup_file
+  write_config_file
   echo >&2
-  info "Saved to .setup — edit that file by hand anytime to change these values."
+  info "Saved to devrig.toml — edit that file by hand anytime to change these values."
 }
 
 # --- 1. Configuration ---------------------------------------------------------
+# devrig.toml is the single source of truth. It's parsed with python3's
+# tomllib (stdlib on 3.11+; falls back to the 'tomli' package on older
+# Python), which prints shell-safe `KEY='value'` assignments that we eval.
 
 load_config() {
-  [ -f "$WORKSPACE_DIR/.setup" ] || fail ".setup not found. This file defines your project (name, org, repos). It ships with the template — restore it from git."
-  # shellcheck source=.setup
-  . "$WORKSPACE_DIR/.setup"
+  [ -f "$WORKSPACE_DIR/devrig.toml" ] || fail "devrig.toml not found. This file defines your project (name, org, repos). It ships with the template — restore it from git."
 
-  : "${PROJECT_NAME:=acme}" "${GITHUB_ORG:=AcmeInc}" "${TICKET_PREFIX:=AC}" "${DEFAULT_BRANCH:=dev}"
-  : "${ISSUE_TRACKER:=linear}"
-  : "${ENABLE_SEMBLE:=true}" "${ENABLE_RTK:=true}" "${ENABLE_GIT_HOOKS:=true}"
+  local py_out
+  py_out="$(python3 - "$WORKSPACE_DIR/devrig.toml" <<'PY'
+import sys
+try:
+    import tomllib
+except ModuleNotFoundError:
+    try:
+        import tomli as tomllib
+    except ModuleNotFoundError:
+        sys.exit("devrig.toml needs Python's tomllib (3.11+) or the 'tomli' package on older Python. Try: pip install tomli")
+
+path = sys.argv[1]
+with open(path, "rb") as f:
+    cfg = tomllib.load(f)
+
+project = cfg.get("project", {})
+features = cfg.get("features", {})
+
+def sh_str(s):
+    return "'" + str(s).replace("'", "'\\''") + "'"
+
+def sh_bool(b):
+    return "true" if b else "false"
+
+print(f"PROJECT_NAME={sh_str(project.get('name', 'acme'))}")
+print(f"GITHUB_ORG={sh_str(project.get('github_org', 'AcmeInc'))}")
+repos = project.get("repos", [])
+print("REPOS=(" + " ".join(sh_str(r) for r in repos) + ")")
+print(f"ISSUE_TRACKER={sh_str(project.get('issue_tracker', 'linear'))}")
+print(f"TICKET_PREFIX={sh_str(project.get('ticket_prefix', 'AC'))}")
+print(f"DEFAULT_BRANCH={sh_str(project.get('default_branch', 'dev'))}")
+print(f"ENABLE_SEMBLE={sh_bool(features.get('semble', True))}")
+print(f"ENABLE_RTK={sh_bool(features.get('rtk', True))}")
+print(f"ENABLE_GIT_HOOKS={sh_bool(features.get('git_hooks', True))}")
+PY
+)" || fail "Failed to parse devrig.toml — see the error above."
+
+  eval "$py_out"
 
   if [ "$PROJECT_NAME" = "acme" ] && [ "$GITHUB_ORG" = "AcmeInc" ]; then
     if [ -t 0 ] && [ -t 1 ]; then
       prompt_for_config
     else
-      fail "'.setup' still contains the shipped example values. Edit .setup with your project's values, then re-run ./setup.sh — or run ./setup.sh in an interactive terminal to be prompted instead."
+      fail "'devrig.toml' still contains the shipped example values. Edit devrig.toml with your project's values, then re-run ./setup.sh — or run ./setup.sh in an interactive terminal to be prompted instead."
     fi
   fi
 }
@@ -200,7 +265,7 @@ exclude_repos() {
 # core.hooksPath.
 
 install_git_hooks() {
-  [ "$ENABLE_GIT_HOOKS" = true ] || { info "Git hooks disabled in .setup — skipping."; return 0; }
+  [ "$ENABLE_GIT_HOOKS" = true ] || { info "Git hooks disabled in devrig.toml — skipping."; return 0; }
   info "Installing protected-branch git hooks..."
   chmod +x "$WORKSPACE_DIR/git-hooks/pre-commit" "$WORKSPACE_DIR/git-hooks/pre-push"
   git -C "$WORKSPACE_DIR" config core.hooksPath "$WORKSPACE_DIR/git-hooks"
@@ -211,13 +276,13 @@ install_git_hooks() {
 }
 
 # --- 4. MCP configuration ------------------------------------------------------
-# Converges .mcp.json and opencode.json to the .setup toggles: the tracker
+# Converges .mcp.json and opencode.json to the devrig.toml toggles: the tracker
 # (linear/atlassian) and semble entries are added/removed to match, while any
 # servers you added by hand are preserved. Also generates
 # .claude/settings.local.json (gitignored) if it doesn't exist yet.
 
 sync_mcp_config() {
-  info "Syncing MCP config to .setup toggles..."
+  info "Syncing MCP config to devrig.toml toggles..."
   python3 - "$WORKSPACE_DIR" "$ISSUE_TRACKER" "$ENABLE_SEMBLE" <<'PY'
 import json, os, sys
 
@@ -288,7 +353,7 @@ PY
 # --- 5. semble (semantic code search, used by agents via MCP) ------------------
 
 install_semble() {
-  [ "$ENABLE_SEMBLE" = true ] || { info "semble disabled in .setup — skipping."; return 0; }
+  [ "$ENABLE_SEMBLE" = true ] || { info "semble disabled in devrig.toml — skipping."; return 0; }
   info "Installing semble..."
   # --force so the [mcp] extra is always present even if semble was installed without it.
   uv tool install --force --quiet 'semble[mcp]'
@@ -325,7 +390,7 @@ install_semble() {
 # --- 6. rtk (token-optimizing command proxy for Claude Code) -------------------
 
 install_rtk() {
-  [ "$ENABLE_RTK" = true ] || { info "rtk disabled in .setup — skipping."; return 0; }
+  [ "$ENABLE_RTK" = true ] || { info "rtk disabled in devrig.toml — skipping."; return 0; }
   if ! command -v rtk >/dev/null 2>&1; then
     info "Installing rtk..."
     if command -v brew >/dev/null 2>&1; then

@@ -6,11 +6,11 @@ description: Code review for any workspace repository, in two modes. Full mode �
 # Code Review
 
 > Project values (ticket prefix, default branch, repo list, org) come from
-> `.setup` and `AGENTS.md` at the workspace root — read them; never assume.
-> Below, `<BASE>` means the `DEFAULT_BRANCH` from `.setup`.
-> The ticket-lookup steps (`mcp__linear__*`) assume `ISSUE_TRACKER="linear"` in
-> `.setup`. If your workspace uses Jira or another tracker instead, adapt those
-> calls to your tracker's MCP tool names.
+> `devrig.toml` and `AGENTS.md` at the workspace root — read them; never assume.
+> Below, `<BASE>` means the `DEFAULT_BRANCH` from `devrig.toml`.
+> The ticket-lookup steps (`mcp__linear__*`) assume `issue_tracker = "linear"`
+> in `devrig.toml`. If your workspace uses Jira or another tracker instead,
+> adapt those calls to your tracker's MCP tool names.
 
 Comprehensive review for any repo in the workspace, in two modes:
 

@@ -1,0 +1,17 @@
+# devrig configuration
+#
+# Edit these values for your project, then run ./setup.sh — or just run
+# ./setup.sh first and answer its prompts; it writes this file for you.
+
+[project]
+name = "acme"                # short lowercase name; names the generated .code-workspace file
+github_org = "AcmeInc"        # GitHub org (or username) that owns your repos
+repos = ["acme-api", "acme-web"]  # repos setup.sh clones side-by-side; use [] for none
+issue_tracker = "linear"      # linear | jira | other — controls which tracker MCP server gets wired up
+ticket_prefix = "AC"          # ticket prefix, e.g. AC-123
+default_branch = "dev"        # protected default branch of your repos
+
+[features]
+semble = true                 # semantic code search, wired to agents via MCP
+rtk = true                    # token-optimizing command proxy for Claude Code
+git_hooks = true               # block direct commits/pushes to protected branches

@@ -2,11 +2,26 @@
 # Blocks direct commits on protected branches. Installed workspace-wide via
 # core.hooksPath (see setup.sh). Bypass in a genuine emergency: git commit --no-verify
 #
-# The protected default branch comes from DEFAULT_BRANCH in the workspace
-# .setup file (parsed, not sourced — .setup uses bash arrays and this hook
-# must stay POSIX sh). main and master are always protected as well.
+# The protected default branch comes from [project].default_branch in the
+# workspace devrig.toml (read via python3's tomllib). main and master are
+# always protected as well.
 HOOKS_DIR="$(cd "$(dirname "$0")" && pwd)"
-DEFAULT_BRANCH="$(sed -n 's/^DEFAULT_BRANCH="\{0,1\}\([^"# ]*\)"\{0,1\}.*/\1/p' "$HOOKS_DIR/../.setup" 2>/dev/null | head -n 1)"
+DEFAULT_BRANCH="$(python3 - "$HOOKS_DIR/../devrig.toml" 2>/dev/null <<'PY'
+import sys
+try:
+    import tomllib
+except ModuleNotFoundError:
+    try:
+        import tomli as tomllib
+    except ModuleNotFoundError:
+        print("dev"); sys.exit()
+try:
+    with open(sys.argv[1], "rb") as f:
+        print(tomllib.load(f).get("project", {}).get("default_branch", "dev"))
+except Exception:
+    print("dev")
+PY
+)"
 [ -n "$DEFAULT_BRANCH" ] || DEFAULT_BRANCH=dev
 
 branch="$(git symbolic-ref --short HEAD 2>/dev/null)"

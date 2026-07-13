@@ -22,7 +22,7 @@
 devrig は*メタリポジトリ*です。プロジェクトのすべてのリポジトリと、それらを
 横断して開発するための AI ツール群をひとつのフォルダに収めます。このリポジトリが
 バージョン管理するのはツールのみ — プロジェクトのリポジトリは `setup.sh` が
-横並びにクローンし、追跡されません。すべては単一の **`.setup`** ファイルで
+横並びにクローンし、追跡されません。すべては単一の **`devrig.toml`** ファイルで
 設定されます。
 
 | | 含まれるもの |
@@ -44,12 +44,12 @@ devrig は*メタリポジトリ*です。プロジェクトのすべてのリ�
    ./setup.sh
    ```
 
-   初回実行時、`.setup` がまだサンプル値のままなら、対話式に設定を案内します:
+   初回実行時、`devrig.toml` がまだサンプル値のままなら、対話式に設定を案内します:
    プロジェクト名、GitHub org、クローンするリポジトリ（スペースまたはカンマ
    区切りで複数まとめて貼り付け可）、課題管理ツール（**Linear**、**Jira**、
    **その他** からメニューで選択）、チケットプレフィックス、デフォルト
-   ブランチ、機能トグル。回答は自動的に `.setup` に書き込まれます。手動編集
-   したい場合は、スクリプト実行前に `.setup` を自分で埋めておけばプロンプトは
+   ブランチ、機能トグル。回答は自動的に `devrig.toml` に書き込まれます。手動編集
+   したい場合は、スクリプト実行前に `devrig.toml` を自分で埋めておけばプロンプトは
    スキップされます。
 3. このフォルダから `claude` を起動して作業開始。
 
@@ -67,12 +67,12 @@ devrig は*メタリポジトリ*です。プロジェクトのすべてのリ�
 devrig テンプレート（https://github.com/lakpriya1s/devrig）からワークスペースを
 作成しました。セットアップを手伝ってください：
 
-1. README.md、AGENTS.md、.setup を読んでワークスペースを理解する。
+1. README.md、AGENTS.md、devrig.toml を読んでワークスペースを理解する。
 2. 一緒に ./setup.sh を実行する — プロジェクト名、GitHub org、リポジトリ
    一覧（複数まとめて貼り付け可）、課題管理ツール（Linear、Jira、その他）、
    チケットプレフィックス、デフォルトブランチ、機能トグルを対話式に質問
    してくるので、その内容を私に伝えて回答を埋めるのを手伝ってください。
-   最後に .setup が自動生成されます。
+   最後に devrig.toml が自動生成されます。
 3. ./setup.sh が指摘した問題の修正を手伝う。
 4. AGENTS.md の Systems テーブルを埋める — リポジトリごとに1行（役割、スタック）。
 5. 各リポジトリについて .agents/skills/code-review/references/<repo>.md に
@@ -89,11 +89,11 @@ devrig テンプレート（https://github.com/lakpriya1s/devrig）からワー�
 
 `setup.sh` は冪等です — いつでも再実行してすべてのリポジトリとツールを更新できます。内容：
 
-0. **初回のみ**：`.setup` がまだサンプル値のままなら、上記すべてを対話式に質問し `.setup` に書き込む。
+0. **初回のみ**：`devrig.toml` がまだサンプル値のままなら、上記すべてを対話式に質問し `devrig.toml` に書き込む。
 1. 前提条件を確認（`git`、認証済み `gh`。semble 有効時は `uv` をインストール）。
-2. `REPOS` の各リポジトリを横並びにクローン（クリーンなデフォルトブランチのチェックアウトは fast-forward）し、`.git/info/exclude` 経由でこのリポジトリの git status から除外。
+2. `repos` の各リポジトリを横並びにクローン（クリーンなデフォルトブランチのチェックアウトは fast-forward）し、`.git/info/exclude` 経由でこのリポジトリの git status から除外。
 3. このリポジトリとクローンした各リポジトリに保護ブランチ用 git フックをインストール。
-4. `.mcp.json` / `opencode.json` を `.setup` のトグルに収束させる — `ISSUE_TRACKER` に応じて `linear` または `atlassian`（Jira）サーバーを追加し、「その他」なら追加しない。手動追加した MCP サーバーは保持し、`.claude/settings.local.json` を生成。
+4. `.mcp.json` / `opencode.json` を `devrig.toml` のトグルに収束させる — `issue_tracker` に応じて `linear` または `atlassian`（Jira）サーバーを追加し、「その他」なら追加しない。手動追加した MCP サーバーは保持し、`.claude/settings.local.json` を生成。
 5. semble をインストールし、リポジトリごとに検索インデックスをウォームアップ。
 6. rtk をインストールし、Claude Code フックを登録。
 7. VS Code 用の `<project>.code-workspace` を生成（既存の場合はスキップされるため、カスタマイズしてコミットしても安全）。
@@ -102,17 +102,17 @@ devrig テンプレート（https://github.com/lakpriya1s/devrig）からワー�
 
 初回の `setup.sh` 実行後、パーソナライズをコミットしましょう：
 
-- [ ] `.setup` — 初回実行時に `setup.sh` が対話式に質問します（または実行前に手動で埋めておけばプロンプトはスキップされます）。後で値を変える場合（トラッカーの変更、リポジトリの追加など）は `.setup` を直接編集して `./setup.sh` を再実行してください。
+- [ ] `devrig.toml` — 初回実行時に `setup.sh` が対話式に質問します（または実行前に手動で埋めておけばプロンプトはスキップされます）。後で値を変える場合（トラッカーの変更、リポジトリの追加など）は `devrig.toml` を直接編集して `./setup.sh` を再実行してください。
 - [ ] `AGENTS.md` — **Systems** テーブル（リポジトリごとに1行：役割、スタック）と **Testing** セクションを記入。すべてのスキルが読む唯一の情報源です。
 - [ ] `.agents/skills/code-review/references/` と `.agents/skills/write-doc/references/` — リポジトリごとにリファレンスファイルを1つ（`_example-repo.md` をコピー）。なくても動きますが、あると格段に鋭くなります。
-- [ ] `ISSUE_TRACKER` が `linear` の場合：`.agents/skills/create-ticket/SKILL.md` の「規約」テーブルを自分の Linear ワークスペース（チーム、プロジェクト、ラベル）と照合。`jira` や `other` の場合：`/start-task`、`/raise-pr`、`/create-ticket` の `mcp__linear__*` 呼び出しを自分のトラッカーの MCP ツール名に合わせて調整（各スキルの冒頭にその旨の記載あり）。
+- [ ] `issue_tracker` が `linear` の場合：`.agents/skills/create-ticket/SKILL.md` の「規約」テーブルを自分の Linear ワークスペース（チーム、プロジェクト、ラベル）と照合。`jira` や `other` の場合：`/start-task`、`/raise-pr`、`/create-ticket` の `mcp__linear__*` 呼び出しを自分のトラッカーの MCP ツール名に合わせて調整（各スキルの冒頭にその旨の記載あり）。
 - [ ] トグルで無効化したものを削除・調整（例：semble を使わないなら `CLAUDE.md` から関連記述を削除）。
 
 ## 構成
 
 | パス | 説明 |
 |---|---|
-| `.setup` | プロジェクト設定 — すべてのツールが読む唯一のファイル |
+| `devrig.toml` | プロジェクト設定 — すべてのツールが読む唯一のファイル |
 | `setup.sh` | 冪等なブートストラップ/更新スクリプト |
 | `AGENTS.md` | エージェント非依存の唯一の情報源（システム、ブランチルール、規約） |
 | `CLAUDE.md` | Claude Code 固有の内容。`AGENTS.md` をインポート |
@@ -136,7 +136,7 @@ devrig テンプレート（https://github.com/lakpriya1s/devrig）からワー�
 PR 経由で [`knowledge/`](../knowledge/) に入ります — semble がインデックスする
 ため、エージェントはコードと同じ方法で設計コンテキストを見つけます。この
 リポジトリに収まらなくなったら、独立した `<project>-knowledge` リポジトリとして
-push し、`.setup` の `REPOS` に追加、ここのフォルダを削除して `AGENTS.md` の
+push し、`devrig.toml` の `repos` に追加、ここのフォルダを削除して `AGENTS.md` の
 ポインタを更新してください。
 
 ## トラブルシューティング
@@ -145,7 +145,7 @@ push し、`.setup` の `REPOS` に追加、ここのフォルダを削除して
 - **Claude に課題管理ツールが表示されない** — `/mcp` を実行して `linear` または `atlassian` サーバーの OAuth フローを完了。
 - **rtk が効かない** — Claude Code を再起動し、`rtk gain` でコマンドがプロキシされているか確認。
 - **リポジトリが更新されない** — `setup.sh` はローカル変更があるリポジトリやタスクブランチ上のリポジトリには触れません。クリーンなデフォルトブランチのチェックアウトだけを fast-forward します。
-- **setup.sh が何も聞いてこず "edit .setup first" と言う** — 対話式端末に接続している場合のみプロンプトが出ます。スクリプトや CI から実行する場合は `.setup` を事前に埋めておく必要があります。
+- **setup.sh が何も聞いてこず "edit devrig.toml first" と言う** — 対話式端末に接続している場合のみプロンプトが出ます。スクリプトや CI から実行する場合は `devrig.toml` を事前に埋めておく必要があります。
 - **Jira や「その他」を選んだ** — `atlassian`（Jira）MCP サーバーは自動で設定されますが、`/start-task`、`/raise-pr`、`/create-ticket` は依然として Linear の MCP ツール名を呼び出します — これらのスキルを調整するまで、`setup.sh` は実行のたびに末尾でこの点を警告します。
 
 ## コントリビュート

@@ -3,11 +3,11 @@
 This folder is a multi-repo AI dev workspace. The project repos are cloned
 side-by-side here by `setup.sh`; this repo versions only the workspace tooling.
 Project values (name, org, repo list, ticket prefix, default branch) live in
-[`.setup`](.setup) — read them from there, never assume.
+[`devrig.toml`](devrig.toml) — read them from there, never assume.
 
 ## Systems
 
-<!-- TODO: fill in — one row per repo in your .setup REPOS list.
+<!-- TODO: fill in — one row per repo in your devrig.toml repos list.
      Delete the example rows below once you've added your own. -->
 
 | Repo | What it is | Stack |
@@ -21,7 +21,7 @@ details — read the relevant one(s) before working in that repo. A repo's
 
 ## Branch rules
 
-All repos use the default branch named in `.setup` (`DEFAULT_BRANCH`).
+All repos use the default branch named in `devrig.toml` (`DEFAULT_BRANCH`).
 **Never commit directly to it** — the hooks in `git-hooks/` enforce this
 (along with `main`/`master`) in every repo once `setup.sh` has run.
 Task branches follow `<ticket-id>-<type>-<short-title>`, all lowercase

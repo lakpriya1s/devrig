@@ -16,7 +16,7 @@ Apply this checklist to every doc drafted for the knowledge base.
 
 - Cite as repo-relative path + symbol: `acme-api/services/invite.service.ts` `createInvite`. **No line numbers** — they rot.
 - Every factual claim must be traceable to a file actually read this session. Anything unverified is written as `TODO(verify: ...)`, never stated as fact.
-- Use exact repo names (as listed in `.setup`) and exact endpoint/event casing as coded.
+- Use exact repo names (as listed in `devrig.toml`) and exact endpoint/event casing as coded.
 
 ## Voice & audience
 

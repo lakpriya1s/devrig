@@ -29,8 +29,8 @@ finds them through symlinks in `.claude/skills/`.
 
 - One skill = one workflow. If a skill needs a mode flag for two unrelated
   jobs, it's two skills.
-- Keep the "project values come from `.setup`/`AGENTS.md`" line — it keeps
-  skills portable when this template is reused.
+- Keep the "project values come from `devrig.toml`/`AGENTS.md`" line — it
+  keeps skills portable when this template is reused.
 - Supporting files pattern: `references/` for per-repo facts (one file per
   repo, `_example-repo.md` shows the shape), `templates/` for output the
   skill fills in.

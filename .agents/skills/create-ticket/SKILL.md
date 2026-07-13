@@ -5,11 +5,12 @@ description: Create well-formed Linear tickets — epics, stories, tasks, and bu
 
 # Create a Linear Ticket
 
-> Project values (ticket prefix, repo list) come from `.setup` and `AGENTS.md`
-> at the workspace root — read them; never assume.
-> This skill's MCP calls (`mcp__linear__*`) assume `ISSUE_TRACKER="linear"` in
-> `.setup`. If your workspace uses Jira or another tracker instead, adapt these
-> calls to your tracker's MCP tool names before relying on this skill.
+> Project values (ticket prefix, repo list) come from `devrig.toml` and
+> `AGENTS.md` at the workspace root — read them; never assume.
+> This skill's MCP calls (`mcp__linear__*`) assume `issue_tracker = "linear"`
+> in `devrig.toml`. If your workspace uses Jira or another tracker instead,
+> adapt these calls to your tracker's MCP tool names before relying on this
+> skill.
 
 ## Usage
 
@@ -31,7 +32,7 @@ as verified. Until then, discover the values with the MCP calls noted. -->
 
 | Fact | Value |
 |---|---|
-| Team | <!-- TODO: your Linear team name + key (matches TICKET_PREFIX in .setup) — discover via `mcp__linear__list_teams` --> |
+| Team | <!-- TODO: your Linear team name + key (matches ticket_prefix in devrig.toml) — discover via `mcp__linear__list_teams` --> |
 | Projects (map to repos) | <!-- TODO: one Linear project per repo, e.g. `Acme API` → `acme-api` — discover via `mcp__linear__list_projects` --> |
 | Type labels | `Feature`, `Improvement`, `Bug` <!-- verify via `mcp__linear__list_issue_labels` --> |
 | Surface labels | e.g. `BE`, `FE`, `Android`, `iOS` <!-- verify / adapt to your surfaces --> |

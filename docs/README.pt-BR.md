@@ -23,7 +23,7 @@ O devrig é um *meta-repo*: uma pasta que contém todos os repos do seu projeto
 **mais** as ferramentas de IA usadas para desenvolver entre eles. Este repo
 versiona apenas as ferramentas — seus repos de projeto são clonados lado a
 lado pelo `setup.sh` e permanecem não rastreados. Tudo é configurado a partir
-de um único arquivo **`.setup`**.
+de um único arquivo **`devrig.toml`**.
 
 | | O que você ganha |
 |---|---|
@@ -44,13 +44,13 @@ de um único arquivo **`.setup`**.
    ./setup.sh
    ```
 
-   Na primeira execução, se o `.setup` ainda tiver os valores de exemplo, ele
+   Na primeira execução, se o `devrig.toml` ainda tiver os valores de exemplo, ele
    vai te guiar interativamente: nome do projeto, organização do GitHub, os
    repos a clonar (cole vários de uma vez, separados por espaço ou vírgula),
    seu gestor de tickets (**Linear**, **Jira** ou **outro** — escolha em um
    menu), prefixo de tickets, branch padrão e toggles de funcionalidades — e
-   então grava o `.setup` para você. Prefere editar à mão? Preencha o
-   `.setup` antes de rodar o script e ele pula as perguntas.
+   então grava o `devrig.toml` para você. Prefere editar à mão? Preencha o
+   `devrig.toml` antes de rodar o script e ele pula as perguntas.
 3. Execute `claude` a partir desta pasta e comece a trabalhar.
 
 Depois, dentro do Claude Code: execute `/mcp` e autentique o servidor do
@@ -68,11 +68,11 @@ configuração com você:
 Acabei de criar um workspace a partir do template devrig
 (https://github.com/lakpriya1s/devrig). Me ajude a configurá-lo:
 
-1. Leia README.md, AGENTS.md e .setup para entender o workspace.
+1. Leia README.md, AGENTS.md e devrig.toml para entender o workspace.
 2. Execute ./setup.sh comigo — ele vai perguntar interativamente meu nome de
    projeto, organização do GitHub, lista de repos (posso colar vários de uma
    vez), gestor de tickets (Linear, Jira ou outro), prefixo de tickets,
-   branch padrão e toggles de funcionalidades, e então gravar o .setup.
+   branch padrão e toggles de funcionalidades, e então gravar o devrig.toml.
    Repasse as perguntas dele para mim e me ajude a responder.
 3. Me ajude a corrigir o que ./setup.sh apontar.
 4. Preencha a tabela Systems do AGENTS.md — uma linha por repo (o que é, stack).
@@ -91,11 +91,11 @@ Acabei de criar um workspace a partir do template devrig
 O `setup.sh` é idempotente — execute-o novamente a qualquer momento para
 atualizar todos os repos e ferramentas. Ele:
 
-0. **Só na primeira vez**: se o `.setup` ainda tiver os valores de exemplo, pergunta tudo acima interativamente e grava o `.setup`.
+0. **Só na primeira vez**: se o `devrig.toml` ainda tiver os valores de exemplo, pergunta tudo acima interativamente e grava o `devrig.toml`.
 1. Verifica os pré-requisitos (`git`, `gh` autenticado; instala `uv` se o semble estiver habilitado).
-2. Clona cada repo de `REPOS` lado a lado (ou faz fast-forward de checkouts limpos da branch padrão), e os exclui do status git deste repo via `.git/info/exclude`.
+2. Clona cada repo de `repos` lado a lado (ou faz fast-forward de checkouts limpos da branch padrão), e os exclui do status git deste repo via `.git/info/exclude`.
 3. Instala os hooks de git de branches protegidas neste repo e em cada repo clonado.
-4. Converge `.mcp.json` / `opencode.json` para os toggles do seu `.setup` — adicionando o servidor `linear` ou `atlassian` (Jira) conforme `ISSUE_TRACKER`, ou nenhum se você escolheu "outro" — preservando servidores MCP adicionados manualmente — e gera `.claude/settings.local.json`.
+4. Converge `.mcp.json` / `opencode.json` para os toggles do seu `devrig.toml` — adicionando o servidor `linear` ou `atlassian` (Jira) conforme `issue_tracker`, ou nenhum se você escolheu "outro" — preservando servidores MCP adicionados manualmente — e gera `.claude/settings.local.json`.
 5. Instala o semble e aquece um índice de busca por repo.
 6. Instala o rtk e registra seu hook do Claude Code.
 7. Gera o `<project>.code-workspace` para o VS Code (pulado se você já tiver um, então é seguro personalizar e commitar).
@@ -104,17 +104,17 @@ atualizar todos os repos e ferramentas. Ele:
 
 Após a primeira execução do `setup.sh`, faça seu commit de personalização:
 
-- [ ] `.setup` — o `setup.sh` pergunta esses valores interativamente na primeira execução (ou preencha o arquivo à mão antes de rodá-lo e ele pula as perguntas). Para mudar valores depois (trocar de gestor, adicionar um repo), edite `.setup` diretamente e rode `./setup.sh` de novo.
+- [ ] `devrig.toml` — o `setup.sh` pergunta esses valores interativamente na primeira execução (ou preencha o arquivo à mão antes de rodá-lo e ele pula as perguntas). Para mudar valores depois (trocar de gestor, adicionar um repo), edite `devrig.toml` diretamente e rode `./setup.sh` de novo.
 - [ ] `AGENTS.md` — preencha a tabela **Systems** (uma linha por repo: o que é, stack) e a seção **Testing**. É a fonte de verdade que toda skill lê.
 - [ ] `.agents/skills/code-review/references/` e `.agents/skills/write-doc/references/` — um arquivo de referência por repo (copie `_example-repo.md`). As skills funcionam sem eles, mas ficam muito mais afiadas com eles.
-- [ ] Se `ISSUE_TRACKER` for `linear`: verifique a tabela de "Convenções" de `.agents/skills/create-ticket/SKILL.md` contra seu workspace do Linear (times, projetos, labels). Se for `jira` ou `other`: adapte as chamadas `mcp__linear__*` de `/start-task`, `/raise-pr` e `/create-ticket` para as ferramentas MCP do seu gestor (cada skill sinaliza isso no topo).
+- [ ] Se `issue_tracker` for `linear`: verifique a tabela de "Convenções" de `.agents/skills/create-ticket/SKILL.md` contra seu workspace do Linear (times, projetos, labels). Se for `jira` ou `other`: adapte as chamadas `mcp__linear__*` de `/start-task`, `/raise-pr` e `/create-ticket` para as ferramentas MCP do seu gestor (cada skill sinaliza isso no topo).
 - [ ] Remova ou ajuste o que um toggle desabilitou (ex.: remova as notas do semble do `CLAUDE.md` se você não usa).
 
 ## Estrutura
 
 | Caminho | O que é |
 |---|---|
-| `.setup` | Sua configuração de projeto — o único arquivo que toda ferramenta lê |
+| `devrig.toml` | Sua configuração de projeto — o único arquivo que toda ferramenta lê |
 | `setup.sh` | Script de bootstrap/atualização idempotente |
 | `AGENTS.md` | Fonte de verdade independente de agente (sistemas, regras de branch, convenções) |
 | `CLAUDE.md` | Específicos do Claude Code; importa `AGENTS.md` |
@@ -138,7 +138,7 @@ Novos documentos de design, notas de arquitetura, ADRs e runbooks vão para
 [`knowledge/`](../knowledge/) como markdown via PR — o semble a indexa, então
 os agentes encontram contexto de design da mesma forma que encontram código.
 Quando ela crescer além deste repo, publique-a como um repo
-`<project>-knowledge` separado, adicione-o a `REPOS` no `.setup`, apague a
+`<project>-knowledge` separado, adicione-o a `repos` no `devrig.toml`, apague a
 pasta aqui e atualize o ponteiro no `AGENTS.md`.
 
 ## Solução de problemas
@@ -147,7 +147,7 @@ pasta aqui e atualize o ponteiro no `AGENTS.md`.
 - **Ferramentas do gestor de tickets ausentes no Claude** — execute `/mcp` e complete o fluxo OAuth do servidor `linear` ou `atlassian`.
 - **rtk não está funcionando** — reinicie o Claude Code; verifique com `rtk gain` que os comandos estão sendo proxificados.
 - **Um repo não atualiza** — o `setup.sh` nunca toca um repo com mudanças locais ou em uma branch de tarefa; ele só faz fast-forward de checkouts limpos da branch padrão.
-- **setup.sh não pergunta nada, só falha com "edit .setup first"** — ele só pergunta interativamente quando conectado a um terminal; rodá-lo a partir de um script ou CI exige que o `.setup` já esteja preenchido.
+- **setup.sh não pergunta nada, só falha com "edit devrig.toml first"** — ele só pergunta interativamente quando conectado a um terminal; rodá-lo a partir de um script ou CI exige que o `devrig.toml` já esteja preenchido.
 - **Escolheu Jira ou "outro"** — o servidor MCP `atlassian` (Jira) é configurado automaticamente, mas `/start-task`, `/raise-pr` e `/create-ticket` ainda chamam as ferramentas MCP do Linear — o `setup.sh` vai te avisar disso no final de cada execução até você adaptar essas skills.
 
 ## Contribuindo

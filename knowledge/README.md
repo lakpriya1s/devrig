@@ -34,7 +34,7 @@ simplest. When you want independent review flow or reuse across workspaces,
 promote it:
 
 1. Push this folder as its own repo: `<project>-knowledge`.
-2. Add `<project>-knowledge` to `REPOS` in `.setup` and re-run `./setup.sh`.
+2. Add `<project>-knowledge` to `repos` in `devrig.toml` and re-run `./setup.sh`.
 3. Delete this folder from the workspace repo.
 4. Update the "Knowledge base" section in `AGENTS.md` — the skills target
    whatever is named there, so nothing else changes.

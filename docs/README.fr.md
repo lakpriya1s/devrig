@@ -23,7 +23,7 @@ devrig est un *méta-dépôt* : un dossier qui contient tous les dépôts de vot
 projet **plus** l'outillage IA utilisé pour développer à travers eux. Ce dépôt
 ne versionne que l'outillage — vos dépôts de projet sont clonés côte à côte
 par `setup.sh` et restent non suivis. Tout se configure depuis un unique
-fichier **`.setup`**.
+fichier **`devrig.toml`**.
 
 | | Ce que vous obtenez |
 |---|---|
@@ -44,13 +44,13 @@ fichier **`.setup`**.
    ./setup.sh
    ```
 
-   Au premier lancement, si `.setup` contient encore les valeurs d'exemple,
+   Au premier lancement, si `devrig.toml` contient encore les valeurs d'exemple,
    le script vous guide de façon interactive : nom du projet, organisation
    GitHub, les dépôts à cloner (collez-en plusieurs d'un coup, séparés par
    des espaces ou des virgules), votre gestionnaire de tickets (**Linear**,
    **Jira**, ou **autre** — au choix dans un menu), préfixe de tickets,
-   branche par défaut, et options — puis il écrit `.setup` pour vous. Vous
-   préférez éditer à la main ? Remplissez `.setup` vous-même avant de lancer
+   branche par défaut, et options — puis il écrit `devrig.toml` pour vous. Vous
+   préférez éditer à la main ? Remplissez `devrig.toml` vous-même avant de lancer
    le script et les questions seront sautées.
 3. Lancez `claude` depuis ce dossier et commencez à travailler.
 
@@ -69,12 +69,12 @@ terminer la configuration avec vous :
 Je viens de créer un workspace depuis le template devrig
 (https://github.com/lakpriya1s/devrig). Aide-moi à le configurer :
 
-1. Lis README.md, AGENTS.md et .setup pour comprendre le workspace.
+1. Lis README.md, AGENTS.md et devrig.toml pour comprendre le workspace.
 2. Exécute ./setup.sh avec moi — il va me demander de façon interactive le
    nom du projet, l'organisation GitHub, la liste des dépôts (je peux en
    coller plusieurs d'un coup), le gestionnaire de tickets (Linear, Jira, ou
    autre), le préfixe de tickets, la branche par défaut et les options, puis
-   écrire .setup. Relaie-moi ses questions et aide-moi à y répondre.
+   écrire devrig.toml. Relaie-moi ses questions et aide-moi à y répondre.
 3. Aide-moi à corriger ce que ./setup.sh signale.
 4. Remplis le tableau Systems d'AGENTS.md — une ligne par dépôt (rôle, stack).
 5. Pour chaque dépôt, écris une référence de revue dans
@@ -92,11 +92,11 @@ Je viens de créer un workspace depuis le template devrig
 `setup.sh` est idempotent — relancez-le à tout moment pour mettre à jour tous
 les dépôts et outils. Il :
 
-0. **Au premier lancement seulement** : si `.setup` contient encore les valeurs d'exemple, demande tout ce qui précède de façon interactive et écrit `.setup`.
+0. **Au premier lancement seulement** : si `devrig.toml` contient encore les valeurs d'exemple, demande tout ce qui précède de façon interactive et écrit `devrig.toml`.
 1. Vérifie les prérequis (`git`, `gh` authentifié ; installe `uv` si semble est activé).
-2. Clone chaque dépôt de `REPOS` côte à côte (ou fait un fast-forward des checkouts propres de la branche par défaut), et les exclut du statut git de ce dépôt via `.git/info/exclude`.
+2. Clone chaque dépôt de `repos` côte à côte (ou fait un fast-forward des checkouts propres de la branche par défaut), et les exclut du statut git de ce dépôt via `.git/info/exclude`.
 3. Installe les hooks git de branches protégées dans ce dépôt et chaque dépôt cloné.
-4. Fait converger `.mcp.json` / `opencode.json` vers vos options `.setup` — en ajoutant le serveur `linear` ou `atlassian` (Jira) selon `ISSUE_TRACKER`, ou aucun si vous avez choisi « autre » — tout en préservant les serveurs MCP ajoutés à la main, et génère `.claude/settings.local.json`.
+4. Fait converger `.mcp.json` / `opencode.json` vers vos options `devrig.toml` — en ajoutant le serveur `linear` ou `atlassian` (Jira) selon `issue_tracker`, ou aucun si vous avez choisi « autre » — tout en préservant les serveurs MCP ajoutés à la main, et génère `.claude/settings.local.json`.
 5. Installe semble et préchauffe un index de recherche par dépôt.
 6. Installe rtk et enregistre son hook Claude Code.
 7. Génère `<project>.code-workspace` pour VS Code (ignoré si vous en avez déjà un, vous pouvez donc le personnaliser et le committer).
@@ -105,17 +105,17 @@ les dépôts et outils. Il :
 
 Après la première exécution de `setup.sh`, faites votre commit de personnalisation :
 
-- [ ] `.setup` — `setup.sh` vous les demande de façon interactive au premier lancement (ou remplissez le fichier à la main avant de le lancer, les questions seront sautées). Pour changer des valeurs plus tard (changer de gestionnaire, ajouter un dépôt), éditez `.setup` directement et relancez `./setup.sh`.
+- [ ] `devrig.toml` — `setup.sh` vous les demande de façon interactive au premier lancement (ou remplissez le fichier à la main avant de le lancer, les questions seront sautées). Pour changer des valeurs plus tard (changer de gestionnaire, ajouter un dépôt), éditez `devrig.toml` directement et relancez `./setup.sh`.
 - [ ] `AGENTS.md` — remplissez le tableau **Systems** (une ligne par dépôt : rôle, stack) et la section **Testing**. C'est la source de vérité que lit chaque skill.
 - [ ] `.agents/skills/code-review/references/` et `.agents/skills/write-doc/references/` — un fichier de référence par dépôt (copiez `_example-repo.md`). Les skills fonctionnent sans, mais elles sont bien plus affûtées avec.
-- [ ] Si `ISSUE_TRACKER` vaut `linear` : vérifiez le tableau des « Conventions » de `.agents/skills/create-ticket/SKILL.md` avec votre workspace Linear (équipes, projets, labels). S'il vaut `jira` ou `other` : adaptez les appels `mcp__linear__*` de `/start-task`, `/raise-pr` et `/create-ticket` aux outils MCP de votre gestionnaire (chaque skill le signale en haut de fichier).
+- [ ] Si `issue_tracker` vaut `linear` : vérifiez le tableau des « Conventions » de `.agents/skills/create-ticket/SKILL.md` avec votre workspace Linear (équipes, projets, labels). S'il vaut `jira` ou `other` : adaptez les appels `mcp__linear__*` de `/start-task`, `/raise-pr` et `/create-ticket` aux outils MCP de votre gestionnaire (chaque skill le signale en haut de fichier).
 - [ ] Supprimez ou ajustez ce qu'une option a désactivé (par ex. retirez les notes semble de `CLAUDE.md` si vous ne l'utilisez pas).
 
 ## Arborescence
 
 | Chemin | Description |
 |---|---|
-| `.setup` | Votre configuration projet — le seul fichier que lit chaque outil |
+| `devrig.toml` | Votre configuration projet — le seul fichier que lit chaque outil |
 | `setup.sh` | Script de bootstrap/mise à jour idempotent |
 | `AGENTS.md` | Source de vérité indépendante de l'agent (systèmes, règles de branches, conventions) |
 | `CLAUDE.md` | Spécificités Claude Code ; importe `AGENTS.md` |
@@ -139,7 +139,7 @@ Les nouveaux documents de conception, notes d'architecture, ADR et runbooks
 vont dans [`knowledge/`](../knowledge/) en markdown via PR — semble l'indexe,
 donc les agents trouvent le contexte de conception comme ils trouvent le code.
 Quand elle dépasse ce dépôt, publiez-la comme dépôt `<project>-knowledge`
-séparé, ajoutez-le à `REPOS` dans `.setup`, supprimez le dossier ici et
+séparé, ajoutez-le à `repos` dans `devrig.toml`, supprimez le dossier ici et
 mettez à jour le pointeur dans `AGENTS.md`.
 
 ## Dépannage
@@ -148,7 +148,7 @@ mettez à jour le pointeur dans `AGENTS.md`.
 - **Outils du gestionnaire de tickets absents dans Claude** — lancez `/mcp` et terminez le flux OAuth du serveur `linear` ou `atlassian`.
 - **rtk ne s'active pas** — redémarrez Claude Code ; vérifiez avec `rtk gain` que les commandes sont bien proxifiées.
 - **Un dépôt ne se met pas à jour** — `setup.sh` ne touche jamais un dépôt avec des changements locaux ou sur une branche de tâche ; il ne fait que du fast-forward sur des checkouts propres de la branche par défaut.
-- **setup.sh ne me demande rien, il échoue directement avec « edit .setup first »** — il n'interroge que s'il est attaché à un terminal interactif ; le lancer depuis un script ou une CI exige que `.setup` soit déjà rempli.
+- **setup.sh ne me demande rien, il échoue directement avec « edit devrig.toml first »** — il n'interroge que s'il est attaché à un terminal interactif ; le lancer depuis un script ou une CI exige que `devrig.toml` soit déjà rempli.
 - **Vous avez choisi Jira ou « autre »** — le serveur MCP `atlassian` (Jira) est configuré automatiquement, mais `/start-task`, `/raise-pr` et `/create-ticket` appellent toujours les outils MCP de Linear — `setup.sh` vous le rappellera à la fin de chaque exécution tant que vous n'aurez pas adapté ces skills.
 
 ## Contribuer

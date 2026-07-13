@@ -1,6 +1,6 @@
 # Per-repo doc references
 
-Write **one file per repo** in your `.setup` `REPOS` list, named `<repo>.md`.
+Write **one file per repo** in your `devrig.toml` `repos` list, named `<repo>.md`.
 The write-doc skill loads the files for repos a doc actually touches; if one
 is missing, it works from that repo's `AGENTS.md` and notes the gap.
 

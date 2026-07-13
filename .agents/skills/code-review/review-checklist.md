@@ -1,11 +1,11 @@
 # Review Checklist
 
 Use this checklist after you identify the correct repo and base branch.
-`<BASE>` means the `DEFAULT_BRANCH` from the workspace `.setup`.
+`<BASE>` means the `DEFAULT_BRANCH` from the workspace `devrig.toml`.
 
 ## 1. Establish Review Scope
 
-- Confirm the repository root (one of the repos in `.setup`'s `REPOS` list).
+- Confirm the repository root (one of the repos in `devrig.toml`'s `repos` list).
 - All repos base off `<BASE>`. Confirm the branch actually being diffed matches
   `<BASE>` (release branches like `staging`/`production`/`prod` are deploy
   targets, not review bases — do not diff against them by mistake).

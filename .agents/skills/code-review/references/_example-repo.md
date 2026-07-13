@@ -5,7 +5,7 @@ facts about that repo. Delete these comments. -->
 
 ## Repo facts
 
-- **Default branch:** <BASE from .setup>. <Note any release/deploy branches
+- **Default branch:** <BASE from devrig.toml>. <Note any release/deploy branches
   that must not be used as review bases.>
 - **Stack:** <framework, database, key services>
 - **Package manager:** <npm/yarn/pnpm/uv/...> <Note missing version pins if any.>

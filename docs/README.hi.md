@@ -22,7 +22,7 @@
 devrig एक *meta-repo* है: एक ऐसा फ़ोल्डर जिसमें आपके प्रोजेक्ट के सभी repos
 **और साथ में** उन पर काम करने वाली AI टूलिंग रहती है। यह repo केवल टूलिंग को
 version करता है — आपके प्रोजेक्ट repos को `setup.sh` अगल-बगल clone करता है और
-वे untracked रहते हैं। सब कुछ एक ही **`.setup`** फ़ाइल से कॉन्फ़िगर होता है।
+वे untracked रहते हैं। सब कुछ एक ही **`devrig.toml`** फ़ाइल से कॉन्फ़िगर होता है।
 
 | | आपको क्या मिलता है |
 |---|---|
@@ -43,12 +43,12 @@ version करता है — आपके प्रोजेक्ट repos �
    ./setup.sh
    ```
 
-   पहली बार चलाने पर, अगर `.setup` अभी भी example मान रखता है, तो यह आपसे
+   पहली बार चलाने पर, अगर `devrig.toml` अभी भी example मान रखता है, तो यह आपसे
    इंटरैक्टिव तरीके से पूछेगा: प्रोजेक्ट का नाम, GitHub org, क्लोन करने वाले
    repos (एक साथ कई paste करें, space या comma से अलग करके), issue tracker
    (**Linear**, **Jira**, या **other** — मेनू से चुनें), ticket prefix,
-   default branch, और feature toggles — फिर खुद `.setup` में लिख देगा। खुद
-   हाथ से एडिट करना पसंद है? स्क्रिप्ट चलाने से पहले `.setup` खुद भर दें, यह
+   default branch, और feature toggles — फिर खुद `devrig.toml` में लिख देगा। खुद
+   हाथ से एडिट करना पसंद है? स्क्रिप्ट चलाने से पहले `devrig.toml` खुद भर दें, यह
    प्रश्न छोड़ देगा।
 3. इसी फ़ोल्डर से `claude` चलाएं और काम शुरू करें।
 
@@ -66,11 +66,11 @@ version करता है — आपके प्रोजेक्ट repos �
 मैंने अभी devrig टेम्पलेट (https://github.com/lakpriya1s/devrig) से एक
 workspace बनाया है। इसे सेट करने में मेरी मदद करो:
 
-1. README.md, AGENTS.md और .setup पढ़कर workspace को समझो।
+1. README.md, AGENTS.md और devrig.toml पढ़कर workspace को समझो।
 2. मेरे साथ ./setup.sh चलाओ — यह मुझसे इंटरैक्टिव तरीके से मेरा प्रोजेक्ट
    नाम, GitHub org, repo सूची (मैं एक साथ कई paste कर सकता हूं), issue
    tracker (Linear, Jira, या other), ticket prefix, default branch, और
-   feature toggles पूछेगा, फिर खुद .setup लिखेगा। इसके सवाल मुझे बताओ और
+   feature toggles पूछेगा, फिर खुद devrig.toml लिखेगा। इसके सवाल मुझे बताओ और
    जवाब भरने में मदद करो।
 3. ./setup.sh जो भी समस्या बताए उसे ठीक करने में मदद करो।
 4. AGENTS.md की Systems टेबल भरो — हर repo की एक पंक्ति (क्या है, stack)।
@@ -89,11 +89,11 @@ workspace बनाया है। इसे सेट करने में �
 
 `setup.sh` idempotent है — सभी repos और tools अपडेट करने के लिए कभी भी दोबारा चलाएं। यह:
 
-0. **सिर्फ़ पहली बार**: अगर `.setup` अभी भी example मान रखता है, तो ऊपर की सारी जानकारी इंटरैक्टिव तरीके से पूछता है और `.setup` में लिखता है।
+0. **सिर्फ़ पहली बार**: अगर `devrig.toml` अभी भी example मान रखता है, तो ऊपर की सारी जानकारी इंटरैक्टिव तरीके से पूछता है और `devrig.toml` में लिखता है।
 1. Prerequisites जांचता है (`git`, authenticated `gh`; semble चालू हो तो `uv` इंस्टॉल करता है)।
-2. `REPOS` का हर repo अगल-बगल clone करता है (या साफ़ default-branch checkouts को fast-forward करता है), और उन्हें `.git/info/exclude` के ज़रिए इस repo की git status से बाहर रखता है।
+2. `repos` का हर repo अगल-बगल clone करता है (या साफ़ default-branch checkouts को fast-forward करता है), और उन्हें `.git/info/exclude` के ज़रिए इस repo की git status से बाहर रखता है।
 3. इस repo और हर cloned repo में protected-branch git hooks इंस्टॉल करता है।
-4. `.mcp.json` / `opencode.json` को आपके `.setup` toggles पर converge करता है — `ISSUE_TRACKER` के अनुसार `linear` या `atlassian` (Jira) सर्वर जोड़ता है, "other" चुना हो तो कोई नहीं — साथ ही हाथ से जोड़े गए MCP सर्वर सुरक्षित रहते हैं — और `.claude/settings.local.json` जनरेट करता है।
+4. `.mcp.json` / `opencode.json` को आपके `devrig.toml` toggles पर converge करता है — `issue_tracker` के अनुसार `linear` या `atlassian` (Jira) सर्वर जोड़ता है, "other" चुना हो तो कोई नहीं — साथ ही हाथ से जोड़े गए MCP सर्वर सुरक्षित रहते हैं — और `.claude/settings.local.json` जनरेट करता है।
 5. semble इंस्टॉल करता है और हर repo के लिए search index warm करता है।
 6. rtk इंस्टॉल करके उसका Claude Code hook रजिस्टर करता है।
 7. VS Code के लिए `<project>.code-workspace` जनरेट करता है (पहले से मौजूद हो तो छोड़ देता है, इसलिए आप उसे customize करके commit कर सकते हैं)।
@@ -102,17 +102,17 @@ workspace बनाया है। इसे सेट करने में �
 
 पहली बार `setup.sh` चलाने के बाद, अपना personalization commit करें:
 
-- [ ] `.setup` — पहली बार चलाने पर `setup.sh` ये मान इंटरैक्टिव तरीके से पूछता है (या चलाने से पहले हाथ से भर दें, यह सवाल छोड़ देगा)। बाद में बदलाव के लिए (tracker बदलना, repo जोड़ना), `.setup` सीधे एडिट करें और `./setup.sh` फिर से चलाएं।
+- [ ] `devrig.toml` — पहली बार चलाने पर `setup.sh` ये मान इंटरैक्टिव तरीके से पूछता है (या चलाने से पहले हाथ से भर दें, यह सवाल छोड़ देगा)। बाद में बदलाव के लिए (tracker बदलना, repo जोड़ना), `devrig.toml` सीधे एडिट करें और `./setup.sh` फिर से चलाएं।
 - [ ] `AGENTS.md` — **Systems** टेबल (हर repo की एक पंक्ति: क्या है, stack) और **Testing** सेक्शन भरें। यही वह source of truth है जिसे हर skill पढ़ती है।
 - [ ] `.agents/skills/code-review/references/` और `.agents/skills/write-doc/references/` — हर repo के लिए एक reference फ़ाइल (`_example-repo.md` कॉपी करें)। इनके बिना भी skills चलती हैं, पर इनके साथ कहीं तेज़ धार होती हैं।
-- [ ] अगर `ISSUE_TRACKER` `linear` है: `.agents/skills/create-ticket/SKILL.md` की "Conventions" टेबल को अपने Linear workspace (teams, projects, labels) से सत्यापित करें। अगर `jira` या `other` है: `/start-task`, `/raise-pr`, और `/create-ticket` की `mcp__linear__*` calls को अपने tracker के MCP tool names में बदलें (हर skill इसे शुरुआत में बताती है)।
+- [ ] अगर `issue_tracker` `linear` है: `.agents/skills/create-ticket/SKILL.md` की "Conventions" टेबल को अपने Linear workspace (teams, projects, labels) से सत्यापित करें। अगर `jira` या `other` है: `/start-task`, `/raise-pr`, और `/create-ticket` की `mcp__linear__*` calls को अपने tracker के MCP tool names में बदलें (हर skill इसे शुरुआत में बताती है)।
 - [ ] जो कुछ किसी toggle ने बंद किया है उसे हटाएँ या समायोजित करें (जैसे semble इस्तेमाल न करने पर `CLAUDE.md` से उसके नोट हटाएँ)।
 
 ## संरचना
 
 | पथ | विवरण |
 |---|---|
-| `.setup` | आपका प्रोजेक्ट कॉन्फ़िग — वह एक फ़ाइल जिसे हर टूल पढ़ता है |
+| `devrig.toml` | आपका प्रोजेक्ट कॉन्फ़िग — वह एक फ़ाइल जिसे हर टूल पढ़ता है |
 | `setup.sh` | Idempotent bootstrap/update स्क्रिप्ट |
 | `AGENTS.md` | Agent-agnostic source of truth (systems, branch नियम, conventions) |
 | `CLAUDE.md` | Claude Code विशेष; `AGENTS.md` import करता है |
@@ -135,8 +135,8 @@ symlink करें, और `CLAUDE.md` में सूचीबद्ध क�
 नए design docs, architecture notes, ADRs और runbooks markdown के रूप में PR के
 ज़रिए [`knowledge/`](../knowledge/) में जाते हैं — semble इसे index करता है,
 इसलिए agents design context उसी तरह खोजते हैं जैसे code। जब यह इस repo से बड़ा
-हो जाए, तो इसे अलग `<project>-knowledge` repo के रूप में push करें, `.setup`
-के `REPOS` में जोड़ें, यहाँ का फ़ोल्डर हटाएँ, और `AGENTS.md` का pointer अपडेट करें।
+हो जाए, तो इसे अलग `<project>-knowledge` repo के रूप में push करें, `devrig.toml`
+के `repos` में जोड़ें, यहाँ का फ़ोल्डर हटाएँ, और `AGENTS.md` का pointer अपडेट करें।
 
 ## समस्या-निवारण
 
@@ -144,7 +144,7 @@ symlink करें, और `CLAUDE.md` में सूचीबद्ध क�
 - **Claude में tracker tools नहीं दिखते** — `/mcp` चलाकर `linear` या `atlassian` सर्वर का OAuth पूरा करें।
 - **rtk काम नहीं कर रहा** — Claude Code restart करें; `rtk gain` से जांचें कि commands proxy हो रही हैं।
 - **कोई repo अपडेट नहीं होता** — `setup.sh` कभी उस repo को नहीं छूता जिसमें local बदलाव हों या जो task branch पर हो; वह केवल साफ़ default-branch checkouts को fast-forward करता है।
-- **setup.sh कुछ पूछता नहीं, सीधे "edit .setup first" कहकर रुक जाता है** — यह सिर्फ़ interactive terminal से जुड़े होने पर पूछता है; script या CI से चलाने पर `.setup` पहले से भरा होना ज़रूरी है।
+- **setup.sh कुछ पूछता नहीं, सीधे "edit devrig.toml first" कहकर रुक जाता है** — यह सिर्फ़ interactive terminal से जुड़े होने पर पूछता है; script या CI से चलाने पर `devrig.toml` पहले से भरा होना ज़रूरी है।
 - **Jira या "other" चुना** — `atlassian` (Jira) MCP सर्वर अपने आप कॉन्फ़िगर हो जाता है, पर `/start-task`, `/raise-pr`, और `/create-ticket` अभी भी Linear के MCP tool names कॉल करते हैं — जब तक आप इन skills को adapt नहीं करते, `setup.sh` हर बार चलने पर अंत में यह चेतावनी देगा।
 
 ## योगदान दें

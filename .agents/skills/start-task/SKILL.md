@@ -5,17 +5,18 @@ description: Start work on a Linear issue — verifies the issue exists, assigns
 
 # Start a Linear Issue
 
-> Project values (ticket prefix, default branch, repo list) come from `.setup`
-> and `AGENTS.md` at the workspace root — read them; never assume.
-> This skill's MCP calls (`mcp__linear__*`) assume `ISSUE_TRACKER="linear"` in
-> `.setup`. If your workspace uses Jira or another tracker instead, adapt these
-> calls to your tracker's MCP tool names before relying on this skill.
+> Project values (ticket prefix, default branch, repo list) come from
+> `devrig.toml` and `AGENTS.md` at the workspace root — read them; never assume.
+> This skill's MCP calls (`mcp__linear__*`) assume `issue_tracker = "linear"`
+> in `devrig.toml`. If your workspace uses Jira or another tracker instead,
+> adapt these calls to your tracker's MCP tool names before relying on this
+> skill.
 
 ## Usage
 
 `/start-task <linear-issue-id>`
 
-Example: `/start-task <TICKET_PREFIX>-123` (the prefix is `TICKET_PREFIX` in `.setup`)
+Example: `/start-task <TICKET_PREFIX>-123` (the prefix is `ticket_prefix` in `devrig.toml`)
 
 ## Instructions
 
@@ -89,7 +90,7 @@ Preserve any labels already on the issue. Tell the user (e.g. "Added label Featu
 
 ### 3. Sync the default branch
 
-Read `DEFAULT_BRANCH` from `.setup` at the workspace root — call it `<BASE>` below.
+Read `default_branch` from `devrig.toml` at the workspace root — call it `<BASE>` below.
 
 **Always work from `<BASE>`. Never use any other branch as the base — even if `<BASE>` is missing or the pull fails.**
 

@@ -5,12 +5,13 @@ description: Raise pull requests for the current task — detects which workspac
 
 # Raise Pull Requests
 
-> Project values (ticket prefix, default branch, repo list) come from `.setup`
-> and `AGENTS.md` at the workspace root — read them; never assume.
-> Below, `<BASE>` means the `DEFAULT_BRANCH` from `.setup`.
-> This skill's MCP calls (`mcp__linear__*`) assume `ISSUE_TRACKER="linear"` in
-> `.setup`. If your workspace uses Jira or another tracker instead, adapt these
-> calls to your tracker's MCP tool names before relying on this skill.
+> Project values (ticket prefix, default branch, repo list) come from
+> `devrig.toml` and `AGENTS.md` at the workspace root — read them; never assume.
+> Below, `<BASE>` means the `DEFAULT_BRANCH` from `devrig.toml`.
+> This skill's MCP calls (`mcp__linear__*`) assume `issue_tracker = "linear"`
+> in `devrig.toml`. If your workspace uses Jira or another tracker instead,
+> adapt these calls to your tracker's MCP tool names before relying on this
+> skill.
 
 ## Usage
 
@@ -36,10 +37,17 @@ and derive the type from the labels (`Feature` → `feature`, `Bug` → `bug`, `
 
 ## Step 2 — Detect the affected repos
 
-Check every system repo in the workspace root (the list comes from `.setup`):
+Check every system repo in the workspace root (the list comes from `devrig.toml`):
 
 ```bash
-source .setup
+eval "$(python3 -c '
+import tomllib
+cfg = tomllib.load(open("devrig.toml", "rb"))["project"]
+repos = " ".join(f"\x27{r}\x27" for r in cfg.get("repos", []))
+branch = cfg.get("default_branch", "dev")
+print(f"REPOS=({repos})")
+print(f"DEFAULT_BRANCH={branch!r}")
+')"
 for r in "${REPOS[@]}" knowledge; do
   [ -d "$r" ] || continue
   echo "== $r ($(git -C $r rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'workspace repo'))"
@@ -47,6 +55,8 @@ for r in "${REPOS[@]}" knowledge; do
   git -C $r log --oneline origin/$DEFAULT_BRANCH..HEAD 2>/dev/null
 done
 ```
+
+(Needs Python 3.11+'s `tomllib`, or the `tomli` package on older Python — same as `setup.sh`.)
 
 (`knowledge/` is part of the workspace meta repo unless it has been split into
 its own repo — check `AGENTS.md`. Workspace-meta changes, including
@@ -208,7 +218,7 @@ Populate each section from the commit messages, diff, and any context available.
 
 Resolve the base branch in this order:
 
-1. **`DEFAULT_BRANCH` from `.setup`** — the workspace-wide base for every repo.
+1. **`default_branch` from `devrig.toml`** — the workspace-wide base for every repo.
    Exception: hotfixes may target a production branch — ask the user first.
 
 2. **Remote detection** — if `<BASE>` doesn't exist on the remote, check which branches do:

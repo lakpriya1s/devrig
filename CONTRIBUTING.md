@@ -20,7 +20,7 @@ Thanks for helping make devrig better! All kinds of contributions are welcome.
 ## Ground rules
 
 1. **Keep it generic.** Nothing project-specific: no hardcoded repo names,
-   ticket prefixes, org names, or stacks. Values come from `.setup`;
+   ticket prefixes, org names, or stacks. Values come from `devrig.toml`;
    conventions come from `AGENTS.md`. If a skill needs a project fact, it
    reads it — never assumes it.
 2. **Keep `setup.sh` idempotent.** Every function must converge: re-running
@@ -28,9 +28,10 @@ Thanks for helping make devrig better! All kinds of contributions are welcome.
    `grep -q`, skip generation when the file exists, prefer "ensure present"
    over "add".
 3. **Mind the shells.** `setup.sh` is bash (and must work on macOS's bash
-   3.2 — guard empty arrays with `${ARR[@]+"${ARR[@]}"}`). The git hooks are
-   POSIX sh and must not source `.setup` (it contains bash arrays) — parse
-   values instead.
+   3.2 — guard empty arrays with `${ARR[@]+"${ARR[@]}"}`). `devrig.toml` is
+   real TOML, not shell — both `setup.sh` and the POSIX-sh git hooks read it
+   by shelling out to `python3`'s `tomllib` (falling back to the `tomli`
+   package on pre-3.11 Python), never by sourcing or regexing it.
 4. **Skills are agent-agnostic.** Canonical copies live in
    `.agents/skills/<name>/`; `.claude/skills/<name>` is a relative symlink.
    Never put content directly in `.claude/skills/`.
@@ -40,7 +41,8 @@ Thanks for helping make devrig better! All kinds of contributions are welcome.
 1. Fork, then branch from `main`: `<short-description>` or
    `fix/<short-description>`.
 2. Make your change. For `setup.sh` changes, smoke-test both paths:
-   the fail-fast guard (example `.setup`) and a real run with `REPOS=()`.
+   the fail-fast guard (example `devrig.toml`) and a real run with an empty
+   `repos` list.
 3. Check nothing project-specific leaked in: `grep -ri <your-project> .`
 4. Open a PR describing what changed and why — screenshots welcome for
    README changes.
@@ -49,4 +51,4 @@ Thanks for helping make devrig better! All kinds of contributions are welcome.
 
 Open a [GitHub issue](https://github.com/lakpriya1s/devrig/issues) with your
 OS, shell, and the full output of the failing command. For `setup.sh` issues,
-include your `.setup` (redact anything private).
+include your `devrig.toml` (redact anything private).

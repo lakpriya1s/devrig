@@ -22,7 +22,7 @@
 devrig is a *meta-repo*: one folder that contains every repo of your project
 **plus** the AI tooling used to develop across them. This repo versions only
 the tooling — your project repos are cloned side-by-side by `setup.sh` and
-stay untracked. Everything is configured from a single **`.setup`** file.
+stay untracked. Everything is configured from a single **`devrig.toml`** file.
 
 | | What you get |
 |---|---|
@@ -43,12 +43,12 @@ stay untracked. Everything is configured from a single **`.setup`** file.
    ./setup.sh
    ```
 
-   The first run notices `.setup` still has the shipped example values and
+   The first run notices `devrig.toml` still has the shipped example values and
    walks you through configuring it interactively: project name, GitHub org,
    the repos to clone (paste several at once, space- or comma-separated),
    your issue tracker (**Linear**, **Jira**, or **other** — pick one from a
    menu), ticket prefix, default branch, and feature toggles. It then writes
-   `.setup` for you. Prefer to hand-edit instead? Fill in `.setup` yourself
+   `devrig.toml` for you. Prefer to hand-edit instead? Fill in `devrig.toml` yourself
    before running the script and it'll skip the prompts.
 3. Run `claude` from this folder and start working.
 
@@ -65,11 +65,11 @@ agent (Claude Code, Cursor, opencode, …) and let it finish the setup with you:
 I just created a workspace from the devrig template
 (https://github.com/lakpriya1s/devrig). Help me set it up:
 
-1. Read README.md, AGENTS.md, and .setup to understand the workspace.
+1. Read README.md, AGENTS.md, and devrig.toml to understand the workspace.
 2. Run ./setup.sh with me — it will interactively ask for my project name,
    GitHub org, repo list (I may paste several at once), issue tracker
    (Linear, Jira, or other), ticket prefix, default branch, and feature
-   toggles, then write .setup itself. Relay its prompts to me and fill in
+   toggles, then write devrig.toml itself. Relay its prompts to me and fill in
    my answers.
 3. Help me fix anything ./setup.sh flags.
 4. Fill the Systems table in AGENTS.md — one row per repo (what it is, stack).
@@ -87,15 +87,15 @@ I just created a workspace from the devrig template
 
 `setup.sh` is idempotent — re-run it anytime to update every repo and tool. It:
 
-0. **First run only**: if `.setup` still has the shipped example values,
-   prompts for all of the values below interactively and writes `.setup`.
+0. **First run only**: if `devrig.toml` still has the shipped example values,
+   prompts for all of the values below interactively and writes `devrig.toml`.
 1. Checks prerequisites (`git`, `gh` authenticated; installs `uv` if semble is enabled).
-2. Clones every repo in `REPOS` side-by-side (or fast-forwards clean
+2. Clones every repo in `repos` side-by-side (or fast-forwards clean
    default-branch checkouts), and excludes them from this repo's git status
    via `.git/info/exclude`.
 3. Installs the protected-branch git hooks into this repo and every cloned repo.
-4. Converges `.mcp.json` / `opencode.json` to your `.setup` toggles — adding
-   the `linear` or `atlassian` (Jira) server per `ISSUE_TRACKER`, or neither
+4. Converges `.mcp.json` / `opencode.json` to your `devrig.toml` toggles — adding
+   the `linear` or `atlassian` (Jira) server per `issue_tracker`, or neither
    if you picked "other" — while preserving any MCP servers you added by
    hand, and generates `.claude/settings.local.json`.
 5. Installs semble and warms a search index per repo.
@@ -107,9 +107,9 @@ I just created a workspace from the devrig template
 
 After the first `setup.sh` run, make your personalization commit:
 
-- [ ] `.setup` — `setup.sh` prompts for these interactively on first run (or
+- [ ] `devrig.toml` — `setup.sh` prompts for these interactively on first run (or
       hand-edit the file before running it, and it'll skip the prompts). To
-      change values later — switch tracker, add a repo — edit `.setup`
+      change values later — switch tracker, add a repo — edit `devrig.toml`
       directly and re-run `./setup.sh`.
 - [ ] `AGENTS.md` — fill the **Systems** table (one row per repo: what it is,
       stack) and the **Testing** section. This is the source of truth every
@@ -118,7 +118,7 @@ After the first `setup.sh` run, make your personalization commit:
       `.agents/skills/write-doc/references/` — one reference file per repo
       (copy `_example-repo.md`). The skills work without them but get much
       sharper with them.
-- [ ] If `ISSUE_TRACKER` is `linear`: verify `.agents/skills/create-ticket/SKILL.md`'s
+- [ ] If `issue_tracker` is `linear`: verify `.agents/skills/create-ticket/SKILL.md`'s
       "Conventions" table against your Linear workspace (teams, projects, labels).
       If it's `jira` or `other`: adapt `/start-task`, `/raise-pr`, and
       `/create-ticket`'s `mcp__linear__*` calls to your tracker's MCP tool names
@@ -130,7 +130,7 @@ After the first `setup.sh` run, make your personalization commit:
 
 | Path | What it is |
 |---|---|
-| `.setup` | Your project config — the one file every tool reads |
+| `devrig.toml` | Your project config — the one file every tool reads |
 | `setup.sh` | Idempotent bootstrap/update script |
 | `AGENTS.md` | Agent-agnostic source of truth (systems, branch rules, conventions) |
 | `CLAUDE.md` | Claude Code specifics; imports `AGENTS.md` |
@@ -153,8 +153,8 @@ Short version: create `.agents/skills/<name>/SKILL.md`, symlink it into
 New design docs, architecture notes, ADRs, and runbooks go in
 [`knowledge/`](knowledge/) as markdown via PR — semble indexes it, so agents
 find design context the same way they find code. When it outgrows this repo,
-push it as a separate `<project>-knowledge` repo, add that to `REPOS` in
-`.setup`, delete the folder here, and update the pointer in `AGENTS.md`.
+push it as a separate `<project>-knowledge` repo, add that to `repos` in
+`devrig.toml`, delete the folder here, and update the pointer in `AGENTS.md`.
 
 ## Troubleshooting
 
@@ -167,9 +167,9 @@ push it as a separate `<project>-knowledge` repo, add that to `REPOS` in
 - **A repo won't update** — `setup.sh` never touches a repo that has local
   changes or is on a task branch; it only fast-forwards clean default-branch
   checkouts.
-- **setup.sh isn't prompting me, it just fails with "edit .setup first"** —
+- **setup.sh isn't prompting me, it just fails with "edit devrig.toml first"** —
   it only prompts when attached to an interactive terminal; running it from
-  a script or CI falls back to requiring `.setup` to already be filled in.
+  a script or CI falls back to requiring `devrig.toml` to already be filled in.
 - **Picked Jira or "other"** — the `atlassian` MCP server (Jira) is wired up
   automatically, but `/start-task`, `/raise-pr`, and `/create-ticket` still
   call Linear's MCP tool names — `setup.sh` will warn you about this at the

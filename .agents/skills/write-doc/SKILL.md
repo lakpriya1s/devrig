@@ -5,11 +5,11 @@ description: Write documentation for the workspace into the knowledge base, in f
 
 # Write Doc — Knowledge Base
 
-> Project values (ticket prefix, default branch, repo list) come from `.setup`
-> and `AGENTS.md` at the workspace root — read them; never assume.
-> The ticket-lookup step (`mcp__linear__get_issue`) assumes `ISSUE_TRACKER="linear"`
-> in `.setup`. If your workspace uses Jira or another tracker instead, adapt
-> that call to your tracker's MCP tool names.
+> Project values (ticket prefix, default branch, repo list) come from
+> `devrig.toml` and `AGENTS.md` at the workspace root — read them; never assume.
+> The ticket-lookup step (`mcp__linear__get_issue`) assumes
+> `issue_tracker = "linear"` in `devrig.toml`. If your workspace uses Jira or
+> another tracker instead, adapt that call to your tracker's MCP tool names.
 
 Generate documentation into **the knowledge base named in `AGENTS.md`**
 (default: `knowledge/` in the workspace root), following its conventions (see
