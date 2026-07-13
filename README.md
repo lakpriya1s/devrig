@@ -58,12 +58,14 @@ Prefer GitHub's UI, or want the repo created under your org from the start?
    ```
 
    The first run notices `devrig.toml` still has the shipped example values and
-   walks you through configuring it interactively: project name, GitHub org,
-   the repos to clone (paste several at once, space- or comma-separated),
-   your issue tracker (**Linear**, **Jira**, or **other** — pick one from a
-   menu), ticket prefix, default branch, and feature toggles. It then writes
-   `devrig.toml` for you. Prefer to hand-edit instead? Fill in `devrig.toml` yourself
-   before running the script and it'll skip the prompts.
+   walks you through configuring it interactively: project name, a one-line
+   description, GitHub org, the repos to clone (paste several at once, space-
+   or comma-separated), your issue tracker (**Linear**, **Jira**, or **other** —
+   pick one from a menu), ticket prefix, default branch, and feature toggles.
+   It then writes `devrig.toml` for you, removes devrig's own template files,
+   and generates a `README.md` for *your* project in their place. Prefer to
+   hand-edit instead? Fill in `devrig.toml` yourself before running the script
+   and it'll skip the prompts.
 3. Run `claude` from this folder and start working.
 
 Either way, inside Claude Code: run `/mcp` and authenticate the tracker server
@@ -83,9 +85,12 @@ I just created a workspace from the devrig template
 
 1. Read README.md and AGENTS.md to understand the workspace.
 2. Run ./setup.sh with me, relaying its interactive prompts (project name,
-   GitHub org, repos, issue tracker, ticket prefix, default branch, feature
-   toggles) so I can answer them — then help me fix anything it flags.
-3. Work through the README's "Customization checklist" section with me.
+   description, GitHub org, repos, issue tracker, ticket prefix, default
+   branch, feature toggles) so I can answer them — then help me fix anything
+   it flags. It personalizes the workspace: devrig's own template files are
+   removed and a README for my project is generated.
+3. Work through the generated README's "Customize this workspace" checklist
+   with me — fill AGENTS.md's Systems table and the per-repo skill references.
 4. Commit the personalization on a task branch and open a PR.
 ```
 
@@ -110,10 +115,11 @@ Help me go from this description to a working workspace:
    building — confirm with me before creating anything.
 3. Create each repo on GitHub under my org (ask which) and scaffold it
    with its framework's starter command, committing the initial code.
-4. Fill in devrig.toml (project name, org, the repos we just created,
-   issue tracker, ticket prefix, default branch — make sure it matches
-   what the new repos actually use) and run ./setup.sh.
-5. Fill in AGENTS.md's Systems table since you already know each stack.
+4. Fill in devrig.toml (project name, description, org, the repos we just
+   created, issue tracker, ticket prefix, default branch — make sure it
+   matches what the new repos actually use) and run ./setup.sh.
+5. Fill in AGENTS.md's Systems table and the generated README's "What's
+   inside" table since you already know each stack.
 ```
 
 ## What setup.sh does
@@ -122,31 +128,35 @@ Help me go from this description to a working workspace:
 
 0. **First run only**: if `devrig.toml` still has the shipped example values,
    prompts for all of the values below interactively and writes `devrig.toml`.
-1. Checks prerequisites (`git`, `gh` authenticated; installs `uv` if semble is enabled).
-2. Clones every repo in `repos` side-by-side (or fast-forwards clean
+1. **Personalizes the workspace**: removes devrig's own template files
+   (`docs/`, `assets/`, `CITATION.cff`, `CONTRIBUTING.md`, `LICENSE`) and
+   generates a `README.md` for *your* project from `devrig.toml`. Skipped
+   inside the devrig repo itself, and a README you've edited is never
+   overwritten.
+2. Checks prerequisites (`git`, `gh` authenticated; installs `uv` if semble is enabled).
+3. Clones every repo in `repos` side-by-side (or fast-forwards clean
    default-branch checkouts), and excludes them from this repo's git status
    via `.git/info/exclude`.
-3. Installs the protected-branch git hooks into this repo and every cloned repo.
-4. Converges `.mcp.json` / `opencode.json` to your `devrig.toml` toggles — adding
+4. Installs the protected-branch git hooks into this repo and every cloned repo.
+5. Converges `.mcp.json` / `opencode.json` to your `devrig.toml` toggles — adding
    the `linear` or `atlassian` (Jira) server per `issue_tracker`, or neither
    if you picked "other" — while preserving any MCP servers you added by
    hand, and generates `.claude/settings.local.json`.
-5. Installs semble and warms a search index per repo.
-6. Installs rtk and registers its Claude Code hook.
-7. Generates `<project>.code-workspace` for VS Code (skipped if you already
+6. Installs semble and warms a search index per repo.
+7. Installs rtk and registers its Claude Code hook.
+8. Generates `<project>.code-workspace` for VS Code (skipped if you already
    have one, so it's safe to customize and commit).
 
 ## Customization checklist
 
-After the first `setup.sh` run, make your personalization commit:
+`setup.sh` handles the mechanical personalization itself (writes `devrig.toml`,
+removes devrig's template files, generates your project README). What's left is
+the knowledge only you have — the generated README's **"Customize this
+workspace"** section carries this same checklist into your workspace:
 
-- [ ] `devrig.toml` — `setup.sh` prompts for these interactively on first run (or
-      hand-edit the file before running it, and it'll skip the prompts). To
-      change values later — switch tracker, add a repo — edit `devrig.toml`
-      directly and re-run `./setup.sh`.
 - [ ] `AGENTS.md` — fill the **Systems** table (one row per repo: what it is,
       stack) and the **Testing** section. This is the source of truth every
-      skill reads.
+      skill reads. Keep the generated README's "What's inside" table in sync.
 - [ ] `.agents/skills/code-review/references/` and
       `.agents/skills/write-doc/references/` — one reference file per repo
       (copy `_example-repo.md`). The skills work without them but get much
@@ -158,6 +168,9 @@ After the first `setup.sh` run, make your personalization commit:
       (each skill flags this at the top).
 - [ ] Delete or adjust anything a toggle disabled (e.g. remove the semble
       notes from `CLAUDE.md` if you don't use it).
+
+To change config values later — switch tracker, add a repo — edit `devrig.toml`
+directly and re-run `./setup.sh`.
 
 ## Layout
 

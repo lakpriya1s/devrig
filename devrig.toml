@@ -5,6 +5,7 @@
 
 [project]
 name = "acme"                # short lowercase name; names the generated .code-workspace file
+description = ""              # one-line project description, used in the generated README
 github_org = "AcmeInc"        # GitHub org (or username) that owns your repos
 repos = ["acme-api", "acme-web"]  # repos setup.sh clones side-by-side; use [] for none
 issue_tracker = "linear"      # linear | jira | other — controls which tracker MCP server gets wired up

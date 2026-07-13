@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 #
 # devrig workspace setup.
-# Clones your project repos (from devrig.toml) and installs the AI tooling
-# (semble, rtk, MCP config, protected-branch git hooks).
+# Personalizes a freshly scaffolded workspace (removes devrig's own template
+# files, generates a project README), clones your project repos (from
+# devrig.toml), and installs the AI tooling (semble, rtk, MCP config,
+# protected-branch git hooks).
 # Idempotent — safe to re-run at any time to update everything.
 #
 set -euo pipefail
@@ -61,6 +63,7 @@ write_config_file() {
   done
 
   DEVRIG_PROJECT_NAME="$PROJECT_NAME" \
+  DEVRIG_PROJECT_DESCRIPTION="$PROJECT_DESCRIPTION" \
   DEVRIG_GITHUB_ORG="$GITHUB_ORG" \
   DEVRIG_REPOS="$repos_joined" \
   DEVRIG_ISSUE_TRACKER="$ISSUE_TRACKER" \
@@ -87,6 +90,7 @@ content = f'''# devrig configuration
 
 [project]
 name = "{esc(env["DEVRIG_PROJECT_NAME"])}"              # short lowercase name; names the generated .code-workspace file
+description = "{esc(env["DEVRIG_PROJECT_DESCRIPTION"])}"  # one-line project description, used in the generated README
 github_org = "{esc(env["DEVRIG_GITHUB_ORG"])}"          # GitHub org (or username) that owns your repos
 repos = [{repos_toml}]  # repos setup.sh clones side-by-side; use [] for none
 issue_tracker = "{esc(env["DEVRIG_ISSUE_TRACKER"])}"    # linear | jira | other — controls which tracker MCP server gets wired up
@@ -113,6 +117,9 @@ prompt_for_config() {
 
   read -r -p "Project name (short, lowercase — names the .code-workspace file) [${PROJECT_NAME}]: " ans
   PROJECT_NAME="${ans:-$PROJECT_NAME}"
+
+  read -r -p "One-line project description (used in the generated README, blank to skip): " ans
+  PROJECT_DESCRIPTION="${ans:-$PROJECT_DESCRIPTION}"
 
   read -r -p "GitHub org or username that owns your repos [${GITHUB_ORG}]: " ans
   GITHUB_ORG="${ans:-$GITHUB_ORG}"
@@ -187,6 +194,7 @@ def sh_bool(b):
     return "true" if b else "false"
 
 print(f"PROJECT_NAME={sh_str(project.get('name', 'acme'))}")
+print(f"PROJECT_DESCRIPTION={sh_str(project.get('description', ''))}")
 print(f"GITHUB_ORG={sh_str(project.get('github_org', 'AcmeInc'))}")
 repos = project.get("repos", [])
 print("REPOS=(" + " ".join(sh_str(r) for r in repos) + ")")
@@ -208,6 +216,231 @@ PY
       fail "'devrig.toml' still contains the shipped example values. Edit devrig.toml with your project's values, then re-run ./setup.sh — or run ./setup.sh in an interactive terminal to be prompted instead."
     fi
   fi
+}
+
+# --- 1b. Personalize the workspace ---------------------------------------------
+# A freshly scaffolded workspace still carries the devrig template's own repo
+# files: the devrig-branded README, logo assets, translated docs, and the
+# CITATION/CONTRIBUTING/LICENSE that belong to the template project — not to
+# your workspace. Remove them and generate a project README from devrig.toml
+# so the workspace is yours from the first run. Idempotent: a README you have
+# edited (or replaced) is never touched again. Skipped inside the devrig
+# template repo itself so contributors can run setup.sh without deleting its
+# own files.
+
+TEMPLATE_ONLY_FILES=(docs assets CITATION.cff CONTRIBUTING.md LICENSE)
+
+is_devrig_template_repo() {
+  git -C "$WORKSPACE_DIR" remote get-url origin 2>/dev/null \
+    | grep -qiE 'github\.com[:/]lakpriya1s/devrig(\.git)?/?$'
+}
+
+personalize_workspace() {
+  if is_devrig_template_repo; then
+    info "This is the devrig template repo itself — skipping personalization."
+    return 0
+  fi
+
+  local removed="" f
+  for f in "${TEMPLATE_ONLY_FILES[@]}"; do
+    if [ -e "$WORKSPACE_DIR/$f" ]; then
+      rm -rf "$WORKSPACE_DIR/$f"
+      removed="$removed $f"
+    fi
+  done
+  [ -n "$removed" ] && info "Removed devrig template files:$removed"
+
+  # Replace the README only while it's still the shipped template one.
+  if [ ! -f "$WORKSPACE_DIR/README.md" ] || grep -q '^## What is devrig?' "$WORKSPACE_DIR/README.md"; then
+    info "Generating project README.md from devrig.toml..."
+    write_readme
+  fi
+}
+
+# Writes a project-specific README.md from the devrig.toml values. Same
+# env-var-to-python pattern as write_config_file.
+write_readme() {
+  local origin_url
+  origin_url="$(git -C "$WORKSPACE_DIR" remote get-url origin 2>/dev/null || true)"
+
+  local repos_joined="" r
+  for r in ${REPOS[@]+"${REPOS[@]}"}; do
+    repos_joined="${repos_joined}${r}"$'\n'
+  done
+
+  DEVRIG_PROJECT_NAME="$PROJECT_NAME" \
+  DEVRIG_PROJECT_DESCRIPTION="$PROJECT_DESCRIPTION" \
+  DEVRIG_GITHUB_ORG="$GITHUB_ORG" \
+  DEVRIG_REPOS="$repos_joined" \
+  DEVRIG_ISSUE_TRACKER="$ISSUE_TRACKER" \
+  DEVRIG_DEFAULT_BRANCH="$DEFAULT_BRANCH" \
+  DEVRIG_ENABLE_SEMBLE="$ENABLE_SEMBLE" \
+  DEVRIG_ENABLE_RTK="$ENABLE_RTK" \
+  DEVRIG_ENABLE_GIT_HOOKS="$ENABLE_GIT_HOOKS" \
+  DEVRIG_ORIGIN_URL="$origin_url" \
+  python3 - "$WORKSPACE_DIR/README.md" <<'PY'
+import os, sys
+
+path = sys.argv[1]
+env = os.environ
+name = env["DEVRIG_PROJECT_NAME"]
+desc = env.get("DEVRIG_PROJECT_DESCRIPTION", "").strip()
+repos = [r for r in env.get("DEVRIG_REPOS", "").split("\n") if r]
+tracker = env["DEVRIG_ISSUE_TRACKER"]
+branch = env["DEVRIG_DEFAULT_BRANCH"]
+semble = env["DEVRIG_ENABLE_SEMBLE"] == "true"
+rtk = env["DEVRIG_ENABLE_RTK"] == "true"
+hooks = env["DEVRIG_ENABLE_GIT_HOOKS"] == "true"
+origin = env.get("DEVRIG_ORIGIN_URL", "").strip()
+
+tracker_server = {"linear": "linear", "jira": "atlassian"}.get(tracker)
+
+out = [f"# {name} AI Workspace", ""]
+if desc:
+    out += [desc, ""]
+out += [
+    "Multi-repo development workspace — one folder that contains every system",
+    "repo plus the AI tooling (workflow skills, semantic code search, token",
+    "optimization) used to develop across them. Configured from `devrig.toml`.",
+    "",
+    "## Getting started",
+    "",
+    "```bash",
+]
+if origin:
+    tail = origin.rstrip("/").split("/")[-1]
+    if tail.endswith(".git"):
+        tail = tail[: -len(".git")]
+    out += [f"git clone {origin}", f"cd {tail}"]
+out += [
+    "./setup.sh",
+    "```",
+    "",
+    "`setup.sh` is idempotent — re-run it anytime to update every repo and tool. It:",
+    "",
+    "1. Checks prerequisites (`git`, `gh` authenticated).",
+    "2. Clones all system repos side-by-side into this folder (or fast-forwards",
+    "   them if already cloned and clean).",
+]
+step = 3
+if hooks:
+    out += [f"{step}. Installs protected-branch git hooks into every repo."]
+    step += 1
+if semble:
+    out += [
+        f"{step}. Installs [semble](https://github.com/MinishLab/semble) — semantic code",
+        "   search that agents use via MCP instead of grep-and-read.",
+    ]
+    step += 1
+if rtk:
+    out += [
+        f"{step}. Installs [rtk](https://github.com/rtk-ai/rtk) and registers its Claude Code",
+        "   hook — compresses command output to cut token usage.",
+    ]
+    step += 1
+out += ["", "Then:", "", "1. Run `claude` from this folder."]
+step = 2
+if tracker_server:
+    out += [f"{step}. Run `/mcp` and authenticate the **{tracker_server}** server (one-time OAuth)."]
+    step += 1
+if rtk:
+    out += [f"{step}. Restart Claude Code once so the rtk hook takes effect."]
+    step += 1
+out += [
+    "",
+    "## Open in VS Code",
+    "",
+    "```bash",
+    f"code {name}.code-workspace",
+    "```",
+    "",
+    "This multi-root workspace shows every system repo plus the workspace meta",
+    "files in one window — the Source Control panel tracks all repos at once.",
+    "",
+    "## What's inside",
+    "",
+    "| Repo | System |",
+    "|---|---|",
+]
+for repo in repos:
+    out += [f"| `{repo}/` | <!-- TODO: what it is, stack --> |"]
+out += [
+    "| `knowledge/` | Knowledge base — design docs, ADRs, runbooks |",
+    "",
+    f"All system repos default to the **`{branch}`** branch. The cloned repos are",
+    "gitignored here — this repo only versions the workspace tooling itself",
+    "(`setup.sh`, `devrig.toml`, `AGENTS.md`, `CLAUDE.md`, `.agents/skills/`).",
+    "",
+    "The systems table in [`AGENTS.md`](AGENTS.md) is the source of truth for what",
+    "each repo is — keep both in sync when repos change.",
+    "",
+    "## Knowledge base",
+    "",
+    "New design docs, architecture notes, and ADRs go in [`knowledge/`](knowledge/)",
+]
+if semble:
+    out += [
+        "as markdown via PR — semble indexes it, so agents find design context the",
+        "same way they find code.",
+    ]
+else:
+    out += ["as markdown via PR."]
+out += [
+    "",
+    "## Customize this workspace",
+    "",
+    "One-time steps after the first `setup.sh` run:",
+    "",
+    "- [ ] Fill the **Systems** table above and in `AGENTS.md` (one row per repo:",
+    "      what it is, stack), plus `AGENTS.md`'s **Testing** section.",
+    "- [ ] Add one reference file per repo in `.agents/skills/code-review/references/`",
+    "      and `.agents/skills/write-doc/references/` (copy `_example-repo.md`).",
+]
+if tracker == "linear":
+    out += [
+        "- [ ] Verify `.agents/skills/create-ticket/SKILL.md`'s \"Conventions\" table",
+        "      against your Linear workspace (teams, projects, labels).",
+    ]
+else:
+    out += [
+        "- [ ] Adapt `/start-task`, `/raise-pr`, and `/create-ticket`'s `mcp__linear__*`",
+        "      calls to your tracker's MCP tool names (each skill flags this at the top).",
+    ]
+out += [
+    "- [ ] To change any value later (switch tracker, add a repo), edit `devrig.toml`",
+    "      and re-run `./setup.sh`.",
+    "",
+    "## Troubleshooting",
+    "",
+]
+if semble:
+    out += [
+        "- **`semble` or `uv` not found after setup** — open a new shell (PATH was",
+        "  updated) and re-run `./setup.sh`.",
+    ]
+if tracker_server:
+    out += [
+        f"- **Tracker tools missing in Claude** — run `/mcp` and complete the OAuth flow",
+        f"  for the `{tracker_server}` server.",
+    ]
+if rtk:
+    out += [
+        "- **rtk not kicking in** — restart Claude Code; verify with `rtk gain` that",
+        "  commands are being proxied.",
+    ]
+out += [
+    "- **A repo won't update** — `setup.sh` never touches a repo that has local",
+    "  changes or is on a task branch; it only fast-forwards clean default-branch",
+    "  checkouts.",
+    "",
+    "---",
+    "",
+    "<sub>Scaffolded with [devrig](https://github.com/lakpriya1s/devrig).</sub>",
+]
+
+with open(path, "w") as f:
+    f.write("\n".join(out) + "\n")
+PY
 }
 
 check_basic_prereqs() {
@@ -538,6 +771,7 @@ EOF
 main() {
   check_basic_prereqs
   load_config
+  personalize_workspace
   check_semble_prereqs
   clone_repos
   exclude_repos

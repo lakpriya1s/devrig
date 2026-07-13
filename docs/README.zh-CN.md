@@ -51,7 +51,7 @@ npx create-devrig my-project
    ./setup.sh
    ```
 
-   第一次运行时，脚本发现 `devrig.toml` 还是示例值，会以交互方式引导你完成配置：项目名、GitHub 组织、要克隆的仓库（可一次粘贴多个，用空格或逗号分隔）、工单系统（**Linear**、**Jira** 或**其他** — 从菜单中选择）、工单前缀、默认分支、功能开关，然后自动写入 `devrig.toml`。想手动编辑？在运行脚本前自行填好 `devrig.toml`，它就会跳过交互提示。
+   第一次运行时，脚本发现 `devrig.toml` 还是示例值，会以交互方式引导你完成配置：项目名、一句话描述、GitHub 组织、要克隆的仓库（可一次粘贴多个，用空格或逗号分隔）、工单系统（**Linear**、**Jira** 或**其他** — 从菜单中选择）、工单前缀、默认分支、功能开关，然后自动写入 `devrig.toml`、删除 devrig 自身的模板文件，并为*你的*项目生成一份 `README.md` 取而代之。想手动编辑？在运行脚本前自行填好 `devrig.toml`，它就会跳过交互提示。
 3. 在此文件夹中运行 `claude`，开始工作。
 
 无论哪种方式，之后在 Claude Code 内：运行 `/mcp` 并为配置好的工单系统服务器（**linear** 或 **atlassian**）完成一次性 OAuth 认证（**semble** 无需认证），并重启一次 Claude Code 使 rtk 钩子生效。
@@ -68,9 +68,12 @@ I just created a workspace from the devrig template
 
 1. Read README.md and AGENTS.md to understand the workspace.
 2. Run ./setup.sh with me, relaying its interactive prompts (project name,
-   GitHub org, repos, issue tracker, ticket prefix, default branch, feature
-   toggles) so I can answer them — then help me fix anything it flags.
-3. Work through the README's "Customization checklist" section with me.
+   description, GitHub org, repos, issue tracker, ticket prefix, default
+   branch, feature toggles) so I can answer them — then help me fix anything
+   it flags. It personalizes the workspace: devrig's own template files are
+   removed and a README for my project is generated.
+3. Work through the generated README's "Customize this workspace" checklist
+   with me — fill AGENTS.md's Systems table and the per-repo skill references.
 4. Commit the personalization on a task branch and open a PR.
 ```
 
@@ -93,10 +96,11 @@ Help me go from this description to a working workspace:
    building — confirm with me before creating anything.
 3. Create each repo on GitHub under my org (ask which) and scaffold it
    with its framework's starter command, committing the initial code.
-4. Fill in devrig.toml (project name, org, the repos we just created,
-   issue tracker, ticket prefix, default branch — make sure it matches
-   what the new repos actually use) and run ./setup.sh.
-5. Fill in AGENTS.md's Systems table since you already know each stack.
+4. Fill in devrig.toml (project name, description, org, the repos we just
+   created, issue tracker, ticket prefix, default branch — make sure it
+   matches what the new repos actually use) and run ./setup.sh.
+5. Fill in AGENTS.md's Systems table and the generated README's "What's
+   inside" table since you already know each stack.
 ```
 
 ## setup.sh 做了什么
@@ -104,23 +108,31 @@ Help me go from this description to a working workspace:
 `setup.sh` 是幂等的 — 随时重新运行即可更新所有仓库和工具。它会：
 
 0. **仅首次运行**：如果 `devrig.toml` 还是示例值，交互式询问上述所有配置并写入 `devrig.toml`。
-1. 检查前置条件（`git`、已认证的 `gh`；若启用 semble 则安装 `uv`）。
-2. 并排克隆 `repos` 中的每个仓库（或对干净的默认分支检出做 fast-forward），并通过 `.git/info/exclude` 将它们从本仓库的 git 状态中排除。
-3. 为本仓库和每个克隆的仓库安装受保护分支的 git 钩子。
-4. 使 `.mcp.json` / `opencode.json` 收敛到你的 `devrig.toml` 开关 — 根据 `issue_tracker` 添加 `linear` 或 `atlassian`（Jira）服务器，选择"其他"则两者都不添加 — 同时保留你手动添加的 MCP 服务器，并生成 `.claude/settings.local.json`。
-5. 安装 semble，并为每个仓库预热搜索索引。
-6. 安装 rtk 并注册其 Claude Code 钩子。
-7. 生成 VS Code 的 `<project>.code-workspace`（若已存在则跳过，可放心自定义和提交）。
+1. **个性化工作区**：删除 devrig 自身的模板文件（`docs/`、`assets/`、
+   `CITATION.cff`、`CONTRIBUTING.md`、`LICENSE`），并根据 `devrig.toml` 为
+   *你的*项目生成一份 `README.md`。在 devrig 模板仓库自身内会跳过此步骤，
+   你编辑过的 README 也永远不会被覆盖。
+2. 检查前置条件（`git`、已认证的 `gh`；若启用 semble 则安装 `uv`）。
+3. 并排克隆 `repos` 中的每个仓库（或对干净的默认分支检出做 fast-forward），并通过 `.git/info/exclude` 将它们从本仓库的 git 状态中排除。
+4. 为本仓库和每个克隆的仓库安装受保护分支的 git 钩子。
+5. 使 `.mcp.json` / `opencode.json` 收敛到你的 `devrig.toml` 开关 — 根据 `issue_tracker` 添加 `linear` 或 `atlassian`（Jira）服务器，选择"其他"则两者都不添加 — 同时保留你手动添加的 MCP 服务器，并生成 `.claude/settings.local.json`。
+6. 安装 semble，并为每个仓库预热搜索索引。
+7. 安装 rtk 并注册其 Claude Code 钩子。
+8. 生成 VS Code 的 `<project>.code-workspace`（若已存在则跳过，可放心自定义和提交）。
 
 ## 自定义清单
 
-首次运行 `setup.sh` 后，完成你的个性化提交：
+机械式的个性化工作 `setup.sh` 自己就会完成（写入 `devrig.toml`、删除 devrig
+模板文件、生成你的项目 README）。剩下的是只有你才知道的信息 — 生成的 README
+中 **"Customize this workspace"** 一节把同样的清单带到了你的工作区里：
 
-- [ ] `devrig.toml` — `setup.sh` 首次运行时会交互式询问这些值（或在运行前手动填好，它会跳过提示）。之后想更改（换工单系统、加仓库），直接编辑 `devrig.toml` 再重新运行 `./setup.sh`。
-- [ ] `AGENTS.md` — 填写 **Systems** 表（每个仓库一行：它是什么、技术栈）和 **Testing** 部分。这是所有技能读取的唯一信息源。
+- [ ] `AGENTS.md` — 填写 **Systems** 表（每个仓库一行：它是什么、技术栈）和 **Testing** 部分。这是所有技能读取的唯一信息源。同时保持生成的 README 中 "What's inside" 表的同步。
 - [ ] `.agents/skills/code-review/references/` 和 `.agents/skills/write-doc/references/` — 每个仓库一个参考文件（复制 `_example-repo.md`）。没有它们技能也能用，但有了会锐利得多。
 - [ ] 若 `issue_tracker` 是 `linear`：对照你的 Linear 工作区核实 `.agents/skills/create-ticket/SKILL.md` 的"约定"表（团队、项目、标签）。若是 `jira` 或 `other`：把 `/start-task`、`/raise-pr`、`/create-ticket` 中的 `mcp__linear__*` 调用适配为你的工单系统的 MCP 工具名（每个技能文件顶部都有提示）。
 - [ ] 删除或调整被开关禁用的内容（例如不用 semble 就从 `CLAUDE.md` 删除相关说明）。
+
+之后想更改配置值（换工单系统、加仓库），直接编辑 `devrig.toml` 再重新运行
+`./setup.sh`。
 
 ## 目录结构
 
