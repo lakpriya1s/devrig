@@ -7,7 +7,8 @@
 
 **Um rig para todos os seus repos — template de workspace multi-repo pronto para IA.**
 
-[![Use this template](https://img.shields.io/badge/Use%20this-template-22D3EE?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
+[![npx create-devrig](https://img.shields.io/npm/v/create-devrig?label=npx%20create-devrig&color=22D3EE&style=flat-square)](https://www.npmjs.com/package/create-devrig)
+[![Use this template](https://img.shields.io/badge/Use%20this-template-3B82F6?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3B82F6?style=flat-square)](../LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-8B5CF6?style=flat-square)](../CONTRIBUTING.md)
 
@@ -37,6 +38,16 @@ de um único arquivo **`devrig.toml`**.
 
 ## Início rápido
 
+O jeito mais rápido — um único comando, sem clonar:
+
+```bash
+npx create-devrig my-project
+```
+
+O [`create-devrig`](https://github.com/lakpriya1s/create-devrig) busca este template (sem histórico de git), inicializa um repositório git novo em `my-project/`, e já lança o assistente de configuração interativo — o mesmo assistente descrito abaixo, só que sem o passo separado de clonar.
+
+Prefere a interface do GitHub, ou quer que o repo já seja criado dentro da sua organização?
+
 1. Clique em **[Use this template](https://github.com/lakpriya1s/devrig/generate)** para criar `sua-org/seu-projeto-workspace`.
 2. Clone e execute:
 
@@ -53,7 +64,7 @@ de um único arquivo **`devrig.toml`**.
    `devrig.toml` antes de rodar o script e ele pula as perguntas.
 3. Execute `claude` a partir desta pasta e comece a trabalhar.
 
-Depois, dentro do Claude Code: execute `/mcp` e autentique o servidor do
+De qualquer forma, dentro do Claude Code: execute `/mcp` e autentique o servidor do
 gestor de tickets configurado (**linear** ou **atlassian**; OAuth único —
 **semble** não precisa de autenticação), e reinicie o Claude Code uma vez
 para o hook do rtk entrar em vigor.

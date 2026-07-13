@@ -7,7 +7,8 @@
 
 **Un solo rig para todos tus repos — plantilla de workspace multi-repo lista para IA.**
 
-[![Use this template](https://img.shields.io/badge/Use%20this-template-22D3EE?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
+[![npx create-devrig](https://img.shields.io/npm/v/create-devrig?label=npx%20create-devrig&color=22D3EE&style=flat-square)](https://www.npmjs.com/package/create-devrig)
+[![Use this template](https://img.shields.io/badge/Use%20this-template-3B82F6?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3B82F6?style=flat-square)](../LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-8B5CF6?style=flat-square)](../CONTRIBUTING.md)
 
@@ -37,6 +38,16 @@ Este repo solo versiona las herramientas — tus repos de proyecto los clona
 
 ## Inicio rápido
 
+La forma más rápida — un solo comando, sin clonar:
+
+```bash
+npx create-devrig my-project
+```
+
+[`create-devrig`](https://github.com/lakpriya1s/create-devrig) descarga esta plantilla (sin historial de git), inicializa un repositorio git nuevo en `my-project/`, y lanza el asistente de configuración interactivo de inmediato — el mismo asistente descrito abajo, solo que sin el paso de clonar por separado.
+
+¿Prefieres la interfaz de GitHub, o quieres que el repo se cree bajo tu organización desde el principio?
+
 1. Haz clic en **[Use this template](https://github.com/lakpriya1s/devrig/generate)** para crear `tu-org/tu-proyecto-workspace`.
 2. Clónalo y ejecuta:
 
@@ -53,7 +64,7 @@ Este repo solo versiona las herramientas — tus repos de proyecto los clona
    `devrig.toml` antes de ejecutar el script y se saltará las preguntas.
 3. Ejecuta `claude` desde esta carpeta y empieza a trabajar.
 
-Después, dentro de Claude Code: ejecuta `/mcp` y autentica el servidor del
+De cualquier forma, dentro de Claude Code: ejecuta `/mcp` y autentica el servidor del
 gestor de tickets configurado (**linear** o **atlassian**; OAuth una sola vez
 — **semble** no necesita autenticación), y reinicia Claude Code una vez para
 que el hook de rtk surta efecto.

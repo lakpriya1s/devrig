@@ -7,7 +7,8 @@
 
 **Un seul rig pour tous vos dépôts — un template de workspace multi-dépôts prêt pour l'IA.**
 
-[![Use this template](https://img.shields.io/badge/Use%20this-template-22D3EE?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
+[![npx create-devrig](https://img.shields.io/npm/v/create-devrig?label=npx%20create-devrig&color=22D3EE&style=flat-square)](https://www.npmjs.com/package/create-devrig)
+[![Use this template](https://img.shields.io/badge/Use%20this-template-3B82F6?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3B82F6?style=flat-square)](../LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-8B5CF6?style=flat-square)](../CONTRIBUTING.md)
 
@@ -37,6 +38,16 @@ fichier **`devrig.toml`**.
 
 ## Démarrage rapide
 
+Le plus rapide — une seule commande, sans cloner :
+
+```bash
+npx create-devrig my-project
+```
+
+[`create-devrig`](https://github.com/lakpriya1s/create-devrig) récupère ce template (sans historique git), initialise un nouveau dépôt git dans `my-project/`, et lance immédiatement l'assistant de configuration interactif — le même assistant que ci-dessous, sans l'étape de clonage séparée.
+
+Vous préférez l'interface de GitHub, ou voulez que le dépôt soit créé directement sous votre organisation ?
+
 1. Cliquez sur **[Use this template](https://github.com/lakpriya1s/devrig/generate)** pour créer `votre-org/votre-projet-workspace`.
 2. Clonez-le et exécutez :
 
@@ -54,7 +65,7 @@ fichier **`devrig.toml`**.
    le script et les questions seront sautées.
 3. Lancez `claude` depuis ce dossier et commencez à travailler.
 
-Ensuite, dans Claude Code : lancez `/mcp` et authentifiez le serveur du
+Dans les deux cas, dans Claude Code : lancez `/mcp` et authentifiez le serveur du
 gestionnaire de tickets configuré (**linear** ou **atlassian** ; OAuth
 unique — **semble** ne nécessite aucune authentification), puis redémarrez
 Claude Code une fois pour que le hook rtk prenne effet.

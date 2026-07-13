@@ -7,7 +7,8 @@
 
 **すべてのリポジトリをひとつの rig で — AI 対応のマルチリポジトリ開発ワークスペーステンプレート。**
 
-[![Use this template](https://img.shields.io/badge/Use%20this-template-22D3EE?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
+[![npx create-devrig](https://img.shields.io/npm/v/create-devrig?label=npx%20create-devrig&color=22D3EE&style=flat-square)](https://www.npmjs.com/package/create-devrig)
+[![Use this template](https://img.shields.io/badge/Use%20this-template-3B82F6?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3B82F6?style=flat-square)](../LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-8B5CF6?style=flat-square)](../CONTRIBUTING.md)
 
@@ -37,6 +38,16 @@ devrig は*メタリポジトリ*です。プロジェクトのすべてのリ�
 
 ## クイックスタート
 
+最速の方法 — クローン不要、コマンド一つだけ：
+
+```bash
+npx create-devrig my-project
+```
+
+[`create-devrig`](https://github.com/lakpriya1s/create-devrig) がこのテンプレートを取得し（git履歴なし）、`my-project/` に新しい git リポジトリを初期化して、すぐに対話式セットアップウィザードを起動します — 下記と同じウィザードですが、別途クローンする手順が不要です。
+
+GitHub の UI を使いたい、または最初から自分の org 配下にリポジトリを作りたい場合は：
+
 1. **[Use this template](https://github.com/lakpriya1s/devrig/generate)** をクリックして `your-org/your-project-workspace` を作成。
 2. クローンして実行：
 
@@ -53,7 +64,7 @@ devrig は*メタリポジトリ*です。プロジェクトのすべてのリ�
    スキップされます。
 3. このフォルダから `claude` を起動して作業開始。
 
-その後、Claude Code 内で `/mcp` を実行して設定された課題管理サーバー
+いずれの方法でも、その後 Claude Code 内で `/mcp` を実行して設定された課題管理サーバー
 （**linear** または **atlassian**）を認証し（初回のみの OAuth。**semble** は
 認証不要）、rtk フックを有効にするため Claude Code を一度再起動してください。
 

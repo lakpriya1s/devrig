@@ -7,7 +7,8 @@
 
 **आपके सभी repos के लिए एक rig — AI-तैयार, मल्टी-रेपो डेव वर्कस्पेस टेम्पलेट।**
 
-[![Use this template](https://img.shields.io/badge/Use%20this-template-22D3EE?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
+[![npx create-devrig](https://img.shields.io/npm/v/create-devrig?label=npx%20create-devrig&color=22D3EE&style=flat-square)](https://www.npmjs.com/package/create-devrig)
+[![Use this template](https://img.shields.io/badge/Use%20this-template-3B82F6?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3B82F6?style=flat-square)](../LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-8B5CF6?style=flat-square)](../CONTRIBUTING.md)
 
@@ -36,6 +37,16 @@ version करता है — आपके प्रोजेक्ट repos �
 
 ## जल्दी शुरू करें
 
+सबसे तेज़ तरीका — एक कमांड, clone करने की ज़रूरत नहीं:
+
+```bash
+npx create-devrig my-project
+```
+
+[`create-devrig`](https://github.com/lakpriya1s/create-devrig) इस टेम्पलेट को fetch करता है (git history के बिना), `my-project/` में एक नया git repo शुरू करता है, और तुरंत इंटरैक्टिव setup wizard चलाता है — बिल्कुल वही wizard जो नीचे बताया गया है, बस अलग से clone करने का चरण नहीं।
+
+GitHub का UI पसंद है, या चाहते हैं कि repo शुरू से आपके org के अंदर बने?
+
 1. **[Use this template](https://github.com/lakpriya1s/devrig/generate)** पर क्लिक करके `your-org/your-project-workspace` बनाएं।
 2. Clone करें और चलाएं:
 
@@ -52,7 +63,7 @@ version करता है — आपके प्रोजेक्ट repos �
    प्रश्न छोड़ देगा।
 3. इसी फ़ोल्डर से `claude` चलाएं और काम शुरू करें।
 
-फिर Claude Code के अंदर: `/mcp` चलाकर जो भी tracker सर्वर कॉन्फ़िगर हुआ है
+किसी भी तरीके से, फिर Claude Code के अंदर: `/mcp` चलाकर जो भी tracker सर्वर कॉन्फ़िगर हुआ है
 उसे (**linear** या **atlassian**) authenticate करें (एक बार का OAuth;
 **semble** को auth की ज़रूरत नहीं), और rtk hook लागू होने के लिए Claude Code
 एक बार restart करें।

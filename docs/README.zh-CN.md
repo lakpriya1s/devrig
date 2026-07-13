@@ -7,7 +7,8 @@
 
 **一个 rig 管理所有仓库 — 面向 AI 的多仓库开发工作区模板。**
 
-[![Use this template](https://img.shields.io/badge/Use%20this-template-22D3EE?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
+[![npx create-devrig](https://img.shields.io/npm/v/create-devrig?label=npx%20create-devrig&color=22D3EE&style=flat-square)](https://www.npmjs.com/package/create-devrig)
+[![Use this template](https://img.shields.io/badge/Use%20this-template-3B82F6?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3B82F6?style=flat-square)](../LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-8B5CF6?style=flat-square)](../CONTRIBUTING.md)
 
@@ -33,6 +34,16 @@ devrig 是一个*元仓库（meta-repo）*：一个文件夹容纳项目的所�
 
 ## 快速开始
 
+最快的方式 — 一条命令，无需克隆：
+
+```bash
+npx create-devrig my-project
+```
+
+[`create-devrig`](https://github.com/lakpriya1s/create-devrig) 会拉取本模板（不含 git 历史）、在 `my-project/` 中初始化全新的 git 仓库，并立即启动交互式安装向导 — 与下面描述的向导相同，只是省去了单独的克隆步骤。
+
+更喜欢 GitHub 的界面，或想从一开始就在你的组织下创建仓库？
+
 1. 点击 **[Use this template](https://github.com/lakpriya1s/devrig/generate)** 创建 `your-org/your-project-workspace`。
 2. 克隆后运行：
 
@@ -43,7 +54,7 @@ devrig 是一个*元仓库（meta-repo）*：一个文件夹容纳项目的所�
    第一次运行时，脚本发现 `devrig.toml` 还是示例值，会以交互方式引导你完成配置：项目名、GitHub 组织、要克隆的仓库（可一次粘贴多个，用空格或逗号分隔）、工单系统（**Linear**、**Jira** 或**其他** — 从菜单中选择）、工单前缀、默认分支、功能开关，然后自动写入 `devrig.toml`。想手动编辑？在运行脚本前自行填好 `devrig.toml`，它就会跳过交互提示。
 3. 在此文件夹中运行 `claude`，开始工作。
 
-然后在 Claude Code 内：运行 `/mcp` 并为配置好的工单系统服务器（**linear** 或 **atlassian**）完成一次性 OAuth 认证（**semble** 无需认证），并重启一次 Claude Code 使 rtk 钩子生效。
+无论哪种方式，之后在 Claude Code 内：运行 `/mcp` 并为配置好的工单系统服务器（**linear** 或 **atlassian**）完成一次性 OAuth 认证（**semble** 无需认证），并重启一次 Claude Code 使 rtk 钩子生效。
 
 ## 🤖 用你的 AI agent 启动项目
 

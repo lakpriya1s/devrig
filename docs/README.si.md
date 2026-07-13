@@ -7,7 +7,8 @@
 
 **ඔබගේ සියලුම repos සඳහා එක rig එකක් — AI සූදානම්, multi-repo dev workspace template එකක්.**
 
-[![Use this template](https://img.shields.io/badge/Use%20this-template-22D3EE?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
+[![npx create-devrig](https://img.shields.io/npm/v/create-devrig?label=npx%20create-devrig&color=22D3EE&style=flat-square)](https://www.npmjs.com/package/create-devrig)
+[![Use this template](https://img.shields.io/badge/Use%20this-template-3B82F6?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3B82F6?style=flat-square)](../LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-8B5CF6?style=flat-square)](../CONTRIBUTING.md)
 
@@ -37,6 +38,16 @@ devrig යනු *meta-repo* එකකි: ඔබේ ව්‍යාපෘති
 
 ## ඉක්මන් ආරම්භය
 
+වේගවත්ම ක්‍රමය — clone කිරීමකින් තොරව, එක command එකක්:
+
+```bash
+npx create-devrig my-project
+```
+
+[`create-devrig`](https://github.com/lakpriya1s/create-devrig) මෙම template එක fetch කර (git history නොමැතිව), `my-project/` හි නව git repo එකක් initialize කර, වහාම interactive setup wizard එක ධාවනය කරයි — පහත විස්තර කර ඇති wizard එකමයි, වෙනම clone පියවරක් නැත.
+
+GitHub UI එක කැමතිද, නැතහොත් ආරම්භයේ සිටම repo එක ඔබේ org යටතේ සාදන්න කැමතිද?
+
 1. **[Use this template](https://github.com/lakpriya1s/devrig/generate)** ක්ලික් කර `your-org/your-project-workspace` සාදන්න.
 2. Clone කර ධාවනය කරන්න:
 
@@ -53,7 +64,7 @@ devrig යනු *meta-repo* එකකි: ඔබේ ව්‍යාපෘති
    ප්‍රශ්න මඟ හරියි.
 3. මෙම folder එකෙන් `claude` ධාවනය කර වැඩ අරඹන්න.
 
-ඉන්පසු Claude Code තුළ: `/mcp` ධාවනය කර වින්‍යාස කළ tracker server එක
+කුමන ක්‍රමය භාවිත කළත්, ඉන්පසු Claude Code තුළ: `/mcp` ධාවනය කර වින්‍යාස කළ tracker server එක
 (**linear** හෝ **atlassian**) authenticate කරන්න (එක් වරක් OAuth; **semble**
 ට auth අවශ්‍ය නැත), rtk hook ක්‍රියාත්මක වීමට Claude Code එක වරක් restart
 කරන්න.

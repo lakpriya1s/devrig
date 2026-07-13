@@ -7,7 +7,8 @@
 
 **One rig for all your repos — an AI-ready, multi-repo dev workspace template.**
 
-[![Use this template](https://img.shields.io/badge/Use%20this-template-22D3EE?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
+[![npx create-devrig](https://img.shields.io/npm/v/create-devrig?label=npx%20create-devrig&color=22D3EE&style=flat-square)](https://www.npmjs.com/package/create-devrig)
+[![Use this template](https://img.shields.io/badge/Use%20this-template-3B82F6?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3B82F6?style=flat-square)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-8B5CF6?style=flat-square)](CONTRIBUTING.md)
 
@@ -36,6 +37,19 @@ stay untracked. Everything is configured from a single **`devrig.toml`** file.
 
 ## Quick start
 
+The fastest way — one command, no cloning:
+
+```bash
+npx create-devrig my-project
+```
+
+[`create-devrig`](https://github.com/lakpriya1s/create-devrig) fetches this
+template (no git history), initializes a fresh git repo in `my-project/`, and
+launches the interactive setup wizard immediately — same wizard described
+below, just without the separate clone step.
+
+Prefer GitHub's UI, or want the repo created under your org from the start?
+
 1. Click **[Use this template](https://github.com/lakpriya1s/devrig/generate)** to create `your-org/your-project-workspace`.
 2. Clone it and run:
 
@@ -52,8 +66,8 @@ stay untracked. Everything is configured from a single **`devrig.toml`** file.
    before running the script and it'll skip the prompts.
 3. Run `claude` from this folder and start working.
 
-Then, inside Claude Code: run `/mcp` and authenticate the tracker server that
-was configured (**linear** or **atlassian**; one-time OAuth — **semble**
+Either way, inside Claude Code: run `/mcp` and authenticate the tracker server
+that was configured (**linear** or **atlassian**; one-time OAuth — **semble**
 needs no auth), and restart Claude Code once so the rtk hook takes effect.
 
 ## 🤖 Kickstart with your AI agent

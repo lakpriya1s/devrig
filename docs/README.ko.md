@@ -7,7 +7,8 @@
 
 **모든 저장소를 하나의 rig로 — AI 지원 멀티 레포 개발 워크스페이스 템플릿.**
 
-[![Use this template](https://img.shields.io/badge/Use%20this-template-22D3EE?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
+[![npx create-devrig](https://img.shields.io/npm/v/create-devrig?label=npx%20create-devrig&color=22D3EE&style=flat-square)](https://www.npmjs.com/package/create-devrig)
+[![Use this template](https://img.shields.io/badge/Use%20this-template-3B82F6?style=flat-square&logo=github&logoColor=white)](https://github.com/lakpriya1s/devrig/generate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3B82F6?style=flat-square)](../LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-8B5CF6?style=flat-square)](../CONTRIBUTING.md)
 
@@ -36,6 +37,16 @@ devrig는 *메타 레포*입니다. 프로젝트의 모든 저장소와 그 사�
 
 ## 빠른 시작
 
+가장 빠른 방법 — 클론 없이 명령어 하나로:
+
+```bash
+npx create-devrig my-project
+```
+
+[`create-devrig`](https://github.com/lakpriya1s/create-devrig)가 이 템플릿을 가져오고(git 기록 없이), `my-project/`에 새 git 저장소를 초기화한 뒤, 바로 대화식 설정 마법사를 실행합니다 — 아래 설명과 동일한 마법사이며, 별도의 클론 단계만 없습니다.
+
+GitHub UI를 선호하거나 처음부터 자신의 org 아래에 저장소를 만들고 싶다면:
+
 1. **[Use this template](https://github.com/lakpriya1s/devrig/generate)**을 클릭해 `your-org/your-project-workspace`를 만듭니다.
 2. 클론한 뒤 실행:
 
@@ -51,7 +62,7 @@ devrig는 *메타 레포*입니다. 프로젝트의 모든 저장소와 그 사�
    전에 `devrig.toml`을 미리 채워 두면 프롬프트를 건너뜁니다.
 3. 이 폴더에서 `claude`를 실행하고 작업을 시작하세요.
 
-그다음 Claude Code 안에서 `/mcp`를 실행해 설정된 트래커 서버(**linear**
+어느 방법이든, 그다음 Claude Code 안에서 `/mcp`를 실행해 설정된 트래커 서버(**linear**
 또는 **atlassian**)를 인증하고(1회성 OAuth, **semble**은 인증 불필요),
 rtk 훅이 적용되도록 Claude Code를 한 번 재시작하세요.
 
