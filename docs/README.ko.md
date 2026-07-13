@@ -55,11 +55,13 @@ GitHub UI를 선호하거나 처음부터 자신의 org 아래에 저장소를 �
    ```
 
    처음 실행 시 `devrig.toml`이 아직 예시 값 그대로면 대화식으로 안내합니다:
-   프로젝트 이름, GitHub org, 클론할 저장소(공백이나 쉼표로 구분해 여러
-   개를 한 번에 붙여넣기 가능), 이슈 트래커(**Linear**, **Jira**, 또는
+   프로젝트 이름, 한 줄 설명, GitHub org, 클론할 저장소(공백이나 쉼표로 구분해
+   여러 개를 한 번에 붙여넣기 가능), 이슈 트래커(**Linear**, **Jira**, 또는
    **기타** — 메뉴에서 선택), 티켓 접두사, 기본 브랜치, 기능 토글을 물어본
-   뒤 `devrig.toml`을 대신 작성해 줍니다. 직접 편집하고 싶다면 스크립트 실행
-   전에 `devrig.toml`을 미리 채워 두면 프롬프트를 건너뜁니다.
+   뒤 `devrig.toml`을 대신 작성해 주고, devrig 자체의 템플릿 파일을 제거한
+   뒤 그 자리에 *당신의* 프로젝트를 위한 `README.md`를 생성합니다. 직접
+   편집하고 싶다면 스크립트 실행 전에 `devrig.toml`을 미리 채워 두면
+   프롬프트를 건너뜁니다.
 3. 이 폴더에서 `claude`를 실행하고 작업을 시작하세요.
 
 어느 방법이든, 그다음 Claude Code 안에서 `/mcp`를 실행해 설정된 트래커 서버(**linear**
@@ -80,9 +82,12 @@ I just created a workspace from the devrig template
 
 1. Read README.md and AGENTS.md to understand the workspace.
 2. Run ./setup.sh with me, relaying its interactive prompts (project name,
-   GitHub org, repos, issue tracker, ticket prefix, default branch, feature
-   toggles) so I can answer them — then help me fix anything it flags.
-3. Work through the README's "Customization checklist" section with me.
+   description, GitHub org, repos, issue tracker, ticket prefix, default
+   branch, feature toggles) so I can answer them — then help me fix anything
+   it flags. It personalizes the workspace: devrig's own template files are
+   removed and a README for my project is generated.
+3. Work through the generated README's "Customize this workspace" checklist
+   with me — fill AGENTS.md's Systems table and the per-repo skill references.
 4. Commit the personalization on a task branch and open a PR.
 ```
 
@@ -105,10 +110,11 @@ Help me go from this description to a working workspace:
    building — confirm with me before creating anything.
 3. Create each repo on GitHub under my org (ask which) and scaffold it
    with its framework's starter command, committing the initial code.
-4. Fill in devrig.toml (project name, org, the repos we just created,
-   issue tracker, ticket prefix, default branch — make sure it matches
-   what the new repos actually use) and run ./setup.sh.
-5. Fill in AGENTS.md's Systems table since you already know each stack.
+4. Fill in devrig.toml (project name, description, org, the repos we just
+   created, issue tracker, ticket prefix, default branch — make sure it
+   matches what the new repos actually use) and run ./setup.sh.
+5. Fill in AGENTS.md's Systems table and the generated README's "What's
+   inside" table since you already know each stack.
 ```
 
 ## setup.sh가 하는 일
@@ -116,23 +122,32 @@ Help me go from this description to a working workspace:
 `setup.sh`는 멱등합니다 — 언제든 다시 실행해 모든 저장소와 도구를 업데이트할 수 있습니다:
 
 0. **최초 1회만**: `devrig.toml`이 아직 예시 값이면 위 모든 항목을 대화식으로 묻고 `devrig.toml`에 기록.
-1. 사전 요구사항 확인(`git`, 인증된 `gh`; semble 활성화 시 `uv` 설치).
-2. `repos`의 각 저장소를 나란히 클론(깨끗한 기본 브랜치 체크아웃은 fast-forward)하고, `.git/info/exclude`로 이 저장소의 git status에서 제외.
-3. 이 저장소와 클론된 모든 저장소에 보호 브랜치 git 훅 설치.
-4. `.mcp.json` / `opencode.json`을 `devrig.toml` 토글에 수렴 — `issue_tracker`에 따라 `linear` 또는 `atlassian`(Jira) 서버를 추가하고, "기타"를 선택했다면 아무것도 추가하지 않음 — 직접 추가한 MCP 서버는 보존하고 `.claude/settings.local.json` 생성.
-5. semble을 설치하고 저장소별 검색 인덱스를 예열.
-6. rtk를 설치하고 Claude Code 훅 등록.
-7. VS Code용 `<project>.code-workspace` 생성(이미 있으면 건너뛰므로 커스터마이즈해 커밋해도 안전).
+1. **워크스페이스를 개인화**: devrig 자체의 템플릿 파일(`docs/`, `assets/`,
+   `CITATION.cff`, `CONTRIBUTING.md`, `LICENSE`)을 제거하고 `devrig.toml`을
+   기반으로 *당신의* 프로젝트를 위한 `README.md`를 생성. devrig 저장소 자체
+   안에서는 건너뛰며, 직접 수정한 README는 절대 덮어쓰지 않음.
+2. 사전 요구사항 확인(`git`, 인증된 `gh`; semble 활성화 시 `uv` 설치).
+3. `repos`의 각 저장소를 나란히 클론(깨끗한 기본 브랜치 체크아웃은 fast-forward)하고, `.git/info/exclude`로 이 저장소의 git status에서 제외.
+4. 이 저장소와 클론된 모든 저장소에 보호 브랜치 git 훅 설치.
+5. `.mcp.json` / `opencode.json`을 `devrig.toml` 토글에 수렴 — `issue_tracker`에 따라 `linear` 또는 `atlassian`(Jira) 서버를 추가하고, "기타"를 선택했다면 아무것도 추가하지 않음 — 직접 추가한 MCP 서버는 보존하고 `.claude/settings.local.json` 생성.
+6. semble을 설치하고 저장소별 검색 인덱스를 예열.
+7. rtk를 설치하고 Claude Code 훅 등록.
+8. VS Code용 `<project>.code-workspace` 생성(이미 있으면 건너뛰므로 커스터마이즈해 커밋해도 안전).
 
 ## 커스터마이징 체크리스트
 
-첫 `setup.sh` 실행 후 개인화 커밋을 만드세요:
+`setup.sh`가 기계적인 개인화는 알아서 처리합니다(`devrig.toml` 작성, devrig
+템플릿 파일 제거, 프로젝트 README 생성). 남은 것은 오직 당신만 아는 정보입니다
+— 생성된 README의 **"Customize this workspace"** 섹션이 이 체크리스트를
+그대로 워크스페이스로 옮겨 옵니다:
 
-- [ ] `devrig.toml` — 첫 실행 시 `setup.sh`가 대화식으로 물어봅니다(또는 실행 전에 직접 채워 두면 프롬프트를 건너뜁니다). 나중에 값을 바꾸려면(트래커 변경, 저장소 추가 등) `devrig.toml`을 직접 편집하고 `./setup.sh`를 다시 실행하세요.
-- [ ] `AGENTS.md` — **Systems** 표(저장소마다 한 줄: 역할, 스택)와 **Testing** 섹션 작성. 모든 스킬이 읽는 단일 정보원입니다.
+- [ ] `AGENTS.md` — **Systems** 표(저장소마다 한 줄: 역할, 스택)와 **Testing** 섹션 작성. 모든 스킬이 읽는 단일 정보원입니다. 생성된 README의 "What's inside" 표도 함께 최신 상태로 유지하세요.
 - [ ] `.agents/skills/code-review/references/`와 `.agents/skills/write-doc/references/` — 저장소마다 레퍼런스 파일 하나(`_example-repo.md` 복사). 없어도 동작하지만 있으면 훨씬 정밀해집니다.
 - [ ] `issue_tracker`가 `linear`라면: `.agents/skills/create-ticket/SKILL.md`의 "컨벤션" 표를 Linear 워크스페이스(팀, 프로젝트, 라벨)와 대조하세요. `jira`나 `other`라면: `/start-task`, `/raise-pr`, `/create-ticket`의 `mcp__linear__*` 호출을 트래커의 MCP 도구 이름에 맞게 조정하세요(각 스킬 상단에 안내가 있습니다).
 - [ ] 토글로 비활성화한 것들 삭제·조정(예: semble을 쓰지 않으면 `CLAUDE.md`에서 관련 내용 제거).
+
+나중에 설정 값을 바꾸려면(트래커 변경, 저장소 추가 등) `devrig.toml`을 직접
+편집하고 `./setup.sh`를 다시 실행하세요.
 
 ## 구조
 

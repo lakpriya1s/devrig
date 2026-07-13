@@ -56,12 +56,13 @@ GitHub の UI を使いたい、または最初から自分の org 配下にリ�
    ```
 
    初回実行時、`devrig.toml` がまだサンプル値のままなら、対話式に設定を案内します:
-   プロジェクト名、GitHub org、クローンするリポジトリ（スペースまたはカンマ
-   区切りで複数まとめて貼り付け可）、課題管理ツール（**Linear**、**Jira**、
+   プロジェクト名、一行の説明、GitHub org、クローンするリポジトリ（スペースまたは
+   カンマ区切りで複数まとめて貼り付け可）、課題管理ツール（**Linear**、**Jira**、
    **その他** からメニューで選択）、チケットプレフィックス、デフォルト
-   ブランチ、機能トグル。回答は自動的に `devrig.toml` に書き込まれます。手動編集
-   したい場合は、スクリプト実行前に `devrig.toml` を自分で埋めておけばプロンプトは
-   スキップされます。
+   ブランチ、機能トグル。回答は自動的に `devrig.toml` に書き込まれ、devrig 自身の
+   テンプレートファイルが削除され、代わりに*あなたの*プロジェクト用の
+   `README.md` が生成されます。手動編集したい場合は、スクリプト実行前に
+   `devrig.toml` を自分で埋めておけばプロンプトはスキップされます。
 3. このフォルダから `claude` を起動して作業開始。
 
 いずれの方法でも、その後 Claude Code 内で `/mcp` を実行して設定された課題管理サーバー
@@ -82,9 +83,12 @@ I just created a workspace from the devrig template
 
 1. Read README.md and AGENTS.md to understand the workspace.
 2. Run ./setup.sh with me, relaying its interactive prompts (project name,
-   GitHub org, repos, issue tracker, ticket prefix, default branch, feature
-   toggles) so I can answer them — then help me fix anything it flags.
-3. Work through the README's "Customization checklist" section with me.
+   description, GitHub org, repos, issue tracker, ticket prefix, default
+   branch, feature toggles) so I can answer them — then help me fix anything
+   it flags. It personalizes the workspace: devrig's own template files are
+   removed and a README for my project is generated.
+3. Work through the generated README's "Customize this workspace" checklist
+   with me — fill AGENTS.md's Systems table and the per-repo skill references.
 4. Commit the personalization on a task branch and open a PR.
 ```
 
@@ -107,10 +111,11 @@ Help me go from this description to a working workspace:
    building — confirm with me before creating anything.
 3. Create each repo on GitHub under my org (ask which) and scaffold it
    with its framework's starter command, committing the initial code.
-4. Fill in devrig.toml (project name, org, the repos we just created,
-   issue tracker, ticket prefix, default branch — make sure it matches
-   what the new repos actually use) and run ./setup.sh.
-5. Fill in AGENTS.md's Systems table since you already know each stack.
+4. Fill in devrig.toml (project name, description, org, the repos we just
+   created, issue tracker, ticket prefix, default branch — make sure it
+   matches what the new repos actually use) and run ./setup.sh.
+5. Fill in AGENTS.md's Systems table and the generated README's "What's
+   inside" table since you already know each stack.
 ```
 
 ## setup.sh がやること
@@ -118,23 +123,34 @@ Help me go from this description to a working workspace:
 `setup.sh` は冪等です — いつでも再実行してすべてのリポジトリとツールを更新できます。内容：
 
 0. **初回のみ**：`devrig.toml` がまだサンプル値のままなら、上記すべてを対話式に質問し `devrig.toml` に書き込む。
-1. 前提条件を確認（`git`、認証済み `gh`。semble 有効時は `uv` をインストール）。
-2. `repos` の各リポジトリを横並びにクローン（クリーンなデフォルトブランチのチェックアウトは fast-forward）し、`.git/info/exclude` 経由でこのリポジトリの git status から除外。
-3. このリポジトリとクローンした各リポジトリに保護ブランチ用 git フックをインストール。
-4. `.mcp.json` / `opencode.json` を `devrig.toml` のトグルに収束させる — `issue_tracker` に応じて `linear` または `atlassian`（Jira）サーバーを追加し、「その他」なら追加しない。手動追加した MCP サーバーは保持し、`.claude/settings.local.json` を生成。
-5. semble をインストールし、リポジトリごとに検索インデックスをウォームアップ。
-6. rtk をインストールし、Claude Code フックを登録。
-7. VS Code 用の `<project>.code-workspace` を生成（既存の場合はスキップされるため、カスタマイズしてコミットしても安全）。
+1. **ワークスペースをパーソナライズ**：devrig 自身のテンプレートファイル
+   （`docs/`、`assets/`、`CITATION.cff`、`CONTRIBUTING.md`、`LICENSE`）を削除し、
+   `devrig.toml` から*あなたの*プロジェクト用の `README.md` を生成。devrig
+   リポジトリ自体の中では実行されず、編集済みの README が上書きされることも
+   ありません。
+2. 前提条件を確認（`git`、認証済み `gh`。semble 有効時は `uv` をインストール）。
+3. `repos` の各リポジトリを横並びにクローン（クリーンなデフォルトブランチのチェックアウトは fast-forward）し、`.git/info/exclude` 経由でこのリポジトリの git status から除外。
+4. このリポジトリとクローンした各リポジトリに保護ブランチ用 git フックをインストール。
+5. `.mcp.json` / `opencode.json` を `devrig.toml` のトグルに収束させる — `issue_tracker` に応じて `linear` または `atlassian`（Jira）サーバーを追加し、「その他」なら追加しない。手動追加した MCP サーバーは保持し、`.claude/settings.local.json` を生成。
+6. semble をインストールし、リポジトリごとに検索インデックスをウォームアップ。
+7. rtk をインストールし、Claude Code フックを登録。
+8. VS Code 用の `<project>.code-workspace` を生成（既存の場合はスキップされるため、カスタマイズしてコミットしても安全）。
 
 ## カスタマイズチェックリスト
 
-初回の `setup.sh` 実行後、パーソナライズをコミットしましょう：
+`setup.sh` は機械的なパーソナライズ自体を行います（`devrig.toml` の書き込み、
+devrig のテンプレートファイルの削除、プロジェクト README の生成）。残るのは
+あなただけが知っている情報です — 生成された README の
+**「Customize this workspace」** セクションが、このチェックリストをそのまま
+あなたのワークスペースに引き継ぎます：
 
-- [ ] `devrig.toml` — 初回実行時に `setup.sh` が対話式に質問します（または実行前に手動で埋めておけばプロンプトはスキップされます）。後で値を変える場合（トラッカーの変更、リポジトリの追加など）は `devrig.toml` を直接編集して `./setup.sh` を再実行してください。
-- [ ] `AGENTS.md` — **Systems** テーブル（リポジトリごとに1行：役割、スタック）と **Testing** セクションを記入。すべてのスキルが読む唯一の情報源です。
+- [ ] `AGENTS.md` — **Systems** テーブル（リポジトリごとに1行：役割、スタック）と **Testing** セクションを記入。すべてのスキルが読む唯一の情報源です。生成された README の「What's inside」テーブルも合わせて更新してください。
 - [ ] `.agents/skills/code-review/references/` と `.agents/skills/write-doc/references/` — リポジトリごとにリファレンスファイルを1つ（`_example-repo.md` をコピー）。なくても動きますが、あると格段に鋭くなります。
 - [ ] `issue_tracker` が `linear` の場合：`.agents/skills/create-ticket/SKILL.md` の「規約」テーブルを自分の Linear ワークスペース（チーム、プロジェクト、ラベル）と照合。`jira` や `other` の場合：`/start-task`、`/raise-pr`、`/create-ticket` の `mcp__linear__*` 呼び出しを自分のトラッカーの MCP ツール名に合わせて調整（各スキルの冒頭にその旨の記載あり）。
 - [ ] トグルで無効化したものを削除・調整（例：semble を使わないなら `CLAUDE.md` から関連記述を削除）。
+
+後で設定値を変える場合（トラッカーの変更、リポジトリの追加など）は
+`devrig.toml` を直接編集して `./setup.sh` を再実行してください。
 
 ## 構成
 
