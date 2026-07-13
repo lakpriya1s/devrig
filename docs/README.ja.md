@@ -75,25 +75,15 @@ GitHub の UI を使いたい、または最初から自分の org 配下にリ�
 セットアップを一緒に仕上げましょう：
 
 ```text
-devrig テンプレート（https://github.com/lakpriya1s/devrig）からワークスペースを
-作成しました。セットアップを手伝ってください：
+I just created a workspace from the devrig template
+(https://github.com/lakpriya1s/devrig). Help me set it up:
 
-1. README.md、AGENTS.md、devrig.toml を読んでワークスペースを理解する。
-2. 一緒に ./setup.sh を実行する — プロジェクト名、GitHub org、リポジトリ
-   一覧（複数まとめて貼り付け可）、課題管理ツール（Linear、Jira、その他）、
-   チケットプレフィックス、デフォルトブランチ、機能トグルを対話式に質問
-   してくるので、その内容を私に伝えて回答を埋めるのを手伝ってください。
-   最後に devrig.toml が自動生成されます。
-3. ./setup.sh が指摘した問題の修正を手伝う。
-4. AGENTS.md の Systems テーブルを埋める — リポジトリごとに1行（役割、スタック）。
-5. 各リポジトリについて .agents/skills/code-review/references/<repo>.md に
-   レビューリファレンスを、.agents/skills/write-doc/references/<repo>.md に
-   ドキュメントリファレンスを書く（_example-repo.md の雛形をコピーし、
-   すべての事実をコードで検証する）。
-6. Linear を選んだ場合は create-ticket の規約テーブルを私の Linear
-   ワークスペースと照合する。Jira やその他を選んだ場合は /start-task、
-   /raise-pr、/create-ticket の MCP 呼び出しをそちらに合わせて調整する。
-7. パーソナライズをタスクブランチにコミットして PR を開く。
+1. Read README.md and AGENTS.md to understand the workspace.
+2. Run ./setup.sh with me, relaying its interactive prompts (project name,
+   GitHub org, repos, issue tracker, ticket prefix, default branch, feature
+   toggles) so I can answer them — then help me fix anything it flags.
+3. Work through the README's "Customization checklist" section with me.
+4. Commit the personalization on a task branch and open a PR.
 ```
 
 ## setup.sh がやること

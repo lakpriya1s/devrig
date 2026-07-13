@@ -73,24 +73,15 @@ rtk 훅이 적용되도록 Claude Code를 한 번 재시작하세요.
 마무리하세요:
 
 ```text
-devrig 템플릿(https://github.com/lakpriya1s/devrig)으로 워크스페이스를
-만들었습니다. 설정을 도와주세요:
+I just created a workspace from the devrig template
+(https://github.com/lakpriya1s/devrig). Help me set it up:
 
-1. README.md, AGENTS.md, devrig.toml을 읽고 워크스페이스를 파악해 주세요.
-2. 저와 함께 ./setup.sh를 실행해 주세요 — 프로젝트 이름, GitHub org, 저장소
-   목록(여러 개를 한 번에 붙여넣을 수 있음), 이슈 트래커(Linear, Jira, 또는
-   기타), 티켓 접두사, 기본 브랜치, 기능 토글을 대화식으로 물어본 뒤 devrig.toml을
-   직접 작성합니다. 프롬프트를 저에게 전달하고 답변을 채우는 걸 도와주세요.
-3. ./setup.sh가 지적한 문제를 함께 해결해 주세요.
-4. AGENTS.md의 Systems 표를 채워 주세요 — 저장소마다 한 줄(역할, 스택).
-5. 저장소마다 .agents/skills/code-review/references/<repo>.md에 리뷰
-   레퍼런스를, .agents/skills/write-doc/references/<repo>.md에 문서
-   레퍼런스를 작성해 주세요 (_example-repo.md 스캐폴드를 복사하고 모든
-   사실을 코드에서 검증).
-6. Linear를 선택했다면 create-ticket의 컨벤션 표를 제 Linear 워크스페이스와
-   대조해 주세요. Jira나 다른 트래커를 선택했다면 /start-task, /raise-pr,
-   /create-ticket의 MCP 호출을 그에 맞게 조정하는 걸 도와주세요.
-7. 개인화 작업을 태스크 브랜치에 커밋하고 PR을 열어 주세요.
+1. Read README.md and AGENTS.md to understand the workspace.
+2. Run ./setup.sh with me, relaying its interactive prompts (project name,
+   GitHub org, repos, issue tracker, ticket prefix, default branch, feature
+   toggles) so I can answer them — then help me fix anything it flags.
+3. Work through the README's "Customization checklist" section with me.
+4. Commit the personalization on a task branch and open a PR.
 ```
 
 ## setup.sh가 하는 일

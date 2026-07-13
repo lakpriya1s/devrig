@@ -76,26 +76,15 @@ GitHub UI එක කැමතිද, නැතහොත් ආරම්භයේ
 අවසන් කරන්න:
 
 ```text
-මම devrig template එකෙන් (https://github.com/lakpriya1s/devrig) workspace
-එකක් සෑදුවා. එය සකසන්න මට උදව් කරන්න:
+I just created a workspace from the devrig template
+(https://github.com/lakpriya1s/devrig). Help me set it up:
 
-1. README.md, AGENTS.md සහ devrig.toml කියවා workspace එක තේරුම් ගන්න.
-2. මා සමඟ ./setup.sh ධාවනය කරන්න — එය මගේ ව්‍යාපෘති නම, GitHub org, repo
-   ලැයිස්තුව (කිහිපයක් එකවර paste කළ හැක), issue tracker (Linear, Jira, හෝ
-   other), ticket prefix, default branch, සහ feature toggles interactive
-   ලෙස අසා devrig.toml ලියනු ඇත. එහි ප්‍රශ්න මට ලබා දී පිළිතුරු පිරවීමට උදව්
-   කරන්න.
-3. ./setup.sh පෙන්වන ගැටලු විසඳන්න උදව් කරන්න.
-4. AGENTS.md හි Systems වගුව පුරවන්න — repo එකකට එක පේළියක් (එය කුමක්ද, stack).
-5. සෑම repo එකකටම .agents/skills/code-review/references/<repo>.md හි review
-   reference එකක් සහ .agents/skills/write-doc/references/<repo>.md හි doc
-   reference එකක් ලියන්න (_example-repo.md scaffold copy කර සෑම කරුණක්ම
-   code එකෙන් තහවුරු කරන්න).
-6. මම Linear තෝරා ඇත්නම්, create-ticket හි conventions වගුව මගේ Linear
-   workspace එක සමඟ සසඳන්න. Jira හෝ වෙනත් tracker එකක් තෝරා ඇත්නම්,
-   /start-task, /raise-pr, සහ /create-ticket හි MCP calls එයට ගැලපෙන ලෙස
-   සකස් කිරීමට උදව් කරන්න.
-7. personalization එක task branch එකක commit කර PR එකක් විවෘත කරන්න.
+1. Read README.md and AGENTS.md to understand the workspace.
+2. Run ./setup.sh with me, relaying its interactive prompts (project name,
+   GitHub org, repos, issue tracker, ticket prefix, default branch, feature
+   toggles) so I can answer them — then help me fix anything it flags.
+3. Work through the README's "Customization checklist" section with me.
+4. Commit the personalization on a task branch and open a PR.
 ```
 
 ## setup.sh කරන දේ

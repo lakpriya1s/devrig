@@ -61,23 +61,15 @@ npx create-devrig my-project
 刚从模板创建了工作区？把下面的提示词粘贴给你的 AI 编程 agent（Claude Code、Cursor、opencode 等），让它陪你完成剩余设置：
 
 ```text
-我刚从 devrig 模板（https://github.com/lakpriya1s/devrig）创建了一个工作区。
-请帮我完成设置：
+I just created a workspace from the devrig template
+(https://github.com/lakpriya1s/devrig). Help me set it up:
 
-1. 阅读 README.md、AGENTS.md 和 devrig.toml，理解这个工作区。
-2. 和我一起运行 ./setup.sh — 它会交互式询问我的项目名、GitHub 组织、
-   仓库列表（我可以一次粘贴多个）、工单系统（Linear、Jira 或其他）、
-   工单前缀、默认分支和功能开关，然后自动写入 devrig.toml。请把它的提示
-   转达给我，并帮我填写答案。
-3. 帮我解决 ./setup.sh 报告的问题。
-4. 填写 AGENTS.md 中的 Systems 表 — 每个仓库一行（它是什么、技术栈）。
-5. 为每个仓库编写评审参考 .agents/skills/code-review/references/<repo>.md
-   和文档参考 .agents/skills/write-doc/references/<repo>.md
-   （复制 _example-repo.md 脚手架，所有事实都要在代码中核实）。
-6. 如果我选择了 Linear，对照我的 Linear 工作区核实 create-ticket 的约定表；
-   如果选择了 Jira 或其他系统，帮我把 /start-task、/raise-pr、/create-ticket
-   的 MCP 调用适配过去。
-7. 在任务分支上提交这些个性化改动并开一个 PR。
+1. Read README.md and AGENTS.md to understand the workspace.
+2. Run ./setup.sh with me, relaying its interactive prompts (project name,
+   GitHub org, repos, issue tracker, ticket prefix, default branch, feature
+   toggles) so I can answer them — then help me fix anything it flags.
+3. Work through the README's "Customization checklist" section with me.
+4. Commit the personalization on a task branch and open a PR.
 ```
 
 ## setup.sh 做了什么

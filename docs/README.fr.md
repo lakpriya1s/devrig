@@ -77,25 +77,15 @@ agent de programmation (Claude Code, Cursor, opencode, …) et laissez-le
 terminer la configuration avec vous :
 
 ```text
-Je viens de créer un workspace depuis le template devrig
-(https://github.com/lakpriya1s/devrig). Aide-moi à le configurer :
+I just created a workspace from the devrig template
+(https://github.com/lakpriya1s/devrig). Help me set it up:
 
-1. Lis README.md, AGENTS.md et devrig.toml pour comprendre le workspace.
-2. Exécute ./setup.sh avec moi — il va me demander de façon interactive le
-   nom du projet, l'organisation GitHub, la liste des dépôts (je peux en
-   coller plusieurs d'un coup), le gestionnaire de tickets (Linear, Jira, ou
-   autre), le préfixe de tickets, la branche par défaut et les options, puis
-   écrire devrig.toml. Relaie-moi ses questions et aide-moi à y répondre.
-3. Aide-moi à corriger ce que ./setup.sh signale.
-4. Remplis le tableau Systems d'AGENTS.md — une ligne par dépôt (rôle, stack).
-5. Pour chaque dépôt, écris une référence de revue dans
-   .agents/skills/code-review/references/<repo>.md et une référence de doc
-   dans .agents/skills/write-doc/references/<repo>.md (copie les squelettes
-   _example-repo.md et vérifie chaque fait dans le code).
-6. Si j'ai choisi Linear, vérifie le tableau des conventions de create-ticket
-   avec mon workspace Linear. Si j'ai choisi Jira ou un autre gestionnaire,
-   aide-moi à adapter les appels MCP de /start-task, /raise-pr et /create-ticket.
-7. Committe la personnalisation sur une branche de tâche et ouvre une PR.
+1. Read README.md and AGENTS.md to understand the workspace.
+2. Run ./setup.sh with me, relaying its interactive prompts (project name,
+   GitHub org, repos, issue tracker, ticket prefix, default branch, feature
+   toggles) so I can answer them — then help me fix anything it flags.
+3. Work through the README's "Customization checklist" section with me.
+4. Commit the personalization on a task branch and open a PR.
 ```
 
 ## Ce que fait setup.sh

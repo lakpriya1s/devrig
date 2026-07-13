@@ -74,26 +74,15 @@ GitHub का UI पसंद है, या चाहते हैं कि re
 (Claude Code, Cursor, opencode, …) में paste करें और बाकी सेटअप उसके साथ पूरा करें:
 
 ```text
-मैंने अभी devrig टेम्पलेट (https://github.com/lakpriya1s/devrig) से एक
-workspace बनाया है। इसे सेट करने में मेरी मदद करो:
+I just created a workspace from the devrig template
+(https://github.com/lakpriya1s/devrig). Help me set it up:
 
-1. README.md, AGENTS.md और devrig.toml पढ़कर workspace को समझो।
-2. मेरे साथ ./setup.sh चलाओ — यह मुझसे इंटरैक्टिव तरीके से मेरा प्रोजेक्ट
-   नाम, GitHub org, repo सूची (मैं एक साथ कई paste कर सकता हूं), issue
-   tracker (Linear, Jira, या other), ticket prefix, default branch, और
-   feature toggles पूछेगा, फिर खुद devrig.toml लिखेगा। इसके सवाल मुझे बताओ और
-   जवाब भरने में मदद करो।
-3. ./setup.sh जो भी समस्या बताए उसे ठीक करने में मदद करो।
-4. AGENTS.md की Systems टेबल भरो — हर repo की एक पंक्ति (क्या है, stack)।
-5. हर repo के लिए .agents/skills/code-review/references/<repo>.md में review
-   reference और .agents/skills/write-doc/references/<repo>.md में doc
-   reference लिखो (_example-repo.md scaffold कॉपी करो और हर तथ्य कोड में
-   सत्यापित करो)।
-6. अगर मैंने Linear चुना है, तो create-ticket की conventions टेबल को मेरे
-   Linear workspace से मिलाओ। अगर Jira या कोई और tracker चुना है, तो
-   /start-task, /raise-pr, और /create-ticket की MCP calls उसके अनुसार बदलने
-   में मदद करो।
-7. personalization को एक task branch पर commit करके PR खोलो।
+1. Read README.md and AGENTS.md to understand the workspace.
+2. Run ./setup.sh with me, relaying its interactive prompts (project name,
+   GitHub org, repos, issue tracker, ticket prefix, default branch, feature
+   toggles) so I can answer them — then help me fix anything it flags.
+3. Work through the README's "Customization checklist" section with me.
+4. Commit the personalization on a task branch and open a PR.
 ```
 
 ## setup.sh क्या करता है
