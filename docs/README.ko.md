@@ -29,7 +29,7 @@ devrig는 *메타 레포*입니다. 프로젝트의 모든 저장소와 그 사�
 | 🧠 | **AI 워크플로우 스킬** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (에이전트 독립적으로 `.agents/skills/`에 위치, Claude Code용 심볼릭 링크, opencode도 설정됨) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — grep과 파일 읽기 대신 에이전트가 MCP로 사용하는 시맨틱 코드 검색 |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code의 토큰을 절약하는 명령어 프록시 |
-| 🎫 | **Linear MCP** — 스킬과 연동된 이슈 트래킹 |
+| 🎫 | **이슈 트래커 MCP** — Linear, Jira, 또는 직접 연결; `setup.sh`가 대화식으로 선택하게 함 |
 | 🛡️ | **보호 브랜치 git 훅** — 어떤 저장소에서도 기본 브랜치에 실수로 커밋/푸시하지 않도록 차단 |
 | 📚 | **`knowledge/`** — AI 툴링이 색인하고 기록하는 markdown 지식 베이스 뼈대(아키텍처, ADR, 설계 문서, 런북) |
 | 🖥️ | **자동 생성되는 VS Code 멀티 루트 워크스페이스** — 모든 저장소를 한 창에서 |
@@ -37,18 +37,23 @@ devrig는 *메타 레포*입니다. 프로젝트의 모든 저장소와 그 사�
 ## 빠른 시작
 
 1. **[Use this template](https://github.com/lakpriya1s/devrig/generate)**을 클릭해 `your-org/your-project-workspace`를 만듭니다.
-2. 클론한 뒤 **`.setup`**을 편집합니다 — 프로젝트 이름, GitHub org, 저장소 목록, 티켓 접두사, 기본 브랜치, 기능 토글.
-3. 실행:
+2. 클론한 뒤 실행:
 
    ```bash
    ./setup.sh
    ```
 
-4. 이 폴더에서 `claude`를 실행하고 작업을 시작하세요.
+   처음 실행 시 `.setup`이 아직 예시 값 그대로면 대화식으로 안내합니다:
+   프로젝트 이름, GitHub org, 클론할 저장소(공백이나 쉼표로 구분해 여러
+   개를 한 번에 붙여넣기 가능), 이슈 트래커(**Linear**, **Jira**, 또는
+   **기타** — 메뉴에서 선택), 티켓 접두사, 기본 브랜치, 기능 토글을 물어본
+   뒤 `.setup`을 대신 작성해 줍니다. 직접 편집하고 싶다면 스크립트 실행
+   전에 `.setup`을 미리 채워 두면 프롬프트를 건너뜁니다.
+3. 이 폴더에서 `claude`를 실행하고 작업을 시작하세요.
 
-그다음 Claude Code 안에서 `/mcp`를 실행해 **linear** 서버를 인증하고
-(1회성 OAuth, **semble**은 인증 불필요), rtk 훅이 적용되도록 Claude Code를
-한 번 재시작하세요.
+그다음 Claude Code 안에서 `/mcp`를 실행해 설정된 트래커 서버(**linear**
+또는 **atlassian**)를 인증하고(1회성 OAuth, **semble**은 인증 불필요),
+rtk 훅이 적용되도록 Claude Code를 한 번 재시작하세요.
 
 ## 🤖 AI 에이전트로 시작하기
 
@@ -61,15 +66,19 @@ devrig 템플릿(https://github.com/lakpriya1s/devrig)으로 워크스페이스�
 만들었습니다. 설정을 도와주세요:
 
 1. README.md, AGENTS.md, .setup을 읽고 워크스페이스를 파악해 주세요.
-2. 프로젝트 이름, GitHub org, 저장소 목록, 티켓 접두사, 기본 브랜치를
-   저에게 물어본 뒤 .setup에 채워 주세요.
-3. ./setup.sh를 실행하고 지적된 문제를 함께 해결해 주세요.
+2. 저와 함께 ./setup.sh를 실행해 주세요 — 프로젝트 이름, GitHub org, 저장소
+   목록(여러 개를 한 번에 붙여넣을 수 있음), 이슈 트래커(Linear, Jira, 또는
+   기타), 티켓 접두사, 기본 브랜치, 기능 토글을 대화식으로 물어본 뒤 .setup을
+   직접 작성합니다. 프롬프트를 저에게 전달하고 답변을 채우는 걸 도와주세요.
+3. ./setup.sh가 지적한 문제를 함께 해결해 주세요.
 4. AGENTS.md의 Systems 표를 채워 주세요 — 저장소마다 한 줄(역할, 스택).
 5. 저장소마다 .agents/skills/code-review/references/<repo>.md에 리뷰
    레퍼런스를, .agents/skills/write-doc/references/<repo>.md에 문서
    레퍼런스를 작성해 주세요 (_example-repo.md 스캐폴드를 복사하고 모든
    사실을 코드에서 검증).
-6. create-ticket의 컨벤션 표를 제 Linear 워크스페이스와 대조해 주세요.
+6. Linear를 선택했다면 create-ticket의 컨벤션 표를 제 Linear 워크스페이스와
+   대조해 주세요. Jira나 다른 트래커를 선택했다면 /start-task, /raise-pr,
+   /create-ticket의 MCP 호출을 그에 맞게 조정하는 걸 도와주세요.
 7. 개인화 작업을 태스크 브랜치에 커밋하고 PR을 열어 주세요.
 ```
 
@@ -77,10 +86,11 @@ devrig 템플릿(https://github.com/lakpriya1s/devrig)으로 워크스페이스�
 
 `setup.sh`는 멱등합니다 — 언제든 다시 실행해 모든 저장소와 도구를 업데이트할 수 있습니다:
 
+0. **최초 1회만**: `.setup`이 아직 예시 값이면 위 모든 항목을 대화식으로 묻고 `.setup`에 기록.
 1. 사전 요구사항 확인(`git`, 인증된 `gh`; semble 활성화 시 `uv` 설치).
 2. `REPOS`의 각 저장소를 나란히 클론(깨끗한 기본 브랜치 체크아웃은 fast-forward)하고, `.git/info/exclude`로 이 저장소의 git status에서 제외.
 3. 이 저장소와 클론된 모든 저장소에 보호 브랜치 git 훅 설치.
-4. `.mcp.json` / `opencode.json`을 `.setup` 토글에 수렴(직접 추가한 MCP 서버는 보존)시키고 `.claude/settings.local.json` 생성.
+4. `.mcp.json` / `opencode.json`을 `.setup` 토글에 수렴 — `ISSUE_TRACKER`에 따라 `linear` 또는 `atlassian`(Jira) 서버를 추가하고, "기타"를 선택했다면 아무것도 추가하지 않음 — 직접 추가한 MCP 서버는 보존하고 `.claude/settings.local.json` 생성.
 5. semble을 설치하고 저장소별 검색 인덱스를 예열.
 6. rtk를 설치하고 Claude Code 훅 등록.
 7. VS Code용 `<project>.code-workspace` 생성(이미 있으면 건너뛰므로 커스터마이즈해 커밋해도 안전).
@@ -89,11 +99,11 @@ devrig 템플릿(https://github.com/lakpriya1s/devrig)으로 워크스페이스�
 
 첫 `setup.sh` 실행 후 개인화 커밋을 만드세요:
 
-- [ ] `.setup` — 실제 값 입력(예시 값 그대로면 setup.sh가 실행을 거부합니다).
+- [ ] `.setup` — 첫 실행 시 `setup.sh`가 대화식으로 물어봅니다(또는 실행 전에 직접 채워 두면 프롬프트를 건너뜁니다). 나중에 값을 바꾸려면(트래커 변경, 저장소 추가 등) `.setup`을 직접 편집하고 `./setup.sh`를 다시 실행하세요.
 - [ ] `AGENTS.md` — **Systems** 표(저장소마다 한 줄: 역할, 스택)와 **Testing** 섹션 작성. 모든 스킬이 읽는 단일 정보원입니다.
 - [ ] `.agents/skills/code-review/references/`와 `.agents/skills/write-doc/references/` — 저장소마다 레퍼런스 파일 하나(`_example-repo.md` 복사). 없어도 동작하지만 있으면 훨씬 정밀해집니다.
-- [ ] `.agents/skills/create-ticket/SKILL.md` — "컨벤션" 표를 Linear 워크스페이스(팀, 프로젝트, 라벨)와 대조.
-- [ ] 토글로 비활성화한 것들 삭제·조정(예: Linear를 쓰지 않으면 `CLAUDE.md`에서 linear 관련 내용 제거).
+- [ ] `ISSUE_TRACKER`가 `linear`라면: `.agents/skills/create-ticket/SKILL.md`의 "컨벤션" 표를 Linear 워크스페이스(팀, 프로젝트, 라벨)와 대조하세요. `jira`나 `other`라면: `/start-task`, `/raise-pr`, `/create-ticket`의 `mcp__linear__*` 호출을 트래커의 MCP 도구 이름에 맞게 조정하세요(각 스킬 상단에 안내가 있습니다).
+- [ ] 토글로 비활성화한 것들 삭제·조정(예: semble을 쓰지 않으면 `CLAUDE.md`에서 관련 내용 제거).
 
 ## 구조
 
@@ -106,7 +116,7 @@ devrig 템플릿(https://github.com/lakpriya1s/devrig)으로 워크스페이스�
 | `.agents/skills/` | 표준 워크플로우 스킬(에이전트 독립적) |
 | `.claude/` | Claude Code 설정, 에이전트, 스킬 심볼릭 링크 |
 | `.opencode/` | opencode 에이전트 및 플러그인 설정 |
-| `.mcp.json` / `opencode.json` | MCP 서버(linear, semble) |
+| `.mcp.json` / `opencode.json` | MCP 서버(이슈 트래커, semble) |
 | `git-hooks/` | 보호 브랜치 pre-commit / pre-push 훅 |
 | `knowledge/` | markdown 지식 베이스(아키텍처, 결정, 설계, 런북, 제품, 릴리스) |
 | `<repo>/` (미추적) | `setup.sh`가 클론하는 프로젝트 저장소 |
@@ -128,10 +138,11 @@ devrig 템플릿(https://github.com/lakpriya1s/devrig)으로 워크스페이스�
 ## 문제 해결
 
 - **setup 후 `semble`이나 `uv`를 찾을 수 없음** — 새 셸을 열고(PATH가 갱신됨) `./setup.sh`를 다시 실행하세요.
-- **Claude에 Linear 도구가 없음** — `/mcp`를 실행해 linear 서버의 OAuth 흐름을 완료하세요.
+- **Claude에 트래커 도구가 없음** — `/mcp`를 실행해 `linear` 또는 `atlassian` 서버의 OAuth 흐름을 완료하세요.
 - **rtk가 동작하지 않음** — Claude Code를 재시작하고 `rtk gain`으로 명령어가 프록시되는지 확인하세요.
 - **저장소가 업데이트되지 않음** — `setup.sh`는 로컬 변경이 있거나 태스크 브랜치에 있는 저장소는 건드리지 않습니다. 깨끗한 기본 브랜치 체크아웃만 fast-forward합니다.
-- **setup.sh가 "edit .setup first"라고 함** — `.setup`이 예시 값(`PROJECT_NAME="acme"`)인 동안은 실행을 거부합니다.
+- **setup.sh가 아무것도 묻지 않고 바로 "edit .setup first"라고 실패함** — 대화식 터미널에 연결된 경우에만 프롬프트가 나타납니다. 스크립트나 CI에서 실행하면 `.setup`이 이미 채워져 있어야 합니다.
+- **Jira나 "기타"를 선택함** — `atlassian`(Jira) MCP 서버는 자동으로 설정되지만, `/start-task`, `/raise-pr`, `/create-ticket`은 여전히 Linear의 MCP 도구 이름을 호출합니다 — 이 스킬들을 조정하기 전까지 `setup.sh`는 매 실행 끝에 이를 경고합니다.
 
 ## 기여하기
 

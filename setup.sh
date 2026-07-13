@@ -13,6 +13,118 @@ info() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mwarn:\033[0m %s\n' "$*"; }
 fail() { printf '\033[1;31merror:\033[0m %s\n' "$*" >&2; exit 1; }
 
+# --- 0. Interactive config wizard (first run only) -----------------------------
+# Only runs when .setup still has the shipped example values (PROJECT_NAME=acme)
+# AND we're attached to a terminal. Otherwise setup.sh expects .setup to already
+# be filled in (e.g. by hand, or by an AI agent per the README's kickstart prompt).
+
+ask_yes_no() {
+  local prompt="$1" default="$2" ans hint
+  if [ "$default" = true ]; then hint="Y/n"; else hint="y/N"; fi
+  read -r -p "$prompt [$hint]: " ans
+  case "$ans" in
+    [Yy]*) echo true ;;
+    [Nn]*) echo false ;;
+    *) echo "$default" ;;
+  esac
+}
+
+# Numbered single-choice prompt. Prints the menu to stderr, returns the chosen
+# option text on stdout (so it's safe to capture with `x=$(ask_choice ...)`).
+ask_choice() {
+  local prompt="$1"; shift
+  local -a opts=("$@")
+  echo "$prompt" >&2
+  local i=1 o
+  for o in "${opts[@]}"; do
+    printf '  %d) %s\n' "$i" "$o" >&2
+    i=$((i + 1))
+  done
+  local ans idx
+  read -r -p "Enter a number [1]: " ans
+  case "$ans" in
+    ''|*[!0-9]*) ans=1 ;;
+  esac
+  idx=$((ans - 1))
+  if [ "$idx" -lt 0 ] || [ "$idx" -ge "${#opts[@]}" ]; then idx=0; fi
+  echo "${opts[$idx]}"
+}
+
+write_setup_file() {
+  local repos_str=""
+  [ "${#REPOS[@]}" -gt 0 ] && repos_str="${REPOS[*]}"
+  cat > "$WORKSPACE_DIR/.setup" <<EOF
+# devrig configuration
+#
+# Edit these values for your project, then run ./setup.sh — or just run
+# ./setup.sh first and answer its prompts; it writes this file for you.
+# This file is sourced by setup.sh and the git hooks — keep it valid shell
+# (no spaces around \`=\`, arrays in parentheses).
+
+PROJECT_NAME="$PROJECT_NAME"                # short lowercase name; names the generated .code-workspace file
+GITHUB_ORG="$GITHUB_ORG"               # GitHub org (or username) that owns your repos
+REPOS=($repos_str)          # repos setup.sh clones side-by-side; use REPOS=() for none
+ISSUE_TRACKER="$ISSUE_TRACKER"              # linear | jira | other — controls which tracker MCP server gets wired up
+TICKET_PREFIX="$TICKET_PREFIX"                 # ticket prefix, e.g. AC-123
+DEFAULT_BRANCH="$DEFAULT_BRANCH"               # protected default branch of your repos
+
+# Feature toggles
+ENABLE_SEMBLE=$ENABLE_SEMBLE                 # semantic code search, wired to agents via MCP
+ENABLE_RTK=$ENABLE_RTK                    # token-optimizing command proxy for Claude Code
+ENABLE_GIT_HOOKS=$ENABLE_GIT_HOOKS              # block direct commits/pushes to protected branches
+EOF
+}
+
+prompt_for_config() {
+  echo >&2
+  info "First run — let's configure this workspace. Press Enter to accept the default in [brackets]."
+  echo >&2
+
+  local ans
+
+  read -r -p "Project name (short, lowercase — names the .code-workspace file) [${PROJECT_NAME}]: " ans
+  PROJECT_NAME="${ans:-$PROJECT_NAME}"
+
+  read -r -p "GitHub org or username that owns your repos [${GITHUB_ORG}]: " ans
+  GITHUB_ORG="${ans:-$GITHUB_ORG}"
+
+  read -r -p "Repos to clone side-by-side — paste names separated by spaces or commas (blank for none): " ans
+  if [ -n "$ans" ]; then
+    local -a pasted cleaned
+    IFS=', ' read -r -a pasted <<< "$ans"
+    cleaned=()
+    for r in "${pasted[@]}"; do [ -n "$r" ] && cleaned+=("$r"); done
+    REPOS=(${cleaned[@]+"${cleaned[@]}"})
+  else
+    REPOS=()
+  fi
+
+  echo >&2
+  local tracker_label
+  tracker_label=$(ask_choice "Which issue tracker do you use?" "Linear" "Jira" "Other / none (I'll wire it up myself)")
+  case "$tracker_label" in
+    Linear) ISSUE_TRACKER=linear ;;
+    Jira) ISSUE_TRACKER=jira ;;
+    *) ISSUE_TRACKER=other ;;
+  esac
+  echo >&2
+
+  read -r -p "Ticket prefix, e.g. AC [${TICKET_PREFIX}]: " ans
+  TICKET_PREFIX="${ans:-$TICKET_PREFIX}"
+
+  read -r -p "Default (protected) branch [${DEFAULT_BRANCH}]: " ans
+  DEFAULT_BRANCH="${ans:-$DEFAULT_BRANCH}"
+
+  echo >&2
+  ENABLE_SEMBLE=$(ask_yes_no "Enable semble (semantic code search)?" true)
+  ENABLE_RTK=$(ask_yes_no "Enable rtk (token-optimizing proxy for Claude Code)?" true)
+  ENABLE_GIT_HOOKS=$(ask_yes_no "Enable protected-branch git hooks?" true)
+
+  write_setup_file
+  echo >&2
+  info "Saved to .setup — edit that file by hand anytime to change these values."
+}
+
 # --- 1. Configuration ---------------------------------------------------------
 
 load_config() {
@@ -20,22 +132,26 @@ load_config() {
   # shellcheck source=.setup
   . "$WORKSPACE_DIR/.setup"
 
-  : "${PROJECT_NAME:?PROJECT_NAME missing from .setup}"
-  : "${GITHUB_ORG:?GITHUB_ORG missing from .setup}"
-  : "${TICKET_PREFIX:?TICKET_PREFIX missing from .setup}"
-  : "${DEFAULT_BRANCH:?DEFAULT_BRANCH missing from .setup}"
-  : "${ENABLE_SEMBLE:=true}" "${ENABLE_RTK:=true}" "${ENABLE_LINEAR_MCP:=true}" "${ENABLE_GIT_HOOKS:=true}"
+  : "${PROJECT_NAME:=acme}" "${GITHUB_ORG:=AcmeInc}" "${TICKET_PREFIX:=AC}" "${DEFAULT_BRANCH:=dev}"
+  : "${ISSUE_TRACKER:=linear}"
+  : "${ENABLE_SEMBLE:=true}" "${ENABLE_RTK:=true}" "${ENABLE_GIT_HOOKS:=true}"
 
   if [ "$PROJECT_NAME" = "acme" ] && [ "$GITHUB_ORG" = "AcmeInc" ]; then
-    fail "'.setup' still contains the shipped example values. Edit .setup with your project's values, then re-run ./setup.sh"
+    if [ -t 0 ] && [ -t 1 ]; then
+      prompt_for_config
+    else
+      fail "'.setup' still contains the shipped example values. Edit .setup with your project's values, then re-run ./setup.sh — or run ./setup.sh in an interactive terminal to be prompted instead."
+    fi
   fi
 }
 
-check_prereqs() {
+check_basic_prereqs() {
   command -v git >/dev/null 2>&1 || fail "git is required. On macOS run: xcode-select --install"
   command -v gh >/dev/null 2>&1 || fail "GitHub CLI (gh) is required. Install: brew install gh"
   gh auth status >/dev/null 2>&1 || fail "gh is not authenticated. Run: gh auth login"
+}
 
+check_semble_prereqs() {
   if [ "$ENABLE_SEMBLE" = true ] && ! command -v uv >/dev/null 2>&1; then
     info "Installing uv (needed for semble)..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -95,17 +211,19 @@ install_git_hooks() {
 }
 
 # --- 4. MCP configuration ------------------------------------------------------
-# Converges .mcp.json and opencode.json to the .setup toggles: the linear and
-# semble entries are added/removed to match, while any servers you added by
-# hand are preserved. Also generates .claude/settings.local.json (gitignored)
-# if it doesn't exist yet.
+# Converges .mcp.json and opencode.json to the .setup toggles: the tracker
+# (linear/atlassian) and semble entries are added/removed to match, while any
+# servers you added by hand are preserved. Also generates
+# .claude/settings.local.json (gitignored) if it doesn't exist yet.
 
 sync_mcp_config() {
   info "Syncing MCP config to .setup toggles..."
-  python3 - "$WORKSPACE_DIR" "$ENABLE_LINEAR_MCP" "$ENABLE_SEMBLE" <<'PY'
+  python3 - "$WORKSPACE_DIR" "$ISSUE_TRACKER" "$ENABLE_SEMBLE" <<'PY'
 import json, os, sys
 
-root, linear_on, semble_on = sys.argv[1], sys.argv[2] == "true", sys.argv[3] == "true"
+root, tracker, semble_on = sys.argv[1], sys.argv[2], sys.argv[3] == "true"
+linear_on = tracker == "linear"
+jira_on = tracker == "jira"
 
 def load(path, default):
     if os.path.exists(path):
@@ -126,6 +244,13 @@ if linear_on:
     servers.setdefault("linear", {"type": "http", "url": "https://mcp.linear.app/mcp"})
 else:
     servers.pop("linear", None)
+if jira_on:
+    # Atlassian's remote MCP server (Jira + Confluence), OAuth-based like linear.
+    # Best-effort: double-check the URL against Atlassian's current docs if this
+    # doesn't connect — remote MCP endpoints are still evolving.
+    servers.setdefault("atlassian", {"type": "sse", "url": "https://mcp.atlassian.com/v1/sse"})
+else:
+    servers.pop("atlassian", None)
 if semble_on:
     servers.setdefault("semble", {"command": "uvx", "args": ["--from", "semble[mcp]", "semble"], "type": "stdio"})
 else:
@@ -140,6 +265,10 @@ if linear_on:
     oc_mcp.setdefault("linear", {"type": "remote", "url": "https://mcp.linear.app/mcp", "enabled": True})
 else:
     oc_mcp.pop("linear", None)
+if jira_on:
+    oc_mcp.setdefault("atlassian", {"type": "remote", "url": "https://mcp.atlassian.com/v1/sse", "enabled": True})
+else:
+    oc_mcp.pop("atlassian", None)
 if semble_on:
     oc_mcp.setdefault("semble", {"type": "local", "command": ["uvx", "--from", "semble[mcp]", "semble"], "enabled": True})
 else:
@@ -149,7 +278,7 @@ save(oc_path, oc)
 # .claude/settings.local.json — generated once, then left alone
 local_path = os.path.join(root, ".claude", "settings.local.json")
 if not os.path.exists(local_path):
-    enabled = [name for name, on in (("linear", linear_on), ("semble", semble_on)) if on]
+    enabled = [name for name, on in (("linear", linear_on), ("atlassian", jira_on), ("semble", semble_on)) if on]
     os.makedirs(os.path.dirname(local_path), exist_ok=True)
     save(local_path, {"enableAllProjectMcpServers": True, "enabledMcpjsonServers": enabled})
     print("  generated .claude/settings.local.json")
@@ -291,14 +420,24 @@ final_checks() {
   if grep -q "TODO: fill in" "$WORKSPACE_DIR/AGENTS.md" 2>/dev/null; then
     warn "AGENTS.md still has its 'TODO: fill in' systems table — fill it in so agents know what each repo is."
   fi
+  case "$ISSUE_TRACKER" in
+    jira)
+      warn "Issue tracker set to Jira: the 'atlassian' MCP server was wired up, but /start-task, /raise-pr, and /create-ticket still call Linear's MCP tool names (mcp__linear__*) — adapt those skills to your Jira MCP server's tool names before relying on them."
+      ;;
+    other)
+      warn "Issue tracker set to 'other' — no tracker MCP server was configured. Add your own to .mcp.json/opencode.json, and adapt /start-task, /raise-pr, and /create-ticket to call it."
+      ;;
+  esac
 }
 
 print_next_steps() {
   printf '\n✅ Workspace ready.\n\nNext steps:\n'
   step=1
   printf '  %d. cd into this folder and run `claude`.\n' "$step"; step=$((step+1))
-  if [ "$ENABLE_LINEAR_MCP" = true ]; then
+  if [ "$ISSUE_TRACKER" = "linear" ]; then
     printf '  %d. Run /mcp and authenticate the "linear" server (OAuth, one time).\n' "$step"; step=$((step+1))
+  elif [ "$ISSUE_TRACKER" = "jira" ]; then
+    printf '  %d. Run /mcp and authenticate the "atlassian" server (OAuth, one time).\n' "$step"; step=$((step+1))
   fi
   if [ "$ENABLE_RTK" = true ]; then
     printf '  %d. Restart Claude Code once so the rtk hook takes effect.\n' "$step"; step=$((step+1))
@@ -332,8 +471,9 @@ EOF
 }
 
 main() {
+  check_basic_prereqs
   load_config
-  check_prereqs
+  check_semble_prereqs
   clone_repos
   exclude_repos
   install_git_hooks

@@ -29,7 +29,7 @@ version करता है — आपके प्रोजेक्ट repos �
 | 🧠 | **AI वर्कफ़्लो skills** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (agent-agnostic, `.agents/skills/` में, Claude Code के लिए symlink; opencode भी कॉन्फ़िगर है) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — semantic code search, जिसे agents grep-और-पढ़ने की जगह MCP के ज़रिए इस्तेमाल करते हैं |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code के लिए token बचाने वाला command proxy |
-| 🎫 | **Linear MCP** — skills से जुड़ी issue tracking |
+| 🎫 | **Issue tracker MCP** — Linear, Jira या अपना कोई और; `setup.sh` इंटरैक्टिव तरीके से चुनवाता है |
 | 🛡️ | **Protected-branch git hooks** — किसी भी repo में default branch पर गलती से commit/push नहीं |
 | 📚 | **`knowledge/`** — markdown नॉलेज बेस का ढांचा (architecture, ADRs, design docs, runbooks) जिसे AI टूलिंग index करती है और उसमें लिखती है |
 | 🖥️ | **जनरेटेड VS Code multi-root workspace** — सारे repos एक ही विंडो में |
@@ -37,18 +37,25 @@ version करता है — आपके प्रोजेक्ट repos �
 ## जल्दी शुरू करें
 
 1. **[Use this template](https://github.com/lakpriya1s/devrig/generate)** पर क्लिक करके `your-org/your-project-workspace` बनाएं।
-2. Clone करें और **`.setup`** एडिट करें — प्रोजेक्ट का नाम, GitHub org, repo सूची, ticket prefix, default branch, feature toggles।
-3. चलाएं:
+2. Clone करें और चलाएं:
 
    ```bash
    ./setup.sh
    ```
 
-4. इसी फ़ोल्डर से `claude` चलाएं और काम शुरू करें।
+   पहली बार चलाने पर, अगर `.setup` अभी भी example मान रखता है, तो यह आपसे
+   इंटरैक्टिव तरीके से पूछेगा: प्रोजेक्ट का नाम, GitHub org, क्लोन करने वाले
+   repos (एक साथ कई paste करें, space या comma से अलग करके), issue tracker
+   (**Linear**, **Jira**, या **other** — मेनू से चुनें), ticket prefix,
+   default branch, और feature toggles — फिर खुद `.setup` में लिख देगा। खुद
+   हाथ से एडिट करना पसंद है? स्क्रिप्ट चलाने से पहले `.setup` खुद भर दें, यह
+   प्रश्न छोड़ देगा।
+3. इसी फ़ोल्डर से `claude` चलाएं और काम शुरू करें।
 
-फिर Claude Code के अंदर: `/mcp` चलाकर **linear** सर्वर को authenticate करें
-(एक बार का OAuth; **semble** को auth की ज़रूरत नहीं), और rtk hook लागू होने के
-लिए Claude Code एक बार restart करें।
+फिर Claude Code के अंदर: `/mcp` चलाकर जो भी tracker सर्वर कॉन्फ़िगर हुआ है
+उसे (**linear** या **atlassian**) authenticate करें (एक बार का OAuth;
+**semble** को auth की ज़रूरत नहीं), और rtk hook लागू होने के लिए Claude Code
+एक बार restart करें।
 
 ## 🤖 अपने AI agent के साथ शुरुआत करें
 
@@ -60,15 +67,21 @@ version करता है — आपके प्रोजेक्ट repos �
 workspace बनाया है। इसे सेट करने में मेरी मदद करो:
 
 1. README.md, AGENTS.md और .setup पढ़कर workspace को समझो।
-2. मुझसे मेरा प्रोजेक्ट नाम, GitHub org, repo सूची, ticket prefix और
-   default branch पूछो, फिर उन्हें .setup में भरो।
-3. ./setup.sh चलाओ और जो भी समस्या आए उसे ठीक करने में मदद करो।
+2. मेरे साथ ./setup.sh चलाओ — यह मुझसे इंटरैक्टिव तरीके से मेरा प्रोजेक्ट
+   नाम, GitHub org, repo सूची (मैं एक साथ कई paste कर सकता हूं), issue
+   tracker (Linear, Jira, या other), ticket prefix, default branch, और
+   feature toggles पूछेगा, फिर खुद .setup लिखेगा। इसके सवाल मुझे बताओ और
+   जवाब भरने में मदद करो।
+3. ./setup.sh जो भी समस्या बताए उसे ठीक करने में मदद करो।
 4. AGENTS.md की Systems टेबल भरो — हर repo की एक पंक्ति (क्या है, stack)।
 5. हर repo के लिए .agents/skills/code-review/references/<repo>.md में review
    reference और .agents/skills/write-doc/references/<repo>.md में doc
    reference लिखो (_example-repo.md scaffold कॉपी करो और हर तथ्य कोड में
    सत्यापित करो)।
-6. create-ticket की conventions टेबल को मेरे Linear workspace से मिलाओ।
+6. अगर मैंने Linear चुना है, तो create-ticket की conventions टेबल को मेरे
+   Linear workspace से मिलाओ। अगर Jira या कोई और tracker चुना है, तो
+   /start-task, /raise-pr, और /create-ticket की MCP calls उसके अनुसार बदलने
+   में मदद करो।
 7. personalization को एक task branch पर commit करके PR खोलो।
 ```
 
@@ -76,10 +89,11 @@ workspace बनाया है। इसे सेट करने में �
 
 `setup.sh` idempotent है — सभी repos और tools अपडेट करने के लिए कभी भी दोबारा चलाएं। यह:
 
+0. **सिर्फ़ पहली बार**: अगर `.setup` अभी भी example मान रखता है, तो ऊपर की सारी जानकारी इंटरैक्टिव तरीके से पूछता है और `.setup` में लिखता है।
 1. Prerequisites जांचता है (`git`, authenticated `gh`; semble चालू हो तो `uv` इंस्टॉल करता है)।
 2. `REPOS` का हर repo अगल-बगल clone करता है (या साफ़ default-branch checkouts को fast-forward करता है), और उन्हें `.git/info/exclude` के ज़रिए इस repo की git status से बाहर रखता है।
 3. इस repo और हर cloned repo में protected-branch git hooks इंस्टॉल करता है।
-4. `.mcp.json` / `opencode.json` को आपके `.setup` toggles पर converge करता है (हाथ से जोड़े गए MCP सर्वर सुरक्षित रहते हैं) और `.claude/settings.local.json` जनरेट करता है।
+4. `.mcp.json` / `opencode.json` को आपके `.setup` toggles पर converge करता है — `ISSUE_TRACKER` के अनुसार `linear` या `atlassian` (Jira) सर्वर जोड़ता है, "other" चुना हो तो कोई नहीं — साथ ही हाथ से जोड़े गए MCP सर्वर सुरक्षित रहते हैं — और `.claude/settings.local.json` जनरेट करता है।
 5. semble इंस्टॉल करता है और हर repo के लिए search index warm करता है।
 6. rtk इंस्टॉल करके उसका Claude Code hook रजिस्टर करता है।
 7. VS Code के लिए `<project>.code-workspace` जनरेट करता है (पहले से मौजूद हो तो छोड़ देता है, इसलिए आप उसे customize करके commit कर सकते हैं)।
@@ -88,11 +102,11 @@ workspace बनाया है। इसे सेट करने में �
 
 पहली बार `setup.sh` चलाने के बाद, अपना personalization commit करें:
 
-- [ ] `.setup` — आपके असली मान (example मानों के साथ setup.sh चलने से मना कर देता है)।
+- [ ] `.setup` — पहली बार चलाने पर `setup.sh` ये मान इंटरैक्टिव तरीके से पूछता है (या चलाने से पहले हाथ से भर दें, यह सवाल छोड़ देगा)। बाद में बदलाव के लिए (tracker बदलना, repo जोड़ना), `.setup` सीधे एडिट करें और `./setup.sh` फिर से चलाएं।
 - [ ] `AGENTS.md` — **Systems** टेबल (हर repo की एक पंक्ति: क्या है, stack) और **Testing** सेक्शन भरें। यही वह source of truth है जिसे हर skill पढ़ती है।
 - [ ] `.agents/skills/code-review/references/` और `.agents/skills/write-doc/references/` — हर repo के लिए एक reference फ़ाइल (`_example-repo.md` कॉपी करें)। इनके बिना भी skills चलती हैं, पर इनके साथ कहीं तेज़ धार होती हैं।
-- [ ] `.agents/skills/create-ticket/SKILL.md` — "Conventions" टेबल को अपने Linear workspace (teams, projects, labels) से सत्यापित करें।
-- [ ] जो कुछ किसी toggle ने बंद किया है उसे हटाएँ या समायोजित करें (जैसे Linear न इस्तेमाल करने पर `CLAUDE.md` से linear वाले नोट हटाएँ)।
+- [ ] अगर `ISSUE_TRACKER` `linear` है: `.agents/skills/create-ticket/SKILL.md` की "Conventions" टेबल को अपने Linear workspace (teams, projects, labels) से सत्यापित करें। अगर `jira` या `other` है: `/start-task`, `/raise-pr`, और `/create-ticket` की `mcp__linear__*` calls को अपने tracker के MCP tool names में बदलें (हर skill इसे शुरुआत में बताती है)।
+- [ ] जो कुछ किसी toggle ने बंद किया है उसे हटाएँ या समायोजित करें (जैसे semble इस्तेमाल न करने पर `CLAUDE.md` से उसके नोट हटाएँ)।
 
 ## संरचना
 
@@ -105,7 +119,7 @@ workspace बनाया है। इसे सेट करने में �
 | `.agents/skills/` | Canonical workflow skills (agent-agnostic) |
 | `.claude/` | Claude Code settings, agents, skill symlinks |
 | `.opencode/` | opencode agents और plugin config |
-| `.mcp.json` / `opencode.json` | MCP सर्वर (linear, semble) |
+| `.mcp.json` / `opencode.json` | MCP सर्वर (issue tracker, semble) |
 | `git-hooks/` | Protected-branch pre-commit / pre-push hooks |
 | `knowledge/` | Markdown नॉलेज बेस (architecture, decisions, design, runbooks, product, releases) |
 | `<repo>/` (untracked) | आपके प्रोजेक्ट repos, `setup.sh` द्वारा cloned |
@@ -127,10 +141,11 @@ symlink करें, और `CLAUDE.md` में सूचीबद्ध क�
 ## समस्या-निवारण
 
 - **setup के बाद `semble` या `uv` नहीं मिलता** — नया shell खोलें (PATH अपडेट हुआ है) और `./setup.sh` दोबारा चलाएं।
-- **Claude में Linear tools नहीं दिखते** — `/mcp` चलाकर linear सर्वर का OAuth पूरा करें।
+- **Claude में tracker tools नहीं दिखते** — `/mcp` चलाकर `linear` या `atlassian` सर्वर का OAuth पूरा करें।
 - **rtk काम नहीं कर रहा** — Claude Code restart करें; `rtk gain` से जांचें कि commands proxy हो रही हैं।
 - **कोई repo अपडेट नहीं होता** — `setup.sh` कभी उस repo को नहीं छूता जिसमें local बदलाव हों या जो task branch पर हो; वह केवल साफ़ default-branch checkouts को fast-forward करता है।
-- **setup.sh कहता है "edit .setup first"** — जब तक `.setup` में example मान (`PROJECT_NAME="acme"`) हैं, वह चलने से मना करता है।
+- **setup.sh कुछ पूछता नहीं, सीधे "edit .setup first" कहकर रुक जाता है** — यह सिर्फ़ interactive terminal से जुड़े होने पर पूछता है; script या CI से चलाने पर `.setup` पहले से भरा होना ज़रूरी है।
+- **Jira या "other" चुना** — `atlassian` (Jira) MCP सर्वर अपने आप कॉन्फ़िगर हो जाता है, पर `/start-task`, `/raise-pr`, और `/create-ticket` अभी भी Linear के MCP tool names कॉल करते हैं — जब तक आप इन skills को adapt नहीं करते, `setup.sh` हर बार चलने पर अंत में यह चेतावनी देगा।
 
 ## योगदान दें
 

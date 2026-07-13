@@ -30,7 +30,7 @@ Este repo solo versiona las herramientas — tus repos de proyecto los clona
 | 🧠 | **Skills de flujo de trabajo con IA** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (independientes del agente, en `.agents/skills/`, con symlinks para Claude Code; opencode también configurado) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — búsqueda semántica de código que los agentes usan vía MCP en lugar de grep y lectura de archivos |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — proxy de comandos que optimiza tokens para Claude Code |
-| 🎫 | **Linear MCP** — gestión de tickets integrada en las skills |
+| 🎫 | **MCP de gestor de tickets** — Linear, Jira o el tuyo propio; elegido de forma interactiva por `setup.sh` |
 | 🛡️ | **Hooks de git para ramas protegidas** — sin commits/pushes accidentales a tu rama por defecto, en ningún repo |
 | 📚 | **`knowledge/`** — esqueleto de base de conocimiento en markdown (arquitectura, ADRs, documentos de diseño, runbooks) que las herramientas de IA indexan y donde escriben |
 | 🖥️ | **Workspace multi-raíz de VS Code generado** — todos los repos en una ventana |
@@ -38,18 +38,25 @@ Este repo solo versiona las herramientas — tus repos de proyecto los clona
 ## Inicio rápido
 
 1. Haz clic en **[Use this template](https://github.com/lakpriya1s/devrig/generate)** para crear `tu-org/tu-proyecto-workspace`.
-2. Clónalo y edita **`.setup`** — nombre del proyecto, organización de GitHub, lista de repos, prefijo de tickets, rama por defecto, toggles.
-3. Ejecuta:
+2. Clónalo y ejecuta:
 
    ```bash
    ./setup.sh
    ```
 
-4. Ejecuta `claude` desde esta carpeta y empieza a trabajar.
+   La primera vez, si `.setup` todavía tiene los valores de ejemplo, te
+   guiará de forma interactiva: nombre del proyecto, organización de GitHub,
+   los repos a clonar (puedes pegar varios a la vez, separados por espacios o
+   comas), tu gestor de tickets (**Linear**, **Jira** u **otro** — elige uno
+   de un menú), prefijo de tickets, rama por defecto y toggles de funciones —
+   y luego escribe `.setup` por ti. ¿Prefieres editarlo a mano? Rellena
+   `.setup` antes de ejecutar el script y se saltará las preguntas.
+3. Ejecuta `claude` desde esta carpeta y empieza a trabajar.
 
-Después, dentro de Claude Code: ejecuta `/mcp` y autentica el servidor
-**linear** (OAuth una sola vez; **semble** no necesita autenticación), y
-reinicia Claude Code una vez para que el hook de rtk surta efecto.
+Después, dentro de Claude Code: ejecuta `/mcp` y autentica el servidor del
+gestor de tickets configurado (**linear** o **atlassian**; OAuth una sola vez
+— **semble** no necesita autenticación), y reinicia Claude Code una vez para
+que el hook de rtk surta efecto.
 
 ## 🤖 Arranca con tu agente de IA
 
@@ -62,15 +69,20 @@ Acabo de crear un workspace desde la plantilla devrig
 (https://github.com/lakpriya1s/devrig). Ayúdame a configurarlo:
 
 1. Lee README.md, AGENTS.md y .setup para entender el workspace.
-2. Pregúntame el nombre del proyecto, la organización de GitHub, la lista de
-   repos, el prefijo de tickets y la rama por defecto, y rellena .setup.
-3. Ejecuta ./setup.sh y ayúdame a arreglar lo que señale.
+2. Ejecuta ./setup.sh conmigo — te preguntará de forma interactiva mi nombre
+   de proyecto, organización de GitHub, lista de repos (puedo pegar varios a
+   la vez), gestor de tickets (Linear, Jira u otro), prefijo de tickets, rama
+   por defecto y toggles de funciones, y luego escribirá .setup. Transmíteme
+   sus preguntas y ayúdame a responderlas.
+3. Ayúdame a arreglar lo que ./setup.sh señale.
 4. Rellena la tabla Systems de AGENTS.md — una fila por repo (qué es, stack).
 5. Para cada repo, escribe una referencia de revisión en
    .agents/skills/code-review/references/<repo>.md y una de documentación en
    .agents/skills/write-doc/references/<repo>.md (copia los scaffolds
    _example-repo.md y verifica cada dato en el código).
-6. Verifica la tabla de convenciones de create-ticket contra mi workspace de Linear.
+6. Si elegí Linear, verifica la tabla de convenciones de create-ticket contra
+   mi workspace de Linear. Si elegí Jira u otro gestor, ayúdame a adaptar las
+   llamadas MCP de /start-task, /raise-pr y /create-ticket a él.
 7. Haz commit de la personalización en una rama de tarea y abre un PR.
 ```
 
@@ -79,10 +91,11 @@ Acabo de crear un workspace desde la plantilla devrig
 `setup.sh` es idempotente — vuelve a ejecutarlo cuando quieras para actualizar
 todos los repos y herramientas. Hace lo siguiente:
 
+0. **Solo la primera vez**: si `.setup` todavía tiene los valores de ejemplo, pregunta todo lo anterior de forma interactiva y escribe `.setup`.
 1. Comprueba los prerrequisitos (`git`, `gh` autenticado; instala `uv` si semble está habilitado).
 2. Clona cada repo de `REPOS` lado a lado (o hace fast-forward de checkouts limpios de la rama por defecto), y los excluye del estado git de este repo vía `.git/info/exclude`.
 3. Instala los hooks de git de ramas protegidas en este repo y en cada repo clonado.
-4. Converge `.mcp.json` / `opencode.json` a tus toggles de `.setup` (los servidores MCP añadidos a mano se conservan) y genera `.claude/settings.local.json`.
+4. Converge `.mcp.json` / `opencode.json` a tus toggles de `.setup` — añadiendo el servidor `linear` o `atlassian` (Jira) según `ISSUE_TRACKER`, o ninguno si elegiste "otro" — conservando los servidores MCP añadidos a mano, y genera `.claude/settings.local.json`.
 5. Instala semble y calienta un índice de búsqueda por repo.
 6. Instala rtk y registra su hook de Claude Code.
 7. Genera `<project>.code-workspace` para VS Code (se omite si ya existe, así puedes personalizarlo y commitearlo).
@@ -91,11 +104,11 @@ todos los repos y herramientas. Hace lo siguiente:
 
 Tras la primera ejecución de `setup.sh`, haz tu commit de personalización:
 
-- [ ] `.setup` — tus valores reales (setup.sh se niega a ejecutarse con los valores de ejemplo).
+- [ ] `.setup` — `setup.sh` te pregunta estos valores de forma interactiva la primera vez (o rellénalo a mano antes de ejecutarlo y se saltará las preguntas). Para cambiar valores después (cambiar de gestor, añadir un repo), edita `.setup` directamente y vuelve a ejecutar `./setup.sh`.
 - [ ] `AGENTS.md` — rellena la tabla **Systems** (una fila por repo: qué es, stack) y la sección **Testing**. Es la fuente de verdad que lee cada skill.
 - [ ] `.agents/skills/code-review/references/` y `.agents/skills/write-doc/references/` — un archivo de referencia por repo (copia `_example-repo.md`). Las skills funcionan sin ellos, pero con ellos son mucho más precisas.
-- [ ] `.agents/skills/create-ticket/SKILL.md` — verifica la tabla de "Convenciones" contra tu workspace de Linear (equipos, proyectos, etiquetas).
-- [ ] Elimina o ajusta lo que un toggle haya deshabilitado (p. ej. quita las notas de linear de `CLAUDE.md` si no usas Linear).
+- [ ] Si `ISSUE_TRACKER` es `linear`: verifica la tabla de "Convenciones" de `.agents/skills/create-ticket/SKILL.md` contra tu workspace de Linear (equipos, proyectos, etiquetas). Si es `jira` u `other`: adapta las llamadas `mcp__linear__*` de `/start-task`, `/raise-pr` y `/create-ticket` a las herramientas MCP de tu gestor (cada skill lo señala al principio).
+- [ ] Elimina o ajusta lo que un toggle haya deshabilitado (p. ej. quita las notas de semble de `CLAUDE.md` si no lo usas).
 
 ## Estructura
 
@@ -108,7 +121,7 @@ Tras la primera ejecución de `setup.sh`, haz tu commit de personalización:
 | `.agents/skills/` | Skills de flujo de trabajo canónicas (independientes del agente) |
 | `.claude/` | Ajustes de Claude Code, agentes, symlinks de skills |
 | `.opencode/` | Agentes y configuración de plugin de opencode |
-| `.mcp.json` / `opencode.json` | Servidores MCP (linear, semble) |
+| `.mcp.json` / `opencode.json` | Servidores MCP (gestor de tickets, semble) |
 | `git-hooks/` | Hooks pre-commit / pre-push de ramas protegidas |
 | `knowledge/` | Base de conocimiento en markdown (arquitectura, decisiones, diseño, runbooks, producto, releases) |
 | `<repo>/` (sin seguimiento) | Tus repos de proyecto, clonados por `setup.sh` |
@@ -131,10 +144,11 @@ puntero en `AGENTS.md`.
 ## Solución de problemas
 
 - **`semble` o `uv` no se encuentran tras el setup** — abre un nuevo shell (el PATH se actualizó) y vuelve a ejecutar `./setup.sh`.
-- **Faltan las herramientas de Linear en Claude** — ejecuta `/mcp` y completa el flujo OAuth del servidor linear.
+- **Faltan las herramientas del gestor de tickets en Claude** — ejecuta `/mcp` y completa el flujo OAuth del servidor `linear` o `atlassian`.
 - **rtk no se activa** — reinicia Claude Code; verifica con `rtk gain` que los comandos se están proxificando.
 - **Un repo no se actualiza** — `setup.sh` nunca toca un repo con cambios locales o en una rama de tarea; solo hace fast-forward de checkouts limpios de la rama por defecto.
-- **setup.sh dice "edit .setup first"** — se niega a ejecutarse mientras `.setup` contenga los valores de ejemplo (`PROJECT_NAME="acme"`).
+- **setup.sh no me pregunta nada, falla directo con "edit .setup first"** — solo pregunta de forma interactiva si está conectado a una terminal; ejecutarlo desde un script o CI exige que `.setup` ya esté rellenado.
+- **Elegiste Jira u "otro"** — el servidor MCP `atlassian` (Jira) se configura automáticamente, pero `/start-task`, `/raise-pr` y `/create-ticket` siguen llamando a las herramientas MCP de Linear — `setup.sh` te lo avisará al final de cada ejecución hasta que adaptes esas skills.
 
 ## Contribuir
 

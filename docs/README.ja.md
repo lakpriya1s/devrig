@@ -30,7 +30,7 @@ devrig は*メタリポジトリ*です。プロジェクトのすべてのリ�
 | 🧠 | **AI ワークフロースキル** — `/start-task`、`/raise-pr`、`/code-review`、`/write-doc`、`/create-ticket`（エージェント非依存で `.agents/skills/` に配置、Claude Code 用に symlink、opencode も設定済み） |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — grep とファイル読みの代わりにエージェントが MCP 経由で使うセマンティックコード検索 |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code のトークンを節約するコマンドプロキシ |
-| 🎫 | **Linear MCP** — スキルと連携した課題管理 |
+| 🎫 | **課題管理 MCP** — Linear、Jira、または自前のもの。`setup.sh` が対話式に選ばせる |
 | 🛡️ | **保護ブランチ用 git フック** — どのリポジトリでもデフォルトブランチへの誤コミット/プッシュを防止 |
 | 📚 | **`knowledge/`** — AI ツールがインデックスし書き込む markdown ナレッジベースの骨組み（アーキテクチャ、ADR、設計ドキュメント、runbook） |
 | 🖥️ | **自動生成される VS Code マルチルートワークスペース** — すべてのリポジトリをひとつのウィンドウで |
@@ -38,18 +38,24 @@ devrig は*メタリポジトリ*です。プロジェクトのすべてのリ�
 ## クイックスタート
 
 1. **[Use this template](https://github.com/lakpriya1s/devrig/generate)** をクリックして `your-org/your-project-workspace` を作成。
-2. クローンして **`.setup`** を編集 — プロジェクト名、GitHub org、リポジトリ一覧、チケットプレフィックス、デフォルトブランチ、機能トグル。
-3. 実行：
+2. クローンして実行：
 
    ```bash
    ./setup.sh
    ```
 
-4. このフォルダから `claude` を起動して作業開始。
+   初回実行時、`.setup` がまだサンプル値のままなら、対話式に設定を案内します:
+   プロジェクト名、GitHub org、クローンするリポジトリ（スペースまたはカンマ
+   区切りで複数まとめて貼り付け可）、課題管理ツール（**Linear**、**Jira**、
+   **その他** からメニューで選択）、チケットプレフィックス、デフォルト
+   ブランチ、機能トグル。回答は自動的に `.setup` に書き込まれます。手動編集
+   したい場合は、スクリプト実行前に `.setup` を自分で埋めておけばプロンプトは
+   スキップされます。
+3. このフォルダから `claude` を起動して作業開始。
 
-その後、Claude Code 内で `/mcp` を実行して **linear** サーバーを認証し
-（初回のみの OAuth。**semble** は認証不要）、rtk フックを有効にするため
-Claude Code を一度再起動してください。
+その後、Claude Code 内で `/mcp` を実行して設定された課題管理サーバー
+（**linear** または **atlassian**）を認証し（初回のみの OAuth。**semble** は
+認証不要）、rtk フックを有効にするため Claude Code を一度再起動してください。
 
 ## 🤖 AI エージェントでキックスタート
 
@@ -62,15 +68,20 @@ devrig テンプレート（https://github.com/lakpriya1s/devrig）からワー�
 作成しました。セットアップを手伝ってください：
 
 1. README.md、AGENTS.md、.setup を読んでワークスペースを理解する。
-2. プロジェクト名、GitHub org、リポジトリ一覧、チケットプレフィックス、
-   デフォルトブランチを私に質問し、.setup に記入する。
-3. ./setup.sh を実行し、指摘された問題の修正を手伝う。
+2. 一緒に ./setup.sh を実行する — プロジェクト名、GitHub org、リポジトリ
+   一覧（複数まとめて貼り付け可）、課題管理ツール（Linear、Jira、その他）、
+   チケットプレフィックス、デフォルトブランチ、機能トグルを対話式に質問
+   してくるので、その内容を私に伝えて回答を埋めるのを手伝ってください。
+   最後に .setup が自動生成されます。
+3. ./setup.sh が指摘した問題の修正を手伝う。
 4. AGENTS.md の Systems テーブルを埋める — リポジトリごとに1行（役割、スタック）。
 5. 各リポジトリについて .agents/skills/code-review/references/<repo>.md に
    レビューリファレンスを、.agents/skills/write-doc/references/<repo>.md に
    ドキュメントリファレンスを書く（_example-repo.md の雛形をコピーし、
    すべての事実をコードで検証する）。
-6. create-ticket の規約テーブルを私の Linear ワークスペースと照合する。
+6. Linear を選んだ場合は create-ticket の規約テーブルを私の Linear
+   ワークスペースと照合する。Jira やその他を選んだ場合は /start-task、
+   /raise-pr、/create-ticket の MCP 呼び出しをそちらに合わせて調整する。
 7. パーソナライズをタスクブランチにコミットして PR を開く。
 ```
 
@@ -78,10 +89,11 @@ devrig テンプレート（https://github.com/lakpriya1s/devrig）からワー�
 
 `setup.sh` は冪等です — いつでも再実行してすべてのリポジトリとツールを更新できます。内容：
 
+0. **初回のみ**：`.setup` がまだサンプル値のままなら、上記すべてを対話式に質問し `.setup` に書き込む。
 1. 前提条件を確認（`git`、認証済み `gh`。semble 有効時は `uv` をインストール）。
 2. `REPOS` の各リポジトリを横並びにクローン（クリーンなデフォルトブランチのチェックアウトは fast-forward）し、`.git/info/exclude` 経由でこのリポジトリの git status から除外。
 3. このリポジトリとクローンした各リポジトリに保護ブランチ用 git フックをインストール。
-4. `.mcp.json` / `opencode.json` を `.setup` のトグルに収束させ（手動追加した MCP サーバーは保持）、`.claude/settings.local.json` を生成。
+4. `.mcp.json` / `opencode.json` を `.setup` のトグルに収束させる — `ISSUE_TRACKER` に応じて `linear` または `atlassian`（Jira）サーバーを追加し、「その他」なら追加しない。手動追加した MCP サーバーは保持し、`.claude/settings.local.json` を生成。
 5. semble をインストールし、リポジトリごとに検索インデックスをウォームアップ。
 6. rtk をインストールし、Claude Code フックを登録。
 7. VS Code 用の `<project>.code-workspace` を生成（既存の場合はスキップされるため、カスタマイズしてコミットしても安全）。
@@ -90,11 +102,11 @@ devrig テンプレート（https://github.com/lakpriya1s/devrig）からワー�
 
 初回の `setup.sh` 実行後、パーソナライズをコミットしましょう：
 
-- [ ] `.setup` — 実際の値を設定（サンプル値のままでは setup.sh は実行を拒否します）。
+- [ ] `.setup` — 初回実行時に `setup.sh` が対話式に質問します（または実行前に手動で埋めておけばプロンプトはスキップされます）。後で値を変える場合（トラッカーの変更、リポジトリの追加など）は `.setup` を直接編集して `./setup.sh` を再実行してください。
 - [ ] `AGENTS.md` — **Systems** テーブル（リポジトリごとに1行：役割、スタック）と **Testing** セクションを記入。すべてのスキルが読む唯一の情報源です。
 - [ ] `.agents/skills/code-review/references/` と `.agents/skills/write-doc/references/` — リポジトリごとにリファレンスファイルを1つ（`_example-repo.md` をコピー）。なくても動きますが、あると格段に鋭くなります。
-- [ ] `.agents/skills/create-ticket/SKILL.md` — 「規約」テーブルを自分の Linear ワークスペース（チーム、プロジェクト、ラベル）と照合。
-- [ ] トグルで無効化したものを削除・調整（例：Linear を使わないなら `CLAUDE.md` から linear の記述を削除）。
+- [ ] `ISSUE_TRACKER` が `linear` の場合：`.agents/skills/create-ticket/SKILL.md` の「規約」テーブルを自分の Linear ワークスペース（チーム、プロジェクト、ラベル）と照合。`jira` や `other` の場合：`/start-task`、`/raise-pr`、`/create-ticket` の `mcp__linear__*` 呼び出しを自分のトラッカーの MCP ツール名に合わせて調整（各スキルの冒頭にその旨の記載あり）。
+- [ ] トグルで無効化したものを削除・調整（例：semble を使わないなら `CLAUDE.md` から関連記述を削除）。
 
 ## 構成
 
@@ -107,7 +119,7 @@ devrig テンプレート（https://github.com/lakpriya1s/devrig）からワー�
 | `.agents/skills/` | 正規のワークフロースキル（エージェント非依存） |
 | `.claude/` | Claude Code の設定、エージェント、スキルの symlink |
 | `.opencode/` | opencode のエージェントとプラグイン設定 |
-| `.mcp.json` / `opencode.json` | MCP サーバー（linear、semble） |
+| `.mcp.json` / `opencode.json` | MCP サーバー（課題管理ツール、semble） |
 | `git-hooks/` | 保護ブランチ用 pre-commit / pre-push フック |
 | `knowledge/` | markdown ナレッジベース（アーキテクチャ、決定、設計、runbook、プロダクト、リリース） |
 | `<repo>/`（未追跡） | `setup.sh` がクローンするプロジェクトリポジトリ |
@@ -130,10 +142,11 @@ push し、`.setup` の `REPOS` に追加、ここのフォルダを削除して
 ## トラブルシューティング
 
 - **setup 後に `semble` や `uv` が見つからない** — 新しいシェルを開き（PATH が更新されています）、`./setup.sh` を再実行。
-- **Claude に Linear ツールが表示されない** — `/mcp` を実行して linear サーバーの OAuth フローを完了。
+- **Claude に課題管理ツールが表示されない** — `/mcp` を実行して `linear` または `atlassian` サーバーの OAuth フローを完了。
 - **rtk が効かない** — Claude Code を再起動し、`rtk gain` でコマンドがプロキシされているか確認。
 - **リポジトリが更新されない** — `setup.sh` はローカル変更があるリポジトリやタスクブランチ上のリポジトリには触れません。クリーンなデフォルトブランチのチェックアウトだけを fast-forward します。
-- **setup.sh が "edit .setup first" と言う** — `.setup` がサンプル値（`PROJECT_NAME="acme"`）のままだと実行を拒否します。
+- **setup.sh が何も聞いてこず "edit .setup first" と言う** — 対話式端末に接続している場合のみプロンプトが出ます。スクリプトや CI から実行する場合は `.setup` を事前に埋めておく必要があります。
+- **Jira や「その他」を選んだ** — `atlassian`（Jira）MCP サーバーは自動で設定されますが、`/start-task`、`/raise-pr`、`/create-ticket` は依然として Linear の MCP ツール名を呼び出します — これらのスキルを調整するまで、`setup.sh` は実行のたびに末尾でこの点を警告します。
 
 ## コントリビュート
 

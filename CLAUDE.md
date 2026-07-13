@@ -18,5 +18,9 @@ This workspace also configures Claude-Code-only tooling not covered by `AGENTS.m
   - `/create-ticket` — file well-formed epics, stories, tasks, and bugs
 - **semble MCP server**: semantic code search across repos — prefer it over
   grep-and-read for "where is X implemented" questions.
-- **linear MCP server**: issue tracking — used by `/start-task` and
-  `/create-ticket`; ticket ids use the `TICKET_PREFIX` defined in `.setup`.
+- **Issue tracker MCP** (`linear` or `atlassian`, wired up by `setup.sh`
+  according to `ISSUE_TRACKER` in `.setup`): issue tracking. `/start-task`,
+  `/raise-pr`, and `/create-ticket` currently call **Linear's** MCP tool
+  names (`mcp__linear__*`) — if `ISSUE_TRACKER` is `jira` or `other`, adapt
+  those skills' tool calls to your tracker's MCP server before relying on
+  them. Ticket ids use the `TICKET_PREFIX` defined in `.setup`.

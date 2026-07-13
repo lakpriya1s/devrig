@@ -8,6 +8,9 @@ description: Raise pull requests for the current task — detects which workspac
 > Project values (ticket prefix, default branch, repo list) come from `.setup`
 > and `AGENTS.md` at the workspace root — read them; never assume.
 > Below, `<BASE>` means the `DEFAULT_BRANCH` from `.setup`.
+> This skill's MCP calls (`mcp__linear__*`) assume `ISSUE_TRACKER="linear"` in
+> `.setup`. If your workspace uses Jira or another tracker instead, adapt these
+> calls to your tracker's MCP tool names before relying on this skill.
 
 ## Usage
 

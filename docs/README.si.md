@@ -30,7 +30,7 @@ devrig යනු *meta-repo* එකකි: ඔබේ ව්‍යාපෘති
 | 🧠 | **AI workflow skills** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (agent-agnostic ලෙස `.agents/skills/` තුළ, Claude Code සඳහා symlink කර ඇත; opencode ද වින්‍යාස කර ඇත) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — grep කර ගොනු කියවීම වෙනුවට agents MCP හරහා භාවිත කරන semantic code search |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code සඳහා token ඉතිරි කරන command proxy |
-| 🎫 | **Linear MCP** — skills සමඟ සම්බන්ධ issue tracking |
+| 🎫 | **Issue tracker MCP** — Linear, Jira, හෝ ඔබේම එකක්; `setup.sh` විසින් interactive ලෙස තෝරවයි |
 | 🛡️ | **Protected-branch git hooks** — කිසිදු repo එකක default branch එකට වැරදීමකින් commit/push වීම වළක්වයි |
 | 📚 | **`knowledge/`** — AI මෙවලම් index කර ලියන markdown දැනුම් පදනමක සැකිල්ල (architecture, ADRs, design docs, runbooks) |
 | 🖥️ | **ස්වයංක්‍රීයව සෑදෙන VS Code multi-root workspace** — සියලුම repos එක window එකක |
@@ -38,18 +38,25 @@ devrig යනු *meta-repo* එකකි: ඔබේ ව්‍යාපෘති
 ## ඉක්මන් ආරම්භය
 
 1. **[Use this template](https://github.com/lakpriya1s/devrig/generate)** ක්ලික් කර `your-org/your-project-workspace` සාදන්න.
-2. Clone කර **`.setup`** සංස්කරණය කරන්න — ව්‍යාපෘති නම, GitHub org, repo ලැයිස්තුව, ticket prefix, default branch, feature toggles.
-3. ධාවනය කරන්න:
+2. Clone කර ධාවනය කරන්න:
 
    ```bash
    ./setup.sh
    ```
 
-4. මෙම folder එකෙන් `claude` ධාවනය කර වැඩ අරඹන්න.
+   පළමු වතාවේ ධාවනයේදී, `.setup` තවමත් example අගයන් නම්, එය ඔබෙන් interactive
+   ලෙස අසයි: ව්‍යාපෘති නම, GitHub org, clone කළ යුතු repos (space හෝ comma
+   වලින් වෙන් කර කිහිපයක් එකවර paste කරන්න), issue tracker (**Linear**,
+   **Jira**, හෝ **other** — මෙනුවකින් තෝරන්න), ticket prefix, default branch,
+   සහ feature toggles — පසුව එය ඔබ වෙනුවෙන් `.setup` ලියයි. අතින් සංස්කරණය
+   කිරීමට කැමතිද? script ධාවනය කිරීමට පෙර ඔබම `.setup` පුරවන්න, එවිට එය
+   ප්‍රශ්න මඟ හරියි.
+3. මෙම folder එකෙන් `claude` ධාවනය කර වැඩ අරඹන්න.
 
-ඉන්පසු Claude Code තුළ: `/mcp` ධාවනය කර **linear** server එක authenticate
-කරන්න (එක් වරක් OAuth; **semble** ට auth අවශ්‍ය නැත), rtk hook ක්‍රියාත්මක
-වීමට Claude Code එක වරක් restart කරන්න.
+ඉන්පසු Claude Code තුළ: `/mcp` ධාවනය කර වින්‍යාස කළ tracker server එක
+(**linear** හෝ **atlassian**) authenticate කරන්න (එක් වරක් OAuth; **semble**
+ට auth අවශ්‍ය නැත), rtk hook ක්‍රියාත්මක වීමට Claude Code එක වරක් restart
+කරන්න.
 
 ## 🤖 ඔබේ AI agent සමඟ ආරම්භ කරන්න
 
@@ -62,15 +69,21 @@ devrig යනු *meta-repo* එකකි: ඔබේ ව්‍යාපෘති
 එකක් සෑදුවා. එය සකසන්න මට උදව් කරන්න:
 
 1. README.md, AGENTS.md සහ .setup කියවා workspace එක තේරුම් ගන්න.
-2. මගේ ව්‍යාපෘති නම, GitHub org, repo ලැයිස්තුව, ticket prefix සහ
-   default branch මගෙන් අසා .setup පුරවන්න.
-3. ./setup.sh ධාවනය කර එය පෙන්වන ගැටලු විසඳන්න උදව් කරන්න.
+2. මා සමඟ ./setup.sh ධාවනය කරන්න — එය මගේ ව්‍යාපෘති නම, GitHub org, repo
+   ලැයිස්තුව (කිහිපයක් එකවර paste කළ හැක), issue tracker (Linear, Jira, හෝ
+   other), ticket prefix, default branch, සහ feature toggles interactive
+   ලෙස අසා .setup ලියනු ඇත. එහි ප්‍රශ්න මට ලබා දී පිළිතුරු පිරවීමට උදව්
+   කරන්න.
+3. ./setup.sh පෙන්වන ගැටලු විසඳන්න උදව් කරන්න.
 4. AGENTS.md හි Systems වගුව පුරවන්න — repo එකකට එක පේළියක් (එය කුමක්ද, stack).
 5. සෑම repo එකකටම .agents/skills/code-review/references/<repo>.md හි review
    reference එකක් සහ .agents/skills/write-doc/references/<repo>.md හි doc
    reference එකක් ලියන්න (_example-repo.md scaffold copy කර සෑම කරුණක්ම
    code එකෙන් තහවුරු කරන්න).
-6. create-ticket හි conventions වගුව මගේ Linear workspace එක සමඟ සසඳන්න.
+6. මම Linear තෝරා ඇත්නම්, create-ticket හි conventions වගුව මගේ Linear
+   workspace එක සමඟ සසඳන්න. Jira හෝ වෙනත් tracker එකක් තෝරා ඇත්නම්,
+   /start-task, /raise-pr, සහ /create-ticket හි MCP calls එයට ගැලපෙන ලෙස
+   සකස් කිරීමට උදව් කරන්න.
 7. personalization එක task branch එකක commit කර PR එකක් විවෘත කරන්න.
 ```
 
@@ -79,10 +92,11 @@ devrig යනු *meta-repo* එකකි: ඔබේ ව්‍යාපෘති
 `setup.sh` idempotent ය — සියලුම repos සහ මෙවලම් යාවත්කාලීන කිරීමට ඕනෑම
 වේලාවක නැවත ධාවනය කළ හැක. එය:
 
+0. **පළමු වතාවේ පමණක්**: `.setup` තවමත් example අගයන් නම්, ඉහත සියල්ල interactive ලෙස අසා `.setup` ලියයි.
 1. පූර්ව අවශ්‍යතා පරීක්ෂා කරයි (`git`, authenticate වූ `gh`; semble සක්‍රීය නම් `uv` install කරයි).
 2. `REPOS` හි සෑම repo එකක්ම එකිනෙක අසල clone කරයි (හෝ පිරිසිදු default-branch checkouts fast-forward කරයි), සහ `.git/info/exclude` හරහා ඒවා මෙම repo එකේ git status වෙතින් බැහැර කරයි.
 3. මෙම repo එකට සහ clone වූ සෑම repo එකකටම protected-branch git hooks install කරයි.
-4. `.mcp.json` / `opencode.json` ඔබේ `.setup` toggles වෙත converge කරයි (අතින් එකතු කළ MCP servers ආරක්ෂා වේ) සහ `.claude/settings.local.json` සාදයි.
+4. `.mcp.json` / `opencode.json` ඔබේ `.setup` toggles වෙත converge කරයි — `ISSUE_TRACKER` අනුව `linear` හෝ `atlassian` (Jira) server එක එකතු කර, "other" තෝරා ඇත්නම් කිසිවක් එකතු නොකරයි — අතින් එකතු කළ MCP servers ආරක්ෂා වන අතර `.claude/settings.local.json` සාදයි.
 5. semble install කර repo එකකට search index එකක් warm කරයි.
 6. rtk install කර එහි Claude Code hook එක register කරයි.
 7. VS Code සඳහා `<project>.code-workspace` සාදයි (දැනටමත් තිබේ නම් මඟ හරින බැවින් customize කර commit කිරීම ආරක්ෂිතයි).
@@ -91,11 +105,11 @@ devrig යනු *meta-repo* එකකි: ඔබේ ව්‍යාපෘති
 
 පළමු `setup.sh` ධාවනයෙන් පසු, ඔබේ personalization commit එක කරන්න:
 
-- [ ] `.setup` — ඔබේ සැබෑ අගයන් (example අගයන් සමඟ setup.sh ධාවනය ප්‍රතික්ෂේප කරයි).
+- [ ] `.setup` — පළමු ධාවනයේදී `setup.sh` මේවා interactive ලෙස අසයි (හෝ ධාවනයට පෙර අතින් පුරවන්න, එවිට ප්‍රශ්න මඟ හැරේ). පසුව අගයන් වෙනස් කිරීමට (tracker මාරු කිරීම, repo එකතු කිරීම), `.setup` කෙලින්ම සංස්කරණය කර `./setup.sh` නැවත ධාවනය කරන්න.
 - [ ] `AGENTS.md` — **Systems** වගුව (repo එකකට එක පේළියක්: එය කුමක්ද, stack) සහ **Testing** කොටස පුරවන්න. සෑම skill එකක්ම කියවන source of truth මෙයයි.
 - [ ] `.agents/skills/code-review/references/` සහ `.agents/skills/write-doc/references/` — repo එකකට එක reference ගොනුවක් (`_example-repo.md` copy කරන්න). ඒවා නැතිවත් skills ක්‍රියා කරයි, නමුත් ඒවා සමඟ බෙහෙවින් තියුණුයි.
-- [ ] `.agents/skills/create-ticket/SKILL.md` — "Conventions" වගුව ඔබේ Linear workspace එක (teams, projects, labels) සමඟ තහවුරු කරන්න.
-- [ ] Toggle එකකින් අක්‍රීය කළ දේ ඉවත් කරන්න හෝ සකසන්න (උදා: Linear භාවිත නොකරන්නේ නම් `CLAUDE.md` වෙතින් linear සටහන් ඉවත් කරන්න).
+- [ ] `ISSUE_TRACKER` `linear` නම්: `.agents/skills/create-ticket/SKILL.md` හි "Conventions" වගුව ඔබේ Linear workspace එක (teams, projects, labels) සමඟ තහවුරු කරන්න. `jira` හෝ `other` නම්: `/start-task`, `/raise-pr`, සහ `/create-ticket` හි `mcp__linear__*` calls ඔබේ tracker එකේ MCP tool නම් වලට ගැලපෙන ලෙස සකසන්න (එය සෑම skill එකකම මුලින්ම සඳහන් වේ).
+- [ ] Toggle එකකින් අක්‍රීය කළ දේ ඉවත් කරන්න හෝ සකසන්න (උදා: semble භාවිත නොකරන්නේ නම් `CLAUDE.md` වෙතින් ඒ පිළිබඳ සටහන් ඉවත් කරන්න).
 
 ## ව්‍යුහය
 
@@ -108,7 +122,7 @@ devrig යනු *meta-repo* එකකි: ඔබේ ව්‍යාපෘති
 | `.agents/skills/` | සම්මත workflow skills (agent-agnostic) |
 | `.claude/` | Claude Code settings, agents, skill symlinks |
 | `.opencode/` | opencode agents සහ plugin config |
-| `.mcp.json` / `opencode.json` | MCP servers (linear, semble) |
+| `.mcp.json` / `opencode.json` | MCP servers (issue tracker, semble) |
 | `git-hooks/` | Protected-branch pre-commit / pre-push hooks |
 | `knowledge/` | Markdown දැනුම් පදනම (architecture, decisions, design, runbooks, product, releases) |
 | `<repo>/` (untracked) | `setup.sh` මගින් clone වන ඔබේ ව්‍යාපෘති repos |
@@ -130,10 +144,11 @@ code සොයන ආකාරයටම design context සොයා ගනී. �
 ## ගැටලු නිරාකරණය
 
 - **setup ට පසු `semble` හෝ `uv` හමු නොවේ** — නව shell එකක් විවෘත කර (PATH යාවත්කාලීන විය) `./setup.sh` නැවත ධාවනය කරන්න.
-- **Claude හි Linear මෙවලම් නැත** — `/mcp` ධාවනය කර linear server එකේ OAuth ක්‍රියාවලිය සම්පූර්ණ කරන්න.
+- **Claude හි tracker මෙවලම් නැත** — `/mcp` ධාවනය කර `linear` හෝ `atlassian` server එකේ OAuth ක්‍රියාවලිය සම්පූර්ණ කරන්න.
 - **rtk ක්‍රියා නොකරයි** — Claude Code restart කරන්න; `rtk gain` මගින් commands proxy වන බව තහවුරු කරන්න.
 - **Repo එකක් යාවත්කාලීන නොවේ** — `setup.sh` local වෙනස්කම් ඇති හෝ task branch එකක ඇති repo එකක් කිසිවිටෙක ස්පර්ශ නොකරයි; පිරිසිදු default-branch checkouts පමණක් fast-forward කරයි.
-- **setup.sh "edit .setup first" කියයි** — `.setup` හි example අගයන් (`PROJECT_NAME="acme"`) ඇති තාක් එය ධාවනය ප්‍රතික්ෂේප කරයි.
+- **setup.sh කිසිවක් නොඅසා කෙලින්ම "edit .setup first" කියා අසාර්ථක වේ** — interactive terminal එකකට සම්බන්ධ විටදී පමණක් එය අසයි; script එකකින් හෝ CI එකකින් ධාවනය කරන්නේ නම් `.setup` කලින්ම පුරවා තිබිය යුතුය.
+- **Jira හෝ "other" තෝරා ඇත** — `atlassian` (Jira) MCP server එක ස්වයංක්‍රීයව සකසනු ලැබේ, නමුත් `/start-task`, `/raise-pr`, සහ `/create-ticket` තවමත් Linear හි MCP tool නම් call කරයි — ඔබ එම skills සකසන තෙක් `setup.sh` සෑම ධාවනයක අවසානයේම මේ ගැන අනතුරු අඟවනු ඇත.
 
 ## දායක වන්න
 
