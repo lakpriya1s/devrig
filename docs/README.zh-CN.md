@@ -58,6 +58,8 @@ npx create-devrig my-project
 
 ## 🤖 用你的 AI agent 启动项目
 
+### 已经有你的仓库了？
+
 刚从模板创建了工作区？把下面的提示词粘贴给你的 AI 编程 agent（Claude Code、Cursor、opencode 等），让它陪你完成剩余设置：
 
 ```text
@@ -70,6 +72,31 @@ I just created a workspace from the devrig template
    toggles) so I can answer them — then help me fix anything it flags.
 3. Work through the README's "Customization checklist" section with me.
 4. Commit the personalization on a task branch and open a PR.
+```
+
+### 要开始一个全新的项目？
+
+还没有仓库，只有一个想法？把下面标记处换成你的项目描述，然后粘贴这个 — agent 会带你从想法直接走到一个可运行的工作区，包括新建仓库：
+
+```text
+I want to start a brand-new project using the devrig template
+(https://github.com/lakpriya1s/devrig). Here's what I'm building:
+
+[describe your project — what it does, who it's for, and any stack or
+platform preferences you already have]
+
+Help me go from this description to a working workspace:
+
+1. Run `npx create-devrig <name>` to scaffold the workspace (pick a short
+   project name from my description if I haven't given one).
+2. Propose a repo breakdown and stack for each piece based on what I'm
+   building — confirm with me before creating anything.
+3. Create each repo on GitHub under my org (ask which) and scaffold it
+   with its framework's starter command, committing the initial code.
+4. Fill in devrig.toml (project name, org, the repos we just created,
+   issue tracker, ticket prefix, default branch — make sure it matches
+   what the new repos actually use) and run ./setup.sh.
+5. Fill in AGENTS.md's Systems table since you already know each stack.
 ```
 
 ## setup.sh 做了什么

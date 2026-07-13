@@ -68,6 +68,8 @@ rtk 훅이 적용되도록 Claude Code를 한 번 재시작하세요.
 
 ## 🤖 AI 에이전트로 시작하기
 
+### 이미 저장소가 있나요?
+
 방금 이 템플릿으로 워크스페이스를 만드셨나요? 아래 내용을 AI 코딩
 에이전트(Claude Code, Cursor, opencode 등)에 붙여넣고 나머지 설정을 함께
 마무리하세요:
@@ -82,6 +84,31 @@ I just created a workspace from the devrig template
    toggles) so I can answer them — then help me fix anything it flags.
 3. Work through the README's "Customization checklist" section with me.
 4. Commit the personalization on a task branch and open a PR.
+```
+
+### 완전히 새로운 프로젝트를 시작하나요?
+
+아직 저장소가 없고 아이디어만 있나요? 표시된 부분을 프로젝트 설명으로 바꿔서 이걸 대신 붙여넣으세요 — 에이전트가 아이디어부터 실제로 동작하는 워크스페이스까지(새 저장소 포함) 데려다줍니다:
+
+```text
+I want to start a brand-new project using the devrig template
+(https://github.com/lakpriya1s/devrig). Here's what I'm building:
+
+[describe your project — what it does, who it's for, and any stack or
+platform preferences you already have]
+
+Help me go from this description to a working workspace:
+
+1. Run `npx create-devrig <name>` to scaffold the workspace (pick a short
+   project name from my description if I haven't given one).
+2. Propose a repo breakdown and stack for each piece based on what I'm
+   building — confirm with me before creating anything.
+3. Create each repo on GitHub under my org (ask which) and scaffold it
+   with its framework's starter command, committing the initial code.
+4. Fill in devrig.toml (project name, org, the repos we just created,
+   issue tracker, ticket prefix, default branch — make sure it matches
+   what the new repos actually use) and run ./setup.sh.
+5. Fill in AGENTS.md's Systems table since you already know each stack.
 ```
 
 ## setup.sh가 하는 일

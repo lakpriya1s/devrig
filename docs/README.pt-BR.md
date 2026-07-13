@@ -71,6 +71,8 @@ para o hook do rtk entrar em vigor.
 
 ## 🤖 Comece com seu agente de IA
 
+### Já tem seus repos?
+
 Acabou de criar um workspace a partir deste template? Cole isto no seu agente
 de programação (Claude Code, Cursor, opencode, …) e deixe-o terminar a
 configuração com você:
@@ -85,6 +87,31 @@ I just created a workspace from the devrig template
    toggles) so I can answer them — then help me fix anything it flags.
 3. Work through the README's "Customization checklist" section with me.
 4. Commit the personalization on a task branch and open a PR.
+```
+
+### Começando um projeto totalmente novo?
+
+Ainda sem repos, só uma ideia? Troque a parte marcada pela descrição do seu projeto e cole isto — o agente te leva da ideia a um workspace funcionando, repos novos incluídos:
+
+```text
+I want to start a brand-new project using the devrig template
+(https://github.com/lakpriya1s/devrig). Here's what I'm building:
+
+[describe your project — what it does, who it's for, and any stack or
+platform preferences you already have]
+
+Help me go from this description to a working workspace:
+
+1. Run `npx create-devrig <name>` to scaffold the workspace (pick a short
+   project name from my description if I haven't given one).
+2. Propose a repo breakdown and stack for each piece based on what I'm
+   building — confirm with me before creating anything.
+3. Create each repo on GitHub under my org (ask which) and scaffold it
+   with its framework's starter command, committing the initial code.
+4. Fill in devrig.toml (project name, org, the repos we just created,
+   issue tracker, ticket prefix, default branch — make sure it matches
+   what the new repos actually use) and run ./setup.sh.
+5. Fill in AGENTS.md's Systems table since you already know each stack.
 ```
 
 ## O que o setup.sh faz

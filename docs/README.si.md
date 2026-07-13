@@ -71,6 +71,8 @@ GitHub UI එක කැමතිද, නැතහොත් ආරම්භයේ
 
 ## 🤖 ඔබේ AI agent සමඟ ආරම්භ කරන්න
 
+### දැනටමත් ඔබේ repos තිබේද?
+
 මේ template එකෙන් workspace එකක් දැන් සෑදුවාද? මෙය ඔබේ AI coding agent
 (Claude Code, Cursor, opencode, …) වෙත paste කර ඉතිරි සැකසුම ඔහු සමඟ
 අවසන් කරන්න:
@@ -85,6 +87,31 @@ I just created a workspace from the devrig template
    toggles) so I can answer them — then help me fix anything it flags.
 3. Work through the README's "Customization checklist" section with me.
 4. Commit the personalization on a task branch and open a PR.
+```
+
+### සම්පූර්ණයෙන්ම නව ව්‍යාපෘතියක් ආරම්භ කරනවාද?
+
+තවම repos නැත, idea එකක් පමණද? සලකුණු කර ඇති කොටස ඔබේ ව්‍යාපෘති විස්තරයෙන් වෙනස් කර මෙය ඒ වෙනුවට paste කරන්න — agent ඔබව idea එකේ සිට ක්‍රියාත්මක workspace එකකට (නව repos ඇතුළුව) ගෙන යයි:
+
+```text
+I want to start a brand-new project using the devrig template
+(https://github.com/lakpriya1s/devrig). Here's what I'm building:
+
+[describe your project — what it does, who it's for, and any stack or
+platform preferences you already have]
+
+Help me go from this description to a working workspace:
+
+1. Run `npx create-devrig <name>` to scaffold the workspace (pick a short
+   project name from my description if I haven't given one).
+2. Propose a repo breakdown and stack for each piece based on what I'm
+   building — confirm with me before creating anything.
+3. Create each repo on GitHub under my org (ask which) and scaffold it
+   with its framework's starter command, committing the initial code.
+4. Fill in devrig.toml (project name, org, the repos we just created,
+   issue tracker, ticket prefix, default branch — make sure it matches
+   what the new repos actually use) and run ./setup.sh.
+5. Fill in AGENTS.md's Systems table since you already know each stack.
 ```
 
 ## setup.sh කරන දේ
