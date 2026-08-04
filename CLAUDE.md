@@ -16,8 +16,15 @@ This workspace also configures Claude-Code-only tooling not covered by `AGENTS.m
   - `/write-doc` — write design docs, as-builts, ADRs, and runbooks into the
     knowledge base
   - `/create-ticket` — file well-formed epics, stories, tasks, and bugs
+  - `/graphify` — build or query a repo's knowledge graph (see the
+    **Knowledge graph** section in `AGENTS.md` for when to reach for it)
 - **semble MCP server**: semantic code search across repos — prefer it over
   grep-and-read for "where is X implemented" questions.
+- **graphify PreToolUse guards** (`.claude/settings.json`, registered by
+  `setup.sh` when the `graphify` toggle is on): before a Bash/Grep search or a
+  Read/Glob, a guard reminds you to check the repo's graph first. Treat it as a
+  real signal, not noise — `graphify query` in that repo is usually cheaper and
+  more complete than the search you were about to run.
 - **Issue tracker MCP** (`linear` or `atlassian`, wired up by `setup.sh`
   according to `ISSUE_TRACKER` in `devrig.toml`): issue tracking. `/start-task`,
   `/raise-pr`, and `/create-ticket` currently call **Linear's** MCP tool

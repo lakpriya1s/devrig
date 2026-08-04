@@ -32,6 +32,33 @@ kebab-case (e.g. `ac-123-feature-user-invites`).
 <!-- TODO: document how changes are validated per repo — test suites,
      commands, what runs in CI vs. locally. -->
 
+## Knowledge graph (graphify)
+
+Enabled by the `graphify` toggle in `devrig.toml`. There is no single
+merged graph — one graph per git repo, each in its own `graphify-out/`
+(hubs, community structure, cross-file relationships): one per cloned project
+repo, plus one for this workspace repo covering `knowledge/` and the tooling.
+The cloned repos are excluded from the workspace graph, so the scopes never
+overlap.
+
+Rules:
+
+- For a codebase question about a specific repo, `cd` into that repo first, then
+  use `graphify query "<question>"` when `<repo>/graphify-out/graph.json` exists.
+  Use `graphify path "<A>" "<B>"` for how two things connect and
+  `graphify explain "<concept>"` for one node and its neighbours. These return a
+  scoped subgraph — usually far smaller than `GRAPH_REPORT.md` or a grep dump.
+- If `<repo>/graphify-out/wiki/index.md` exists, use it for broad navigation
+  instead of browsing raw source.
+- Read `<repo>/graphify-out/GRAPH_REPORT.md` only for a broad architecture review,
+  or when query/path/explain don't surface enough context.
+- No graph yet in a repo? Build it with `graphify update .` from that repo root
+  (AST-only, no API key). The git hooks in `git-hooks/` keep it fresh after
+  commits, checkouts and merges — you don't need to rebuild by hand after
+  committing.
+- The full skill lives in `.agents/skills/graphify/SKILL.md` (installed by
+  `setup.sh` from the graphify CLI, so it's gitignored, not committed).
+
 ## Knowledge base
 
 Design docs, architecture notes, ADRs, and runbooks live in [`knowledge/`](knowledge/)

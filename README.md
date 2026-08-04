@@ -29,6 +29,7 @@ stay untracked. Everything is configured from a single **`devrig.toml`** file.
 |---|---|
 | 🧠 | **AI workflow skills** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (agent-agnostic in `.agents/skills/`, symlinked for Claude Code, opencode configured too) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — semantic code search agents use via MCP instead of grep-and-read |
+| 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — a knowledge graph per repo that agents query instead of grepping, kept fresh by git hooks |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — token-optimizing command proxy for Claude Code |
 | 🎫 | **Issue tracker MCP** — Linear, Jira, or bring your own; picked interactively by `setup.sh` |
 | 🛡️ | **Protected-branch git hooks** — no accidental commits/pushes to your default branch, in any repo |
@@ -70,7 +71,9 @@ Prefer GitHub's UI, or want the repo created under your org from the start?
 
 Either way, inside Claude Code: run `/mcp` and authenticate the tracker server
 that was configured (**linear** or **atlassian**; one-time OAuth — **semble**
-needs no auth), and restart Claude Code once so the rtk hook takes effect.
+needs no auth), and restart Claude Code once so the rtk hook takes effect. If
+graphify is enabled, build each repo's graph once with `graphify update .` from
+that repo's root — the git hooks keep it fresh from then on.
 
 ## 🤖 Kickstart with your AI agent
 
@@ -133,7 +136,8 @@ Help me go from this description to a working workspace:
    generates a `README.md` for *your* project from `devrig.toml`. Skipped
    inside the devrig repo itself, and a README you've edited is never
    overwritten.
-2. Checks prerequisites (`git`, `gh` authenticated; installs `uv` if semble is enabled).
+2. Checks prerequisites (`git`, `gh` authenticated; installs `uv` if semble or
+   graphify is enabled).
 3. Clones every repo in `repos` side-by-side (or fast-forwards clean
    default-branch checkouts), and excludes them from this repo's git status
    via `.git/info/exclude`.
@@ -144,7 +148,11 @@ Help me go from this description to a working workspace:
    hand, and generates `.claude/settings.local.json`.
 6. Installs semble and warms a search index per repo.
 7. Installs rtk and registers its Claude Code hook.
-8. Generates `<project>.code-workspace` for VS Code (skipped if you already
+8. Installs graphify: its skill into `.agents/skills/` (symlinked for Claude
+   Code), the PreToolUse guards that point agents at the graph before they
+   grep, and the git hooks that rebuild a repo's graph after commits,
+   checkouts and merges.
+9. Generates `<project>.code-workspace` for VS Code (skipped if you already
    have one, so it's safe to customize and commit).
 
 ## Customization checklist
@@ -184,7 +192,7 @@ directly and re-run `./setup.sh`.
 | `.claude/` | Claude Code settings, agents, skill symlinks |
 | `.opencode/` | opencode agents and plugin config |
 | `.mcp.json` / `opencode.json` | MCP servers (issue tracker, semble) |
-| `git-hooks/` | Protected-branch pre-commit / pre-push hooks |
+| `git-hooks/` | Shared hooks for every repo (`core.hooksPath`): protected-branch pre-commit / pre-push, plus the graphify graph rebuilds |
 | `knowledge/` | Markdown knowledge base (architecture, decisions, design, runbooks, product, releases) |
 | `<repo>/` (untracked) | Your project repos, cloned by `setup.sh` |
 
@@ -193,6 +201,29 @@ directly and re-run `./setup.sh`.
 See [`.agents/skills/_template/README.md`](.agents/skills/_template/README.md).
 Short version: create `.agents/skills/<name>/SKILL.md`, symlink it into
 `.claude/skills/`, and list it in `CLAUDE.md`.
+
+## Knowledge graph
+
+With the `graphify` toggle on, every repo gets its own `<repo>/graphify-out/` — a
+queryable graph of the code (hubs, communities, cross-file relationships) plus a
+plain-language `GRAPH_REPORT.md` and an interactive `graph.html`. Agents hit it
+instead of grep-and-read:
+
+```bash
+cd <repo>
+graphify update .                                # build/refresh (AST-only, no API key)
+graphify query "how does authentication work"    # scoped subgraph, not a grep dump
+graphify path "LoginForm" "SessionStore"         # how two things connect
+graphify explain "PaymentService"                # one node and its neighbours
+```
+
+`setup.sh` installs the CLI, drops the skill in `.agents/skills/graphify/`,
+registers the PreToolUse guards that nudge agents to the graph before they
+search, and installs the rebuild hooks — `graphify hook install` covers
+post-commit and post-checkout, and devrig adds `git-hooks/post-merge` so a
+`git pull` refreshes the graph too. Graphs, the installed skill and the
+generated hooks are all gitignored: they're regenerated from the CLI on every
+`./setup.sh`, so nothing stale gets committed.
 
 ## Knowledge base
 
@@ -210,6 +241,12 @@ push it as a separate `<project>-knowledge` repo, add that to `repos` in
   for the `linear` or `atlassian` server.
 - **rtk not kicking in** — restart Claude Code; verify with `rtk gain` that
   commands are being proxied.
+- **`graphify query` says there's no graph** — build it once per repo with
+  `graphify update .` from that repo's root; the hooks only refresh a graph
+  that already exists.
+- **Graph rebuilds aren't firing on commit** — run `graphify hook status` in the
+  repo and check `~/.cache/graphify-rebuild.log`. `GRAPHIFY_SKIP_HOOK=1`
+  silences them for one command.
 - **A repo won't update** — `setup.sh` never touches a repo that has local
   changes or is on a task branch; it only fast-forwards clean default-branch
   checkouts.
