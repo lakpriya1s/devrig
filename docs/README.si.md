@@ -30,6 +30,7 @@ devrig යනු *meta-repo* එකකි: ඔබේ ව්‍යාපෘති
 |---|---|
 | 🧠 | **AI workflow skills** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (agent-agnostic ලෙස `.agents/skills/` තුළ, Claude Code සඳහා symlink කර ඇත; opencode ද වින්‍යාස කර ඇත) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — grep කර ගොනු කියවීම වෙනුවට agents MCP හරහා භාවිත කරන semantic code search |
+| 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — repo එකකට එකක් වන knowledge graph; agents grep කිරීම වෙනුවට එය query කරයි, git hooks එය නැවුම්ව තබා ගනී |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code සඳහා token ඉතිරි කරන command proxy |
 | 🎫 | **Issue tracker MCP** — Linear, Jira, හෝ ඔබේම එකක්; `setup.sh` විසින් interactive ලෙස තෝරවයි |
 | 🛡️ | **Protected-branch git hooks** — කිසිදු repo එකක default branch එකට වැරදීමකින් commit/push වීම වළක්වයි |
@@ -68,7 +69,7 @@ GitHub UI එක කැමතිද, නැතහොත් ආරම්භයේ
 කුමන ක්‍රමය භාවිත කළත්, ඉන්පසු Claude Code තුළ: `/mcp` ධාවනය කර වින්‍යාස කළ tracker server එක
 (**linear** හෝ **atlassian**) authenticate කරන්න (එක් වරක් OAuth; **semble**
 ට auth අවශ්‍ය නැත), rtk hook ක්‍රියාත්මක වීමට Claude Code එක වරක් restart
-කරන්න.
+කරන්න. graphify සක්‍රීය නම්, එක් එක් repo එකේ root එකෙන් වරක් `graphify update .` ධාවනය කර graph එක සාදන්න — ඉන් පසු git hooks එය නැවුම්ව තබා ගනී.
 
 ## 🤖 ඔබේ AI agent සමඟ ආරම්භ කරන්න
 
@@ -130,13 +131,14 @@ Help me go from this description to a working workspace:
    `devrig.toml` වෙතින් *ඔබේ* ව්‍යාපෘතිය සඳහා `README.md` එකක් සාදයි. devrig
    repo එක ඇතුළතම මෙය මඟ හරින අතර, ඔබ සංස්කරණය කළ README එකක් කිසිවිටෙක
    overwrite නොවේ.
-2. පූර්ව අවශ්‍යතා පරීක්ෂා කරයි (`git`, authenticate වූ `gh`; semble සක්‍රීය නම් `uv` install කරයි).
+2. පූර්ව අවශ්‍යතා පරීක්ෂා කරයි (`git`, authenticate වූ `gh`; semble හෝ graphify සක්‍රීය නම් `uv` install කරයි).
 3. `repos` හි සෑම repo එකක්ම එකිනෙක අසල clone කරයි (හෝ පිරිසිදු default-branch checkouts fast-forward කරයි), සහ `.git/info/exclude` හරහා ඒවා මෙම repo එකේ git status වෙතින් බැහැර කරයි.
 4. මෙම repo එකට සහ clone වූ සෑම repo එකකටම protected-branch git hooks install කරයි.
 5. `.mcp.json` / `opencode.json` ඔබේ `devrig.toml` toggles වෙත converge කරයි — `issue_tracker` අනුව `linear` හෝ `atlassian` (Jira) server එක එකතු කර, "other" තෝරා ඇත්නම් කිසිවක් එකතු නොකරයි — අතින් එකතු කළ MCP servers ආරක්ෂා වන අතර `.claude/settings.local.json` සාදයි.
 6. semble install කර repo එකකට search index එකක් warm කරයි.
 7. rtk install කර එහි Claude Code hook එක register කරයි.
-8. VS Code සඳහා `<project>.code-workspace` සාදයි (දැනටමත් තිබේ නම් මඟ හරින බැවින් customize කර commit කිරීම ආරක්ෂිතයි).
+8. graphify install කරයි: එහි skill එක `.agents/skills/` වෙත (Claude Code සඳහා symlink සමඟ), agents grep කිරීමට පෙර ඔවුන් graph එක වෙත යොමු කරන PreToolUse guards, සහ commit, checkout සහ merge වලින් පසු එම repo එකේ graph නැවත ගොඩනඟන git hooks.
+9. VS Code සඳහා `<project>.code-workspace` සාදයි (දැනටමත් තිබේ නම් මඟ හරින බැවින් customize කර commit කිරීම ආරක්ෂිතයි).
 
 ## Customization පිරික්සුම් ලැයිස්තුව
 
@@ -166,7 +168,7 @@ Help me go from this description to a working workspace:
 | `.claude/` | Claude Code settings, agents, skill symlinks |
 | `.opencode/` | opencode agents සහ plugin config |
 | `.mcp.json` / `opencode.json` | MCP servers (issue tracker, semble) |
-| `git-hooks/` | Protected-branch pre-commit / pre-push hooks |
+| `git-hooks/` | සියලු repos බෙදාගන්නා hooks (`core.hooksPath`): protected-branch pre-commit / pre-push, සහ graphify graph නැවත ගොඩනැඟීම් |
 | `knowledge/` | Markdown දැනුම් පදනම (architecture, decisions, design, runbooks, product, releases) |
 | `<repo>/` (untracked) | `setup.sh` මගින් clone වන ඔබේ ව්‍යාපෘති repos |
 
@@ -175,6 +177,20 @@ Help me go from this description to a working workspace:
 [`.agents/skills/_template/README.md`](../.agents/skills/_template/README.md) බලන්න.
 කෙටියෙන්: `.agents/skills/<name>/SKILL.md` සාදා, `.claude/skills/` වෙත
 symlink කර, `CLAUDE.md` හි ලැයිස්තුගත කරන්න.
+
+## දැනුම් ග්‍රාෆය
+
+`graphify` toggle සක්‍රීය විට එක් එක් repo එකට තමන්ගේම `<repo>/graphify-out/` එකක් ලැබේ — query කළ හැකි code graph එකක් (hubs, communities, ගොනු අතර සම්බන්ධතා), සමඟම සරල භාෂාවෙන් `GRAPH_REPORT.md` සහ interactive `graph.html`. Agents grep කර ගොනු කියවීම වෙනුවට මෙය භාවිත කරයි:
+
+```bash
+cd <repo>
+graphify update .                                # සාදන්න/නැවුම් කරන්න (AST පමණි, API key අවශ්‍ය නැත)
+graphify query "authentication ක්‍රියා කරන ආකාරය"  # සීමිත subgraph එකක්, grep ගොඩක් නොවේ
+graphify path "LoginForm" "SessionStore"         # දෙකක් සම්බන්ධ වන ආකාරය
+graphify explain "PaymentService"                # node එකක් සහ එහි අසල්වාසීන්
+```
+
+`setup.sh` CLI එක install කරයි, skill එක `.agents/skills/graphify/` හි තබයි, සොයන්නට පෙර agents graph එක වෙත යොමු කරන PreToolUse guards register කරයි, සහ නැවත ගොඩනැඟීමේ hooks install කරයි — post-commit සහ post-checkout `graphify hook install` මගින් ලැබෙන අතර, `git pull` එකකින් ද graph නැවුම් වන පිණිස devrig `git-hooks/post-merge` එකතු කරයි. Graphs, install කළ skill සහ generate කළ hooks සියල්ල gitignore කර ඇත: සෑම `./setup.sh` එකකදීම CLI එකෙන් නැවත සාදන බැවින් පැරණි කිසිවක් commit නොවේ.
 
 ## දැනුම් පදනම
 
@@ -189,6 +205,8 @@ code සොයන ආකාරයටම design context සොයා ගනී. �
 - **setup ට පසු `semble` හෝ `uv` හමු නොවේ** — නව shell එකක් විවෘත කර (PATH යාවත්කාලීන විය) `./setup.sh` නැවත ධාවනය කරන්න.
 - **Claude හි tracker මෙවලම් නැත** — `/mcp` ධාවනය කර `linear` හෝ `atlassian` server එකේ OAuth ක්‍රියාවලිය සම්පූර්ණ කරන්න.
 - **rtk ක්‍රියා නොකරයි** — Claude Code restart කරන්න; `rtk gain` මගින් commands proxy වන බව තහවුරු කරන්න.
+- **`graphify query` කියන්නේ graph එකක් නැති බව** — එම repo එකේ root එකෙන් වරක් `graphify update .` ධාවනය කරන්න; hooks දැනටමත් ඇති graph එකක් පමණක් නැවුම් කරයි.
+- **Commit කිරීමේදී graph නැවත ගොඩනැඟීම සිදු නොවේ** — එම repo එකේ `graphify hook status` ධාවනය කර `~/.cache/graphify-rebuild.log` බලන්න. `GRAPHIFY_SKIP_HOOK=1` එක් command එකකට එය නවත්වයි.
 - **Repo එකක් යාවත්කාලීන නොවේ** — `setup.sh` local වෙනස්කම් ඇති හෝ task branch එකක ඇති repo එකක් කිසිවිටෙක ස්පර්ශ නොකරයි; පිරිසිදු default-branch checkouts පමණක් fast-forward කරයි.
 - **setup.sh කිසිවක් නොඅසා කෙලින්ම "edit devrig.toml first" කියා අසාර්ථක වේ** — interactive terminal එකකට සම්බන්ධ විටදී පමණක් එය අසයි; script එකකින් හෝ CI එකකින් ධාවනය කරන්නේ නම් `devrig.toml` කලින්ම පුරවා තිබිය යුතුය.
 - **Jira හෝ "other" තෝරා ඇත** — `atlassian` (Jira) MCP server එක ස්වයංක්‍රීයව සකසනු ලැබේ, නමුත් `/start-task`, `/raise-pr`, සහ `/create-ticket` තවමත් Linear හි MCP tool නම් call කරයි — ඔබ එම skills සකසන තෙක් `setup.sh` සෑම ධාවනයක අවසානයේම මේ ගැන අනතුරු අඟවනු ඇත.

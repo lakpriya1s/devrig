@@ -29,6 +29,7 @@ devrig는 *메타 레포*입니다. 프로젝트의 모든 저장소와 그 사�
 |---|---|
 | 🧠 | **AI 워크플로우 스킬** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (에이전트 독립적으로 `.agents/skills/`에 위치, Claude Code용 심볼릭 링크, opencode도 설정됨) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — grep과 파일 읽기 대신 에이전트가 MCP로 사용하는 시맨틱 코드 검색 |
+| 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — 레포마다 하나씩 생기는 지식 그래프. 에이전트가 grep 대신 이걸 질의하고, git 훅이 항상 최신으로 유지 |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code의 토큰을 절약하는 명령어 프록시 |
 | 🎫 | **이슈 트래커 MCP** — Linear, Jira, 또는 직접 연결; `setup.sh`가 대화식으로 선택하게 함 |
 | 🛡️ | **보호 브랜치 git 훅** — 어떤 저장소에서도 기본 브랜치에 실수로 커밋/푸시하지 않도록 차단 |
@@ -66,7 +67,7 @@ GitHub UI를 선호하거나 처음부터 자신의 org 아래에 저장소를 �
 
 어느 방법이든, 그다음 Claude Code 안에서 `/mcp`를 실행해 설정된 트래커 서버(**linear**
 또는 **atlassian**)를 인증하고(1회성 OAuth, **semble**은 인증 불필요),
-rtk 훅이 적용되도록 Claude Code를 한 번 재시작하세요.
+rtk 훅이 적용되도록 Claude Code를 한 번 재시작하세요. graphify를 활성화했다면 각 레포 루트에서 `graphify update .`를 한 번 실행해 그래프를 만드세요 — 이후로는 git 훅이 최신 상태로 유지합니다.
 
 ## 🤖 AI 에이전트로 시작하기
 
@@ -126,13 +127,14 @@ Help me go from this description to a working workspace:
    `CITATION.cff`, `CONTRIBUTING.md`, `LICENSE`)을 제거하고 `devrig.toml`을
    기반으로 *당신의* 프로젝트를 위한 `README.md`를 생성. devrig 저장소 자체
    안에서는 건너뛰며, 직접 수정한 README는 절대 덮어쓰지 않음.
-2. 사전 요구사항 확인(`git`, 인증된 `gh`; semble 활성화 시 `uv` 설치).
+2. 사전 요구사항 확인(`git`, 인증된 `gh`; semble 또는 graphify 활성화 시 `uv` 설치).
 3. `repos`의 각 저장소를 나란히 클론(깨끗한 기본 브랜치 체크아웃은 fast-forward)하고, `.git/info/exclude`로 이 저장소의 git status에서 제외.
 4. 이 저장소와 클론된 모든 저장소에 보호 브랜치 git 훅 설치.
 5. `.mcp.json` / `opencode.json`을 `devrig.toml` 토글에 수렴 — `issue_tracker`에 따라 `linear` 또는 `atlassian`(Jira) 서버를 추가하고, "기타"를 선택했다면 아무것도 추가하지 않음 — 직접 추가한 MCP 서버는 보존하고 `.claude/settings.local.json` 생성.
 6. semble을 설치하고 저장소별 검색 인덱스를 예열.
 7. rtk를 설치하고 Claude Code 훅 등록.
-8. VS Code용 `<project>.code-workspace` 생성(이미 있으면 건너뛰므로 커스터마이즈해 커밋해도 안전).
+8. graphify 설치: 스킬을 `.agents/skills/`에(Claude Code용 심링크 포함), 에이전트가 grep하기 전에 그래프를 가리키는 PreToolUse 가드, 그리고 커밋·체크아웃·머지 후 해당 레포의 그래프를 다시 만드는 git 훅을 설치.
+9. VS Code용 `<project>.code-workspace` 생성(이미 있으면 건너뛰므로 커스터마이즈해 커밋해도 안전).
 
 ## 커스터마이징 체크리스트
 
@@ -161,7 +163,7 @@ Help me go from this description to a working workspace:
 | `.claude/` | Claude Code 설정, 에이전트, 스킬 심볼릭 링크 |
 | `.opencode/` | opencode 에이전트 및 플러그인 설정 |
 | `.mcp.json` / `opencode.json` | MCP 서버(이슈 트래커, semble) |
-| `git-hooks/` | 보호 브랜치 pre-commit / pre-push 훅 |
+| `git-hooks/` | 모든 레포가 공유하는 훅(`core.hooksPath`): 보호 브랜치 pre-commit / pre-push, 그리고 graphify 그래프 재빌드 |
 | `knowledge/` | markdown 지식 베이스(아키텍처, 결정, 설계, 런북, 제품, 릴리스) |
 | `<repo>/` (미추적) | `setup.sh`가 클론하는 프로젝트 저장소 |
 
@@ -170,6 +172,20 @@ Help me go from this description to a working workspace:
 [`.agents/skills/_template/README.md`](../.agents/skills/_template/README.md)를 참고하세요.
 요약: `.agents/skills/<name>/SKILL.md`를 만들고 `.claude/skills/`에 심볼릭
 링크한 뒤 `CLAUDE.md`에 등록합니다.
+
+## 지식 그래프
+
+`graphify` 토글을 켜면 레포마다 자체 `<repo>/graphify-out/`이 생깁니다 — 질의 가능한 코드 그래프(허브, 커뮤니티, 파일 간 관계)에 평문 `GRAPH_REPORT.md`와 인터랙티브 `graph.html`까지. 에이전트는 grep 후 파일을 읽는 대신 이걸 사용합니다:
+
+```bash
+cd <repo>
+graphify update .                                # 빌드/갱신 (AST만, API 키 불필요)
+graphify query "인증은 어떻게 동작하나"            # 범위가 좁혀진 서브그래프, grep 덤프가 아님
+graphify path "LoginForm" "SessionStore"         # 두 대상이 어떻게 연결되는지
+graphify explain "PaymentService"                # 한 노드와 그 이웃
+```
+
+`setup.sh`는 CLI를 설치하고, 스킬을 `.agents/skills/graphify/`에 넣고, 검색 전에 에이전트를 그래프로 유도하는 PreToolUse 가드를 등록하고, 재빌드 훅을 설치합니다 — post-commit과 post-checkout은 `graphify hook install`이 담당하고, devrig는 `git pull`에서도 그래프가 갱신되도록 `git-hooks/post-merge`를 추가합니다. 그래프, 설치된 스킬, 생성된 훅은 모두 gitignore 대상입니다: `./setup.sh`마다 CLI에서 다시 생성되므로 오래된 것이 커밋되지 않습니다.
 
 ## 지식 베이스
 
@@ -184,6 +200,8 @@ Help me go from this description to a working workspace:
 - **setup 후 `semble`이나 `uv`를 찾을 수 없음** — 새 셸을 열고(PATH가 갱신됨) `./setup.sh`를 다시 실행하세요.
 - **Claude에 트래커 도구가 없음** — `/mcp`를 실행해 `linear` 또는 `atlassian` 서버의 OAuth 흐름을 완료하세요.
 - **rtk가 동작하지 않음** — Claude Code를 재시작하고 `rtk gain`으로 명령어가 프록시되는지 확인하세요.
+- **`graphify query`가 그래프가 없다고 함** — 해당 레포 루트에서 `graphify update .`를 한 번 실행하세요. 훅은 이미 있는 그래프만 갱신합니다.
+- **커밋해도 그래프 재빌드가 안 됨** — 레포에서 `graphify hook status`를 실행하고 `~/.cache/graphify-rebuild.log`를 확인하세요. `GRAPHIFY_SKIP_HOOK=1`은 한 명령에 대해서만 비활성화합니다.
 - **저장소가 업데이트되지 않음** — `setup.sh`는 로컬 변경이 있거나 태스크 브랜치에 있는 저장소는 건드리지 않습니다. 깨끗한 기본 브랜치 체크아웃만 fast-forward합니다.
 - **setup.sh가 아무것도 묻지 않고 바로 "edit devrig.toml first"라고 실패함** — 대화식 터미널에 연결된 경우에만 프롬프트가 나타납니다. 스크립트나 CI에서 실행하면 `devrig.toml`이 이미 채워져 있어야 합니다.
 - **Jira나 "기타"를 선택함** — `atlassian`(Jira) MCP 서버는 자동으로 설정되지만, `/start-task`, `/raise-pr`, `/create-ticket`은 여전히 Linear의 MCP 도구 이름을 호출합니다 — 이 스킬들을 조정하기 전까지 `setup.sh`는 매 실행 끝에 이를 경고합니다.

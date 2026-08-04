@@ -26,6 +26,7 @@ devrig 是一个*元仓库（meta-repo）*：一个文件夹容纳项目的所�
 |---|---|
 | 🧠 | **AI 工作流技能** — `/start-task`、`/raise-pr`、`/code-review`、`/write-doc`、`/create-ticket`（与具体 agent 无关，存放于 `.agents/skills/`，为 Claude Code 建立符号链接，同时配置了 opencode） |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — 语义代码搜索，agent 通过 MCP 使用它替代 grep+逐个读取文件 |
+| 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — 每个仓库一张知识图谱，agent 查询它而不是 grep，由 git 钩子保持最新 |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — 为 Claude Code 优化 token 消耗的命令代理 |
 | 🎫 | **工单系统 MCP** — Linear、Jira 或自带其他系统；由 `setup.sh` 交互式询问选择 |
 | 🛡️ | **受保护分支的 git 钩子** — 任何仓库都不会意外提交/推送到默认分支 |
@@ -54,7 +55,7 @@ npx create-devrig my-project
    第一次运行时，脚本发现 `devrig.toml` 还是示例值，会以交互方式引导你完成配置：项目名、一句话描述、GitHub 组织、要克隆的仓库（可一次粘贴多个，用空格或逗号分隔）、工单系统（**Linear**、**Jira** 或**其他** — 从菜单中选择）、工单前缀、默认分支、功能开关，然后自动写入 `devrig.toml`、删除 devrig 自身的模板文件，并为*你的*项目生成一份 `README.md` 取而代之。想手动编辑？在运行脚本前自行填好 `devrig.toml`，它就会跳过交互提示。
 3. 在此文件夹中运行 `claude`，开始工作。
 
-无论哪种方式，之后在 Claude Code 内：运行 `/mcp` 并为配置好的工单系统服务器（**linear** 或 **atlassian**）完成一次性 OAuth 认证（**semble** 无需认证），并重启一次 Claude Code 使 rtk 钩子生效。
+无论哪种方式，之后在 Claude Code 内：运行 `/mcp` 并为配置好的工单系统服务器（**linear** 或 **atlassian**）完成一次性 OAuth 认证（**semble** 无需认证），并重启一次 Claude Code 使 rtk 钩子生效。 若启用了 graphify，在每个仓库根目录运行一次 `graphify update .` 构建图谱 — 之后 git 钩子会自动保持最新。
 
 ## 🤖 用你的 AI agent 启动项目
 
@@ -112,13 +113,14 @@ Help me go from this description to a working workspace:
    `CITATION.cff`、`CONTRIBUTING.md`、`LICENSE`），并根据 `devrig.toml` 为
    *你的*项目生成一份 `README.md`。在 devrig 模板仓库自身内会跳过此步骤，
    你编辑过的 README 也永远不会被覆盖。
-2. 检查前置条件（`git`、已认证的 `gh`；若启用 semble 则安装 `uv`）。
+2. 检查前提条件（`git`、已认证的 `gh`；若启用了 semble 或 graphify 则安装 `uv`）。
 3. 并排克隆 `repos` 中的每个仓库（或对干净的默认分支检出做 fast-forward），并通过 `.git/info/exclude` 将它们从本仓库的 git 状态中排除。
 4. 为本仓库和每个克隆的仓库安装受保护分支的 git 钩子。
 5. 使 `.mcp.json` / `opencode.json` 收敛到你的 `devrig.toml` 开关 — 根据 `issue_tracker` 添加 `linear` 或 `atlassian`（Jira）服务器，选择"其他"则两者都不添加 — 同时保留你手动添加的 MCP 服务器，并生成 `.claude/settings.local.json`。
 6. 安装 semble，并为每个仓库预热搜索索引。
 7. 安装 rtk 并注册其 Claude Code 钩子。
-8. 生成 VS Code 的 `<project>.code-workspace`（若已存在则跳过，可放心自定义和提交）。
+8. 安装 graphify：把它的技能放进 `.agents/skills/`（并为 Claude Code 建立符号链接）、注册在 agent 动手 grep 之前把它指向图谱的 PreToolUse 守卫，以及在提交、检出、合并之后重建该仓库图谱的 git 钩子。
+9. 生成 VS Code 的 `<project>.code-workspace`（若已存在则跳过，可放心自定义和提交）。
 
 ## 自定义清单
 
@@ -146,7 +148,7 @@ Help me go from this description to a working workspace:
 | `.claude/` | Claude Code 设置、agent、技能符号链接 |
 | `.opencode/` | opencode 的 agent 和插件配置 |
 | `.mcp.json` / `opencode.json` | MCP 服务器（工单系统、semble） |
-| `git-hooks/` | 受保护分支的 pre-commit / pre-push 钩子 |
+| `git-hooks/` | 所有仓库共享的钩子（`core.hooksPath`）：受保护分支的 pre-commit / pre-push，以及 graphify 的图谱重建 |
 | `knowledge/` | markdown 知识库（架构、决策、设计、运维手册、产品、发布） |
 | `<repo>/`（不跟踪） | 你的项目仓库，由 `setup.sh` 克隆 |
 
@@ -154,6 +156,20 @@ Help me go from this description to a working workspace:
 
 见 [`.agents/skills/_template/README.md`](../.agents/skills/_template/README.md)。
 简版：创建 `.agents/skills/<name>/SKILL.md`，符号链接到 `.claude/skills/`，并在 `CLAUDE.md` 中列出。
+
+## 知识图谱
+
+打开 `graphify` 开关后，每个仓库都会有自己的 `<repo>/graphify-out/` — 一张可查询的代码图谱（枢纽节点、社区、跨文件关系），外加一份通俗的 `GRAPH_REPORT.md` 和可交互的 `graph.html`。agent 用它替代 grep+逐个读取文件：
+
+```bash
+cd <repo>
+graphify update .                                # 构建/刷新（纯 AST，无需 API key）
+graphify query "认证是怎么工作的"                  # 有范围的子图，而不是一堆 grep 结果
+graphify path "LoginForm" "SessionStore"         # 两者之间如何关联
+graphify explain "PaymentService"                # 某个节点及其邻居
+```
+
+`setup.sh` 会安装 CLI、把技能放到 `.agents/skills/graphify/`、注册让 agent 先查图谱再搜索的 PreToolUse 守卫，并安装重建钩子 — `graphify hook install` 负责 post-commit 和 post-checkout，devrig 另外提供 `git-hooks/post-merge`，让 `git pull` 也刷新图谱。图谱、安装好的技能和生成的钩子都被 gitignore：每次 `./setup.sh` 都会从 CLI 重新生成，因此不会提交过时内容。
 
 ## 知识库
 
@@ -164,6 +180,8 @@ Help me go from this description to a working workspace:
 - **setup 后找不到 `semble` 或 `uv`** — 打开新 shell（PATH 已更新）并重新运行 `./setup.sh`。
 - **Claude 中缺少工单系统工具** — 运行 `/mcp` 并完成 `linear` 或 `atlassian` 服务器的 OAuth 流程。
 - **rtk 没有生效** — 重启 Claude Code；用 `rtk gain` 验证命令是否被代理。
+- **`graphify query` 说没有图谱** — 在该仓库根目录运行一次 `graphify update .`；钩子只刷新已存在的图谱。
+- **提交后没有触发图谱重建** — 在该仓库运行 `graphify hook status`，并查看 `~/.cache/graphify-rebuild.log`。`GRAPHIFY_SKIP_HOOK=1` 可让单条命令跳过重建。
 - **某个仓库不更新** — `setup.sh` 从不触碰有本地改动或在任务分支上的仓库；只对干净的默认分支检出做 fast-forward。
 - **setup.sh 没有交互提示，直接报错 "edit devrig.toml first"** — 只有连接到交互式终端时才会提示；在脚本或 CI 中运行则要求 `devrig.toml` 已经填好。
 - **选择了 Jira 或"其他"** — `atlassian`（Jira）MCP 服务器会自动配置好，但 `/start-task`、`/raise-pr`、`/create-ticket` 仍调用 Linear 的 MCP 工具名 — 在你适配这些技能之前，`setup.sh` 每次运行结束都会提醒你。
