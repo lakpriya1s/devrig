@@ -29,6 +29,7 @@ version करता है — आपके प्रोजेक्ट repos �
 |---|---|
 | 🧠 | **AI वर्कफ़्लो skills** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (agent-agnostic, `.agents/skills/` में, Claude Code के लिए symlink; opencode भी कॉन्फ़िगर है) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — semantic code search, जिसे agents grep-और-पढ़ने की जगह MCP के ज़रिए इस्तेमाल करते हैं |
+| 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — हर repo के लिए एक knowledge graph, जिसे agent grep के बजाय query करते हैं और git hooks उसे ताज़ा रखते हैं |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code के लिए token बचाने वाला command proxy |
 | 🎫 | **Issue tracker MCP** — Linear, Jira या अपना कोई और; `setup.sh` इंटरैक्टिव तरीके से चुनवाता है |
 | 🛡️ | **Protected-branch git hooks** — किसी भी repo में default branch पर गलती से commit/push नहीं |
@@ -67,7 +68,7 @@ GitHub का UI पसंद है, या चाहते हैं कि re
 किसी भी तरीके से, फिर Claude Code के अंदर: `/mcp` चलाकर जो भी tracker सर्वर कॉन्फ़िगर हुआ है
 उसे (**linear** या **atlassian**) authenticate करें (एक बार का OAuth;
 **semble** को auth की ज़रूरत नहीं), और rtk hook लागू होने के लिए Claude Code
-एक बार restart करें।
+एक बार restart करें। graphify चालू हो तो हर repo की root से एक बार `graphify update .` चलाकर उसका graph बनाएं — उसके बाद git hooks उसे ताज़ा रखते हैं।
 
 ## 🤖 अपने AI agent के साथ शुरुआत करें
 
@@ -127,13 +128,14 @@ Help me go from this description to a working workspace:
    और `devrig.toml` से *आपके* प्रोजेक्ट के लिए एक `README.md` जनरेट करता है।
    devrig repo के अंदर ही यह छोड़ दिया जाता है, और आपने जो README एडिट किया है
    वह कभी overwrite नहीं होता।
-2. Prerequisites जांचता है (`git`, authenticated `gh`; semble चालू हो तो `uv` इंस्टॉल करता है)।
+2. Prerequisites जांचता है (`git`, authenticated `gh`; semble या graphify चालू हो तो `uv` इंस्टॉल करता है)।
 3. `repos` का हर repo अगल-बगल clone करता है (या साफ़ default-branch checkouts को fast-forward करता है), और उन्हें `.git/info/exclude` के ज़रिए इस repo की git status से बाहर रखता है।
 4. इस repo और हर cloned repo में protected-branch git hooks इंस्टॉल करता है।
 5. `.mcp.json` / `opencode.json` को आपके `devrig.toml` toggles पर converge करता है — `issue_tracker` के अनुसार `linear` या `atlassian` (Jira) सर्वर जोड़ता है, "other" चुना हो तो कोई नहीं — साथ ही हाथ से जोड़े गए MCP सर्वर सुरक्षित रहते हैं — और `.claude/settings.local.json` जनरेट करता है।
 6. semble इंस्टॉल करता है और हर repo के लिए search index warm करता है।
 7. rtk इंस्टॉल करके उसका Claude Code hook रजिस्टर करता है।
-8. VS Code के लिए `<project>.code-workspace` जनरेट करता है (पहले से मौजूद हो तो छोड़ देता है, इसलिए आप उसे customize करके commit कर सकते हैं)।
+8. graphify इंस्टॉल करता है: उसकी skill `.agents/skills/` में (Claude Code के लिए symlink सहित), वे PreToolUse guards जो agent को grep से पहले graph की ओर भेजते हैं, और वे git hooks जो commit, checkout और merge के बाद उस repo का graph फिर बनाते हैं।
+9. VS Code के लिए `<project>.code-workspace` जनरेट करता है (पहले से मौजूद हो तो छोड़ देता है, इसलिए आप उसे customize करके commit कर सकते हैं)।
 
 ## Customization चेकलिस्ट
 
@@ -163,7 +165,7 @@ devrig की टेम्पलेट फ़ाइलें हटाता ह
 | `.claude/` | Claude Code settings, agents, skill symlinks |
 | `.opencode/` | opencode agents और plugin config |
 | `.mcp.json` / `opencode.json` | MCP सर्वर (issue tracker, semble) |
-| `git-hooks/` | Protected-branch pre-commit / pre-push hooks |
+| `git-hooks/` | सभी repos के लिए साझा hooks (`core.hooksPath`): protected-branch pre-commit / pre-push, साथ ही graphify के graph rebuild |
 | `knowledge/` | Markdown नॉलेज बेस (architecture, decisions, design, runbooks, product, releases) |
 | `<repo>/` (untracked) | आपके प्रोजेक्ट repos, `setup.sh` द्वारा cloned |
 
@@ -172,6 +174,20 @@ devrig की टेम्पलेट फ़ाइलें हटाता ह
 देखें [`.agents/skills/_template/README.md`](../.agents/skills/_template/README.md)।
 संक्षेप में: `.agents/skills/<name>/SKILL.md` बनाएं, `.claude/skills/` में
 symlink करें, और `CLAUDE.md` में सूचीबद्ध करें।
+
+## नॉलेज ग्राफ
+
+`graphify` toggle चालू होने पर हर repo को अपना `<repo>/graphify-out/` मिलता है — code का query करने योग्य graph (hubs, communities, फाइलों के बीच के रिश्ते), साथ में सरल भाषा में `GRAPH_REPORT.md` और interactive `graph.html`। Agent grep+फाइल पढ़ने के बजाय इसे इस्तेमाल करते हैं:
+
+```bash
+cd <repo>
+graphify update .                                # बनाएं/ताज़ा करें (सिर्फ AST, कोई API key नहीं)
+graphify query "authentication कैसे काम करता है"  # सीमित subgraph, grep का ढेर नहीं
+graphify path "LoginForm" "SessionStore"         # दो चीज़ें कैसे जुड़ी हैं
+graphify explain "PaymentService"                # एक node और उसके पड़ोसी
+```
+
+`setup.sh` CLI इंस्टॉल करता है, skill को `.agents/skills/graphify/` में रखता है, खोजने से पहले agent को graph की ओर भेजने वाले PreToolUse guards रजिस्टर करता है, और rebuild hooks इंस्टॉल करता है — post-commit और post-checkout `graphify hook install` से आते हैं, और devrig `git-hooks/post-merge` जोड़ता है ताकि `git pull` पर भी graph ताज़ा हो। Graph, इंस्टॉल की गई skill और जनरेट किए गए hooks सभी gitignore में हैं: हर `./setup.sh` पर CLI से फिर बनते हैं, इसलिए कुछ भी पुराना commit नहीं होता।
 
 ## नॉलेज बेस
 
@@ -186,6 +202,8 @@ symlink करें, और `CLAUDE.md` में सूचीबद्ध क�
 - **setup के बाद `semble` या `uv` नहीं मिलता** — नया shell खोलें (PATH अपडेट हुआ है) और `./setup.sh` दोबारा चलाएं।
 - **Claude में tracker tools नहीं दिखते** — `/mcp` चलाकर `linear` या `atlassian` सर्वर का OAuth पूरा करें।
 - **rtk काम नहीं कर रहा** — Claude Code restart करें; `rtk gain` से जांचें कि commands proxy हो रही हैं।
+- **`graphify query` कहता है कि graph नहीं है** — उस repo की root से एक बार `graphify update .` चलाएं; hooks सिर्फ पहले से मौजूद graph को ताज़ा करते हैं।
+- **Commit पर graph rebuild नहीं हो रहा** — उस repo में `graphify hook status` चलाएं और `~/.cache/graphify-rebuild.log` देखें। `GRAPHIFY_SKIP_HOOK=1` एक command के लिए इसे बंद कर देता है।
 - **कोई repo अपडेट नहीं होता** — `setup.sh` कभी उस repo को नहीं छूता जिसमें local बदलाव हों या जो task branch पर हो; वह केवल साफ़ default-branch checkouts को fast-forward करता है।
 - **setup.sh कुछ पूछता नहीं, सीधे "edit devrig.toml first" कहकर रुक जाता है** — यह सिर्फ़ interactive terminal से जुड़े होने पर पूछता है; script या CI से चलाने पर `devrig.toml` पहले से भरा होना ज़रूरी है।
 - **Jira या "other" चुना** — `atlassian` (Jira) MCP सर्वर अपने आप कॉन्फ़िगर हो जाता है, पर `/start-task`, `/raise-pr`, और `/create-ticket` अभी भी Linear के MCP tool names कॉल करते हैं — जब तक आप इन skills को adapt नहीं करते, `setup.sh` हर बार चलने पर अंत में यह चेतावनी देगा।

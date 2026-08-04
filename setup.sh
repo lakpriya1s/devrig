@@ -3,7 +3,7 @@
 # devrig workspace setup.
 # Personalizes a freshly scaffolded workspace (removes devrig's own template
 # files, generates a project README), clones your project repos (from
-# devrig.toml), and installs the AI tooling (semble, rtk, MCP config,
+# devrig.toml), and installs the AI tooling (semble, rtk, graphify, MCP config,
 # protected-branch git hooks).
 # Idempotent — safe to re-run at any time to update everything.
 #
@@ -71,6 +71,7 @@ write_config_file() {
   DEVRIG_DEFAULT_BRANCH="$DEFAULT_BRANCH" \
   DEVRIG_ENABLE_SEMBLE="$ENABLE_SEMBLE" \
   DEVRIG_ENABLE_RTK="$ENABLE_RTK" \
+  DEVRIG_ENABLE_GRAPHIFY="$ENABLE_GRAPHIFY" \
   DEVRIG_ENABLE_GIT_HOOKS="$ENABLE_GIT_HOOKS" \
   python3 - "$WORKSPACE_DIR/devrig.toml" <<'PY'
 import os, sys
@@ -100,6 +101,7 @@ default_branch = "{esc(env["DEVRIG_DEFAULT_BRANCH"])}"  # protected default bran
 [features]
 semble = {env["DEVRIG_ENABLE_SEMBLE"]}         # semantic code search, wired to agents via MCP
 rtk = {env["DEVRIG_ENABLE_RTK"]}               # token-optimizing command proxy for Claude Code
+graphify = {env["DEVRIG_ENABLE_GRAPHIFY"]}     # per-repo knowledge graph agents query before grepping
 git_hooks = {env["DEVRIG_ENABLE_GIT_HOOKS"]}   # block direct commits/pushes to protected branches
 '''
 
@@ -154,6 +156,7 @@ prompt_for_config() {
   echo >&2
   ENABLE_SEMBLE=$(ask_yes_no "Enable semble (semantic code search)?" true)
   ENABLE_RTK=$(ask_yes_no "Enable rtk (token-optimizing proxy for Claude Code)?" true)
+  ENABLE_GRAPHIFY=$(ask_yes_no "Enable graphify (per-repo knowledge graph for agents)?" true)
   ENABLE_GIT_HOOKS=$(ask_yes_no "Enable protected-branch git hooks?" true)
 
   write_config_file
@@ -203,6 +206,7 @@ print(f"TICKET_PREFIX={sh_str(project.get('ticket_prefix', 'AC'))}")
 print(f"DEFAULT_BRANCH={sh_str(project.get('default_branch', 'dev'))}")
 print(f"ENABLE_SEMBLE={sh_bool(features.get('semble', True))}")
 print(f"ENABLE_RTK={sh_bool(features.get('rtk', True))}")
+print(f"ENABLE_GRAPHIFY={sh_bool(features.get('graphify', True))}")
 print(f"ENABLE_GIT_HOOKS={sh_bool(features.get('git_hooks', True))}")
 PY
 )" || fail "Failed to parse devrig.toml — see the error above."
@@ -276,6 +280,7 @@ write_readme() {
   DEVRIG_DEFAULT_BRANCH="$DEFAULT_BRANCH" \
   DEVRIG_ENABLE_SEMBLE="$ENABLE_SEMBLE" \
   DEVRIG_ENABLE_RTK="$ENABLE_RTK" \
+  DEVRIG_ENABLE_GRAPHIFY="$ENABLE_GRAPHIFY" \
   DEVRIG_ENABLE_GIT_HOOKS="$ENABLE_GIT_HOOKS" \
   DEVRIG_ORIGIN_URL="$origin_url" \
   python3 - "$WORKSPACE_DIR/README.md" <<'PY'
@@ -290,6 +295,7 @@ tracker = env["DEVRIG_ISSUE_TRACKER"]
 branch = env["DEVRIG_DEFAULT_BRANCH"]
 semble = env["DEVRIG_ENABLE_SEMBLE"] == "true"
 rtk = env["DEVRIG_ENABLE_RTK"] == "true"
+graphify = env["DEVRIG_ENABLE_GRAPHIFY"] == "true"
 hooks = env["DEVRIG_ENABLE_GIT_HOOKS"] == "true"
 origin = env.get("DEVRIG_ORIGIN_URL", "").strip()
 
@@ -338,6 +344,13 @@ if rtk:
         "   hook — compresses command output to cut token usage.",
     ]
     step += 1
+if graphify:
+    out += [
+        f"{step}. Installs [graphify](https://github.com/Graphify-Labs/graphify) — its skill, the",
+        "   PreToolUse guards that point agents at the graph, and the git hooks that",
+        "   rebuild each repo's graph after commits, checkouts and merges.",
+    ]
+    step += 1
 out += ["", "Then:", "", "1. Run `claude` from this folder."]
 step = 2
 if tracker_server:
@@ -345,6 +358,13 @@ if tracker_server:
     step += 1
 if rtk:
     out += [f"{step}. Restart Claude Code once so the rtk hook takes effect."]
+    step += 1
+if graphify:
+    out += [
+        f"{step}. Build each repo's knowledge graph once — `graphify update .` from a repo",
+        "   root (AST-only, no API key, no LLM cost). After that the git hooks keep it",
+        "   current. Or just ask an agent to run `/graphify` in that repo.",
+    ]
     step += 1
 out += [
     "",
@@ -385,6 +405,26 @@ if semble:
     ]
 else:
     out += ["as markdown via PR."]
+if graphify:
+    out += [
+        "",
+        "## Knowledge graph",
+        "",
+        "[graphify](https://github.com/Graphify-Labs/graphify) gives every repo its own",
+        "`<repo>/graphify-out/` — a queryable graph of the code (hubs, communities,",
+        "cross-file relationships) plus `GRAPH_REPORT.md` and an interactive `graph.html`.",
+        "",
+        "```bash",
+        "cd <repo>",
+        "graphify query \"how does authentication work\"   # scoped subgraph, not a grep dump",
+        "graphify path \"LoginForm\" \"SessionStore\"        # how two things connect",
+        "graphify explain \"PaymentService\"               # one node and its neighbours",
+        "graphify update .                               # refresh after code changes",
+        "```",
+        "",
+        "The graphs are gitignored (generated locally, per machine). The shared git hooks",
+        "rebuild the graph of whichever repo you just committed, checked out, or merged in.",
+    ]
 out += [
     "",
     "## Customize this workspace",
@@ -428,6 +468,15 @@ if rtk:
         "- **rtk not kicking in** — restart Claude Code; verify with `rtk gain` that",
         "  commands are being proxied.",
     ]
+if graphify:
+    out += [
+        "- **`graphify query` says there's no graph** — build it once with",
+        "  `graphify update .` from that repo's root; the hooks only refresh an",
+        "  existing graph.",
+        "- **Graph rebuilds aren't firing on commit** — check `graphify hook status`",
+        "  in the repo, and the rebuild log at `~/.cache/graphify-rebuild.log`. Set",
+        "  `GRAPHIFY_SKIP_HOOK=1` to silence them temporarily.",
+    ]
 out += [
     "- **A repo won't update** — `setup.sh` never touches a repo that has local",
     "  changes or is on a task branch; it only fast-forwards clean default-branch",
@@ -449,13 +498,15 @@ check_basic_prereqs() {
   gh auth status >/dev/null 2>&1 || fail "gh is not authenticated. Run: gh auth login"
 }
 
-check_semble_prereqs() {
-  if [ "$ENABLE_SEMBLE" = true ] && ! command -v uv >/dev/null 2>&1; then
-    info "Installing uv (needed for semble)..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$HOME/.local/bin:$PATH"
-    command -v uv >/dev/null 2>&1 || fail "uv installed but not on PATH. Open a new shell and re-run ./setup.sh"
-  fi
+# uv is the installer for both semble and graphify — only needed if one of them
+# is enabled.
+check_uv_prereqs() {
+  [ "$ENABLE_SEMBLE" = true ] || [ "$ENABLE_GRAPHIFY" = true ] || return 0
+  command -v uv >/dev/null 2>&1 && return 0
+  info "Installing uv (needed for semble/graphify)..."
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="$HOME/.local/bin:$PATH"
+  command -v uv >/dev/null 2>&1 || fail "uv installed but not on PATH. Open a new shell and re-run ./setup.sh"
 }
 
 # --- 2. Clone / update repos --------------------------------------------------
@@ -495,12 +546,15 @@ exclude_repos() {
 # --- 3. Protected-branch git hooks --------------------------------------------
 # Blocks accidental commits/pushes on the default branch (and main/master) in
 # every repo. Hooks live in git-hooks/ at the workspace root; wired via
-# core.hooksPath.
+# core.hooksPath — so this one directory serves the workspace repo and every
+# cloned repo, and `graphify hook install` (see install_graphify) drops its
+# post-commit/post-checkout rebuild hooks in here too.
 
 install_git_hooks() {
   [ "$ENABLE_GIT_HOOKS" = true ] || { info "Git hooks disabled in devrig.toml — skipping."; return 0; }
   info "Installing protected-branch git hooks..."
-  chmod +x "$WORKSPACE_DIR/git-hooks/pre-commit" "$WORKSPACE_DIR/git-hooks/pre-push"
+  chmod +x "$WORKSPACE_DIR/git-hooks/pre-commit" "$WORKSPACE_DIR/git-hooks/pre-push" \
+    "$WORKSPACE_DIR/git-hooks/post-merge"
   git -C "$WORKSPACE_DIR" config core.hooksPath "$WORKSPACE_DIR/git-hooks"
   for repo in ${REPOS[@]+"${REPOS[@]}"}; do
     dir="$WORKSPACE_DIR/$repo"
@@ -671,7 +725,113 @@ else:
 PY
 }
 
-# --- 7. VS Code multi-root workspace -------------------------------------------
+# --- 7. graphify (knowledge graph agents query instead of grepping) ------------
+# https://github.com/Graphify-Labs/graphify — turns a repo into a queryable
+# knowledge graph (god nodes, communities, cross-file relationships) that agents
+# hit with `graphify query/path/explain` instead of grep-and-read.
+#
+# One graph per git repo rather than one merged graph: each cloned repo gets its
+# own `<repo>/graphify-out/`, and this workspace repo gets one covering
+# `knowledge/` and the tooling (the cloned repos are excluded from it via
+# .git/info/exclude, which graphify honors). All kept fresh by the git hooks
+# below. Wiring installed here:
+#   - skill:        .agents/skills/graphify/ (+ .claude/skills/ symlink)
+#   - agent nudge:  PreToolUse hook-guards in .claude/settings.json
+#   - freshness:    post-commit/post-checkout (graphify) + post-merge (devrig)
+
+install_graphify() {
+  if [ "$ENABLE_GRAPHIFY" != true ]; then
+    info "graphify disabled in devrig.toml — skipping."
+    sync_graphify_claude_hooks false
+    return 0
+  fi
+
+  info "Installing graphify..."
+  # PyPI package is 'graphifyy'; the CLI it ships is 'graphify'.
+  uv tool install --force --quiet graphifyy
+  command -v graphify >/dev/null 2>&1 || fail "graphify installed but not on PATH. Open a new shell and re-run ./setup.sh"
+
+  # `--platform agents --project` writes the skill to ./.agents/skills/graphify/
+  # — exactly where devrig keeps its canonical, agent-agnostic skills. Re-run on
+  # every setup so the skill tracks the installed CLI version (graphify warns
+  # when the two drift), then symlink it for Claude Code like every other skill.
+  info "Installing the graphify skill into .agents/skills/..."
+  ( cd "$WORKSPACE_DIR" && graphify install --project --platform agents >/dev/null ) \
+    || warn "graphify skill install failed — run 'graphify install --project --platform agents' here by hand."
+  mkdir -p "$WORKSPACE_DIR/.claude/skills"
+  ln -sfn ../../.agents/skills/graphify "$WORKSPACE_DIR/.claude/skills/graphify"
+
+  sync_graphify_claude_hooks true
+
+  # Rebuild-on-commit hooks. With core.hooksPath pointing every repo at
+  # git-hooks/ (install_git_hooks), one install covers the whole workspace —
+  # each hook run rebuilds the graph of whichever repo the commit happened in.
+  # Without it, every repo has its own .git/hooks and needs its own install.
+  info "Installing graphify git hooks (graph rebuild on commit/checkout)..."
+  ( cd "$WORKSPACE_DIR" && graphify hook install >/dev/null ) \
+    || warn "graphify hook install failed at the workspace root — run it by hand to get commit-triggered rebuilds."
+  if [ "$ENABLE_GIT_HOOKS" != true ]; then
+    for repo in ${REPOS[@]+"${REPOS[@]}"}; do
+      dir="$WORKSPACE_DIR/$repo"
+      [ -d "$dir/.git" ] || continue
+      ( cd "$dir" && graphify hook install >/dev/null ) \
+        || warn "graphify hook install failed in $repo."
+    done
+  fi
+}
+
+# Converges the two graphify PreToolUse hook-guards in .claude/settings.json:
+# they fire before the agent greps or reads files and remind it to query the
+# graph first. Added when the feature is on, removed when it's off, so the
+# committed settings.json always matches devrig.toml.
+#
+# The command is bare `graphify` (resolved from PATH, not an absolute path) so
+# the committed file works for every teammate, and it is wrapped in a
+# command-v test so a checkout where graphify isn't installed yet is a silent
+# no-op instead of a failing hook on every tool call.
+sync_graphify_claude_hooks() {
+  local on="$1"
+  python3 - "$WORKSPACE_DIR/.claude/settings.json" "$on" <<'PY'
+import json, os, sys
+
+path, on = sys.argv[1], sys.argv[2] == "true"
+
+GUARDS = [
+    {"matcher": "Bash|Grep", "hooks": [{"type": "command",
+     "command": "if command -v graphify >/dev/null 2>&1; then graphify hook-guard search; fi"}]},
+    {"matcher": "Read|Glob", "hooks": [{"type": "command",
+     "command": "if command -v graphify >/dev/null 2>&1; then graphify hook-guard read; fi"}]},
+]
+
+before = ""
+settings = {}
+if os.path.exists(path):
+    before = open(path).read()
+    settings = json.loads(before)
+
+# Drop any graphify guard already registered (so an upgrade replaces rather than
+# duplicates it), then re-add if the feature is on.
+hooks = settings.get("hooks", {})
+pre = [h for h in hooks.get("PreToolUse", []) if "graphify" not in json.dumps(h)]
+pre += GUARDS if on else []
+
+if pre:
+    settings.setdefault("hooks", {})["PreToolUse"] = pre
+elif hooks:
+    hooks.pop("PreToolUse", None)
+    if not hooks:
+        settings.pop("hooks", None)
+
+after = json.dumps(settings, indent=2) + "\n"
+if after != before:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write(after)
+    print("  .claude/settings.json  ->  graphify PreToolUse guards " + ("registered" if on else "removed"))
+PY
+}
+
+# --- 8. VS Code multi-root workspace -------------------------------------------
 # Generated from the REPOS list. Skipped if the file already exists so you can
 # customize it (and commit it) without setup.sh overwriting your changes.
 
@@ -712,7 +872,7 @@ with open(ws_file, "w") as f:
 PY
 }
 
-# --- 8. Done --------------------------------------------------------------------
+# --- 9. Done --------------------------------------------------------------------
 
 final_checks() {
   if grep -q "TODO: fill in" "$WORKSPACE_DIR/AGENTS.md" 2>/dev/null; then
@@ -753,6 +913,17 @@ Code search:
 EOF
   fi
 
+  if [ "$ENABLE_GRAPHIFY" = true ]; then
+    cat <<'EOF'
+
+Knowledge graph (graphify):
+  Build each repo's graph once — it's AST-only, no API key, no LLM cost:
+    cd <repo> && graphify update .
+  Then agents query it instead of grepping (graphify query/path/explain), and
+  the shared git hooks rebuild it after every commit, checkout and merge.
+EOF
+  fi
+
   cat <<EOF
 
 Workflow skills available inside Claude Code:
@@ -772,13 +943,14 @@ main() {
   check_basic_prereqs
   load_config
   personalize_workspace
-  check_semble_prereqs
+  check_uv_prereqs
   clone_repos
   exclude_repos
   install_git_hooks
   sync_mcp_config
   install_semble
   install_rtk
+  install_graphify
   generate_workspace
   final_checks
   print_next_steps

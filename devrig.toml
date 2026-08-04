@@ -15,4 +15,5 @@ default_branch = "dev"        # protected default branch of your repos
 [features]
 semble = true                 # semantic code search, wired to agents via MCP
 rtk = true                    # token-optimizing command proxy for Claude Code
+graphify = true               # per-repo knowledge graph agents query before grepping
 git_hooks = true               # block direct commits/pushes to protected branches

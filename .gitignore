@@ -2,5 +2,14 @@
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 debug-logs/
+
+# graphify: the graphs themselves are generated locally per machine, and the
+# skill + rebuild hooks are (re)installed from the graphify CLI on every
+# ./setup.sh run — committing them would just pin a stale version.
+graphify-out/
+/.agents/skills/graphify/
+/.claude/skills/graphify
+/git-hooks/post-commit
+/git-hooks/post-checkout
 # Cloned project repos are excluded via .git/info/exclude (written by setup.sh)
 # so this file stays free of project-specific names.

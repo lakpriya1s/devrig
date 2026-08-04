@@ -30,6 +30,7 @@ Este repo solo versiona las herramientas — tus repos de proyecto los clona
 |---|---|
 | 🧠 | **Skills de flujo de trabajo con IA** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (independientes del agente, en `.agents/skills/`, con symlinks para Claude Code; opencode también configurado) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — búsqueda semántica de código que los agentes usan vía MCP en lugar de grep y lectura de archivos |
+| 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — un grafo de conocimiento por repo que los agentes consultan en lugar de hacer grep, mantenido al día por hooks de git |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — proxy de comandos que optimiza tokens para Claude Code |
 | 🎫 | **MCP de gestor de tickets** — Linear, Jira o el tuyo propio; elegido de forma interactiva por `setup.sh` |
 | 🛡️ | **Hooks de git para ramas protegidas** — sin commits/pushes accidentales a tu rama por defecto, en ningún repo |
@@ -69,7 +70,7 @@ npx create-devrig my-project
 De cualquier forma, dentro de Claude Code: ejecuta `/mcp` y autentica el servidor del
 gestor de tickets configurado (**linear** o **atlassian**; OAuth una sola vez
 — **semble** no necesita autenticación), y reinicia Claude Code una vez para
-que el hook de rtk surta efecto.
+que el hook de rtk surta efecto. Si graphify está habilitado, construye el grafo de cada repo una vez con `graphify update .` desde la raíz de ese repo — a partir de ahí los hooks de git lo mantienen fresco.
 
 ## 🤖 Arranca con tu agente de IA
 
@@ -130,13 +131,14 @@ todos los repos y herramientas. Hace lo siguiente:
    (`docs/`, `assets/`, `CITATION.cff`, `CONTRIBUTING.md`, `LICENSE`) y genera
    un `README.md` para *tu* proyecto a partir de `devrig.toml`. Se omite dentro
    del propio repo de devrig, y un README que hayas editado nunca se sobrescribe.
-2. Comprueba los prerrequisitos (`git`, `gh` autenticado; instala `uv` si semble está habilitado).
+2. Comprueba los prerrequisitos (`git`, `gh` autenticado; instala `uv` si semble o graphify está habilitado).
 3. Clona cada repo de `repos` lado a lado (o hace fast-forward de checkouts limpios de la rama por defecto), y los excluye del estado git de este repo vía `.git/info/exclude`.
 4. Instala los hooks de git de ramas protegidas en este repo y en cada repo clonado.
 5. Converge `.mcp.json` / `opencode.json` a tus toggles de `devrig.toml` — añadiendo el servidor `linear` o `atlassian` (Jira) según `issue_tracker`, o ninguno si elegiste "otro" — conservando los servidores MCP añadidos a mano, y genera `.claude/settings.local.json`.
 6. Instala semble y calienta un índice de búsqueda por repo.
 7. Instala rtk y registra su hook de Claude Code.
-8. Genera `<project>.code-workspace` para VS Code (se omite si ya existe, así puedes personalizarlo y commitearlo).
+8. Instala graphify: su skill en `.agents/skills/` (con symlink para Claude Code), los guards PreToolUse que apuntan a los agentes al grafo antes de que hagan grep, y los hooks de git que reconstruyen el grafo de un repo tras commits, checkouts y merges.
+9. Genera `<project>.code-workspace` para VS Code (se omite si ya existe, así puedes personalizarlo y commitearlo).
 
 ## Lista de personalización
 
@@ -166,7 +168,7 @@ repo), edita `devrig.toml` directamente y vuelve a ejecutar `./setup.sh`.
 | `.claude/` | Ajustes de Claude Code, agentes, symlinks de skills |
 | `.opencode/` | Agentes y configuración de plugin de opencode |
 | `.mcp.json` / `opencode.json` | Servidores MCP (gestor de tickets, semble) |
-| `git-hooks/` | Hooks pre-commit / pre-push de ramas protegidas |
+| `git-hooks/` | Hooks compartidos por todos los repos (`core.hooksPath`): pre-commit / pre-push de ramas protegidas, más las reconstrucciones del grafo de graphify |
 | `knowledge/` | Base de conocimiento en markdown (arquitectura, decisiones, diseño, runbooks, producto, releases) |
 | `<repo>/` (sin seguimiento) | Tus repos de proyecto, clonados por `setup.sh` |
 
@@ -175,6 +177,20 @@ repo), edita `devrig.toml` directamente y vuelve a ejecutar `./setup.sh`.
 Ver [`.agents/skills/_template/README.md`](../.agents/skills/_template/README.md).
 Versión corta: crea `.agents/skills/<name>/SKILL.md`, crea el symlink en
 `.claude/skills/` y lístala en `CLAUDE.md`.
+
+## Grafo de conocimiento
+
+Con el toggle `graphify` activo, cada repo tiene su propio `<repo>/graphify-out/`: un grafo consultable del código (hubs, comunidades, relaciones entre archivos) más un `GRAPH_REPORT.md` en lenguaje llano y un `graph.html` interactivo. Los agentes lo usan en lugar de grep + lectura de archivos:
+
+```bash
+cd <repo>
+graphify update .                                # construir/refrescar (solo AST, sin API key)
+graphify query "cómo funciona la autenticación"  # subgrafo acotado, no un volcado de grep
+graphify path "LoginForm" "SessionStore"         # cómo se conectan dos cosas
+graphify explain "PaymentService"                # un nodo y sus vecinos
+```
+
+`setup.sh` instala la CLI, deja la skill en `.agents/skills/graphify/`, registra los guards PreToolUse que empujan a los agentes al grafo antes de buscar, e instala los hooks de reconstrucción: `graphify hook install` cubre post-commit y post-checkout, y devrig añade `git-hooks/post-merge` para que un `git pull` también refresque el grafo. Los grafos, la skill instalada y los hooks generados están en gitignore: se regeneran desde la CLI en cada `./setup.sh`, así que nunca se commitea nada obsoleto.
 
 ## Base de conocimiento
 
@@ -190,6 +206,8 @@ puntero en `AGENTS.md`.
 - **`semble` o `uv` no se encuentran tras el setup** — abre un nuevo shell (el PATH se actualizó) y vuelve a ejecutar `./setup.sh`.
 - **Faltan las herramientas del gestor de tickets en Claude** — ejecuta `/mcp` y completa el flujo OAuth del servidor `linear` o `atlassian`.
 - **rtk no se activa** — reinicia Claude Code; verifica con `rtk gain` que los comandos se están proxificando.
+- **`graphify query` dice que no hay grafo** — constrúyelo una vez por repo con `graphify update .` desde la raíz de ese repo; los hooks solo refrescan un grafo que ya existe.
+- **Las reconstrucciones no se disparan al hacer commit** — ejecuta `graphify hook status` en el repo y revisa `~/.cache/graphify-rebuild.log`. `GRAPHIFY_SKIP_HOOK=1` las silencia para un comando.
 - **Un repo no se actualiza** — `setup.sh` nunca toca un repo con cambios locales o en una rama de tarea; solo hace fast-forward de checkouts limpios de la rama por defecto.
 - **setup.sh no me pregunta nada, falla directo con "edit devrig.toml first"** — solo pregunta de forma interactiva si está conectado a una terminal; ejecutarlo desde un script o CI exige que `devrig.toml` ya esté rellenado.
 - **Elegiste Jira u "otro"** — el servidor MCP `atlassian` (Jira) se configura automáticamente, pero `/start-task`, `/raise-pr` y `/create-ticket` siguen llamando a las herramientas MCP de Linear — `setup.sh` te lo avisará al final de cada ejecución hasta que adaptes esas skills.

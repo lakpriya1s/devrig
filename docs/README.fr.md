@@ -30,6 +30,7 @@ fichier **`devrig.toml`**.
 |---|---|
 | 🧠 | **Skills de workflow IA** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (indépendantes de l'agent, dans `.agents/skills/`, avec des liens symboliques pour Claude Code ; opencode est aussi configuré) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — recherche sémantique de code que les agents utilisent via MCP au lieu de grep et lecture de fichiers |
+| 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — un graphe de connaissances par dépôt que les agents interrogent au lieu de faire un grep, tenu à jour par des hooks git |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — proxy de commandes optimisant les tokens pour Claude Code |
 | 🎫 | **MCP de gestion de tickets** — Linear, Jira, ou le vôtre ; choisi de façon interactive par `setup.sh` |
 | 🛡️ | **Hooks git de branches protégées** — aucun commit/push accidentel vers votre branche par défaut, dans aucun dépôt |
@@ -70,7 +71,7 @@ Vous préférez l'interface de GitHub, ou voulez que le dépôt soit créé dire
 Dans les deux cas, dans Claude Code : lancez `/mcp` et authentifiez le serveur du
 gestionnaire de tickets configuré (**linear** ou **atlassian** ; OAuth
 unique — **semble** ne nécessite aucune authentification), puis redémarrez
-Claude Code une fois pour que le hook rtk prenne effet.
+Claude Code une fois pour que le hook rtk prenne effet. Si graphify est activé, construisez le graphe de chaque dépôt une fois avec `graphify update .` depuis la racine du dépôt — ensuite les hooks git le tiennent à jour.
 
 ## 🤖 Démarrez avec votre agent IA
 
@@ -132,13 +133,14 @@ les dépôts et outils. Il :
    un `README.md` pour votre projet à partir de `devrig.toml`. Ignoré à
    l'intérieur du dépôt devrig lui-même, et un README que vous avez modifié
    n'est jamais écrasé.
-2. Vérifie les prérequis (`git`, `gh` authentifié ; installe `uv` si semble est activé).
+2. Vérifie les prérequis (`git`, `gh` authentifié ; installe `uv` si semble ou graphify est activé).
 3. Clone chaque dépôt de `repos` côte à côte (ou fait un fast-forward des checkouts propres de la branche par défaut), et les exclut du statut git de ce dépôt via `.git/info/exclude`.
 4. Installe les hooks git de branches protégées dans ce dépôt et chaque dépôt cloné.
 5. Fait converger `.mcp.json` / `opencode.json` vers vos options `devrig.toml` — en ajoutant le serveur `linear` ou `atlassian` (Jira) selon `issue_tracker`, ou aucun si vous avez choisi « autre » — tout en préservant les serveurs MCP ajoutés à la main, et génère `.claude/settings.local.json`.
 6. Installe semble et préchauffe un index de recherche par dépôt.
 7. Installe rtk et enregistre son hook Claude Code.
-8. Génère `<project>.code-workspace` pour VS Code (ignoré si vous en avez déjà un, vous pouvez donc le personnaliser et le committer).
+8. Installe graphify : sa skill dans `.agents/skills/` (avec un symlink pour Claude Code), les guards PreToolUse qui orientent les agents vers le graphe avant qu'ils ne fassent un grep, et les hooks git qui reconstruisent le graphe d'un dépôt après les commits, checkouts et merges.
+9. Génère `<project>.code-workspace` pour VS Code (ignoré si vous en avez déjà un, vous pouvez donc le personnaliser et le committer).
 
 ## Checklist de personnalisation
 
@@ -168,7 +170,7 @@ ajouter un dépôt), éditez `devrig.toml` directement et relancez `./setup.sh`.
 | `.claude/` | Réglages Claude Code, agents, liens symboliques de skills |
 | `.opencode/` | Agents et configuration de plugin opencode |
 | `.mcp.json` / `opencode.json` | Serveurs MCP (gestionnaire de tickets, semble) |
-| `git-hooks/` | Hooks pre-commit / pre-push de branches protégées |
+| `git-hooks/` | Hooks partagés par tous les dépôts (`core.hooksPath`) : pre-commit / pre-push de branches protégées, plus les reconstructions du graphe graphify |
 | `knowledge/` | Base de connaissances markdown (architecture, décisions, conception, runbooks, produit, releases) |
 | `<repo>/` (non suivi) | Vos dépôts de projet, clonés par `setup.sh` |
 
@@ -177,6 +179,20 @@ ajouter un dépôt), éditez `devrig.toml` directement et relancez `./setup.sh`.
 Voir [`.agents/skills/_template/README.md`](../.agents/skills/_template/README.md).
 En bref : créez `.agents/skills/<name>/SKILL.md`, liez-la dans
 `.claude/skills/` et listez-la dans `CLAUDE.md`.
+
+## Graphe de connaissances
+
+Avec l'option `graphify` activée, chaque dépôt obtient son propre `<repo>/graphify-out/` : un graphe interrogeable du code (hubs, communautés, relations entre fichiers) plus un `GRAPH_REPORT.md` en langage clair et un `graph.html` interactif. Les agents s'en servent au lieu de grep + lecture de fichiers :
+
+```bash
+cd <repo>
+graphify update .                                # construire/rafraîchir (AST seul, sans clé API)
+graphify query "comment fonctionne l'authentification"  # sous-graphe ciblé, pas un dump de grep
+graphify path "LoginForm" "SessionStore"         # comment deux choses sont reliées
+graphify explain "PaymentService"                # un nœud et ses voisins
+```
+
+`setup.sh` installe la CLI, dépose la skill dans `.agents/skills/graphify/`, enregistre les guards PreToolUse qui poussent les agents vers le graphe avant de chercher, et installe les hooks de reconstruction — `graphify hook install` couvre post-commit et post-checkout, et devrig ajoute `git-hooks/post-merge` pour qu'un `git pull` rafraîchisse aussi le graphe. Les graphes, la skill installée et les hooks générés sont tous dans le gitignore : ils sont régénérés depuis la CLI à chaque `./setup.sh`, donc rien d'obsolète n'est committé.
 
 ## Base de connaissances
 
@@ -192,6 +208,8 @@ mettez à jour le pointeur dans `AGENTS.md`.
 - **`semble` ou `uv` introuvables après le setup** — ouvrez un nouveau shell (le PATH a été mis à jour) et relancez `./setup.sh`.
 - **Outils du gestionnaire de tickets absents dans Claude** — lancez `/mcp` et terminez le flux OAuth du serveur `linear` ou `atlassian`.
 - **rtk ne s'active pas** — redémarrez Claude Code ; vérifiez avec `rtk gain` que les commandes sont bien proxifiées.
+- **`graphify query` dit qu'il n'y a pas de graphe** — construisez-le une fois par dépôt avec `graphify update .` depuis sa racine ; les hooks ne rafraîchissent qu'un graphe existant.
+- **Les reconstructions ne se déclenchent pas au commit** — lancez `graphify hook status` dans le dépôt et consultez `~/.cache/graphify-rebuild.log`. `GRAPHIFY_SKIP_HOOK=1` les désactive pour une commande.
 - **Un dépôt ne se met pas à jour** — `setup.sh` ne touche jamais un dépôt avec des changements locaux ou sur une branche de tâche ; il ne fait que du fast-forward sur des checkouts propres de la branche par défaut.
 - **setup.sh ne me demande rien, il échoue directement avec « edit devrig.toml first »** — il n'interroge que s'il est attaché à un terminal interactif ; le lancer depuis un script ou une CI exige que `devrig.toml` soit déjà rempli.
 - **Vous avez choisi Jira ou « autre »** — le serveur MCP `atlassian` (Jira) est configuré automatiquement, mais `/start-task`, `/raise-pr` et `/create-ticket` appellent toujours les outils MCP de Linear — `setup.sh` vous le rappellera à la fin de chaque exécution tant que vous n'aurez pas adapté ces skills.

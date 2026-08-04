@@ -1,0 +1,37 @@
+#!/bin/sh
+# Rebuilds this repo's graphify knowledge graph after a `git pull` / `git merge`.
+# Installed workspace-wide via core.hooksPath (see setup.sh), so it runs in
+# whichever repo was merged and rebuilds that repo's graphify-out/.
+#
+# graphify ships its own post-commit and post-checkout hooks (`graphify hook
+# install`, run by setup.sh) but none for merges — pulling a colleague's work
+# would otherwise leave the graph stale until the next local commit. This is
+# devrig's thin equivalent: it shells out to the graphify CLI rather than
+# vendoring graphify's interpreter-probing logic, since setup.sh has already
+# guaranteed the CLI is installed.
+#
+# Opt out for one command: GRAPHIFY_SKIP_HOOK=1 git pull
+
+[ "${GRAPHIFY_SKIP_HOOK:-0}" = "1" ] && exit 0
+
+# Only refresh a graph that already exists — building the first one is a
+# deliberate, potentially slow step (`graphify update .`), not something to
+# spring on someone mid-pull.
+[ -d graphify-out ] || exit 0
+command -v graphify >/dev/null 2>&1 || exit 0
+
+# ORIG_HEAD is the pre-merge commit; fall back to the previous commit if a
+# merge left it unset.
+CHANGED=$(git diff --name-only ORIG_HEAD HEAD 2>/dev/null || git diff --name-only HEAD~1 HEAD 2>/dev/null)
+[ -n "$CHANGED" ] || exit 0
+
+# Nothing to do when the merge only moved graph artifacts around.
+echo "$CHANGED" | grep -qv '^graphify-out/' || exit 0
+
+LOG="${HOME}/.cache/graphify-rebuild.log"
+mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
+echo "[graphify] pull/merge — rebuilding graph in background (log: $LOG)"
+
+# Detached so `git pull` returns immediately; a large rebuild can take minutes.
+( graphify update . >>"$LOG" 2>&1 & ) &
+exit 0

@@ -30,6 +30,7 @@ devrig は*メタリポジトリ*です。プロジェクトのすべてのリ�
 |---|---|
 | 🧠 | **AI ワークフロースキル** — `/start-task`、`/raise-pr`、`/code-review`、`/write-doc`、`/create-ticket`（エージェント非依存で `.agents/skills/` に配置、Claude Code 用に symlink、opencode も設定済み） |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — grep とファイル読みの代わりにエージェントが MCP 経由で使うセマンティックコード検索 |
+| 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — リポジトリごとのナレッジグラフ。エージェントは grep の代わりにこれを問い合わせ、git フックが常に最新に保つ |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code のトークンを節約するコマンドプロキシ |
 | 🎫 | **課題管理 MCP** — Linear、Jira、または自前のもの。`setup.sh` が対話式に選ばせる |
 | 🛡️ | **保護ブランチ用 git フック** — どのリポジトリでもデフォルトブランチへの誤コミット/プッシュを防止 |
@@ -67,7 +68,7 @@ GitHub の UI を使いたい、または最初から自分の org 配下にリ�
 
 いずれの方法でも、その後 Claude Code 内で `/mcp` を実行して設定された課題管理サーバー
 （**linear** または **atlassian**）を認証し（初回のみの OAuth。**semble** は
-認証不要）、rtk フックを有効にするため Claude Code を一度再起動してください。
+認証不要）、rtk フックを有効にするため Claude Code を一度再起動してください。 graphify を有効にした場合は、各リポジトリのルートで一度 `graphify update .` を実行してグラフを構築してください。以降は git フックが最新に保ちます。
 
 ## 🤖 AI エージェントでキックスタート
 
@@ -128,13 +129,14 @@ Help me go from this description to a working workspace:
    `devrig.toml` から*あなたの*プロジェクト用の `README.md` を生成。devrig
    リポジトリ自体の中では実行されず、編集済みの README が上書きされることも
    ありません。
-2. 前提条件を確認（`git`、認証済み `gh`。semble 有効時は `uv` をインストール）。
+2. 前提条件を確認（`git`、認証済み `gh`。semble または graphify 有効時は `uv` をインストール）。
 3. `repos` の各リポジトリを横並びにクローン（クリーンなデフォルトブランチのチェックアウトは fast-forward）し、`.git/info/exclude` 経由でこのリポジトリの git status から除外。
 4. このリポジトリとクローンした各リポジトリに保護ブランチ用 git フックをインストール。
 5. `.mcp.json` / `opencode.json` を `devrig.toml` のトグルに収束させる — `issue_tracker` に応じて `linear` または `atlassian`（Jira）サーバーを追加し、「その他」なら追加しない。手動追加した MCP サーバーは保持し、`.claude/settings.local.json` を生成。
 6. semble をインストールし、リポジトリごとに検索インデックスをウォームアップ。
 7. rtk をインストールし、Claude Code フックを登録。
-8. VS Code 用の `<project>.code-workspace` を生成（既存の場合はスキップされるため、カスタマイズしてコミットしても安全）。
+8. graphify をインストール：スキルを `.agents/skills/` へ（Claude Code 用のシンボリックリンクも作成）、エージェントが grep する前にグラフへ誘導する PreToolUse ガード、そしてコミット・チェックアウト・マージ後にそのリポジトリのグラフを再構築する git フックを登録。
+9. VS Code 用の `<project>.code-workspace` を生成（既存の場合はスキップされるため、カスタマイズしてコミットしても安全）。
 
 ## カスタマイズチェックリスト
 
@@ -164,7 +166,7 @@ devrig のテンプレートファイルの削除、プロジェクト README �
 | `.claude/` | Claude Code の設定、エージェント、スキルの symlink |
 | `.opencode/` | opencode のエージェントとプラグイン設定 |
 | `.mcp.json` / `opencode.json` | MCP サーバー（課題管理ツール、semble） |
-| `git-hooks/` | 保護ブランチ用 pre-commit / pre-push フック |
+| `git-hooks/` | 全リポジトリ共有のフック（`core.hooksPath`）：保護ブランチ用 pre-commit / pre-push と、graphify のグラフ再構築 |
 | `knowledge/` | markdown ナレッジベース（アーキテクチャ、決定、設計、runbook、プロダクト、リリース） |
 | `<repo>/`（未追跡） | `setup.sh` がクローンするプロジェクトリポジトリ |
 
@@ -173,6 +175,20 @@ devrig のテンプレートファイルの削除、プロジェクト README �
 [`.agents/skills/_template/README.md`](../.agents/skills/_template/README.md) を参照。
 要約：`.agents/skills/<name>/SKILL.md` を作成し、`.claude/skills/` に symlink し、
 `CLAUDE.md` に記載します。
+
+## ナレッジグラフ
+
+`graphify` トグルを有効にすると、各リポジトリが自分の `<repo>/graphify-out/` を持ちます — 問い合わせ可能なコードのグラフ（ハブ、コミュニティ、ファイル間の関係）に加え、平易な `GRAPH_REPORT.md` とインタラクティブな `graph.html`。エージェントは grep してファイルを読む代わりにこれを使います：
+
+```bash
+cd <repo>
+graphify update .                                # 構築/更新（AST のみ、API キー不要）
+graphify query "認証はどう動くのか"                # 範囲を絞ったサブグラフ。grep の羅列ではない
+graphify path "LoginForm" "SessionStore"         # 2 つがどう繋がっているか
+graphify explain "PaymentService"                # あるノードとその隣接ノード
+```
+
+`setup.sh` は CLI をインストールし、スキルを `.agents/skills/graphify/` に配置し、検索前にエージェントをグラフへ向ける PreToolUse ガードを登録し、再構築フックを入れます — post-commit と post-checkout は `graphify hook install` が担当し、devrig は `git-hooks/post-merge` を追加して `git pull` でもグラフを更新します。グラフ・インストール済みスキル・生成されたフックはすべて gitignore 対象です：`./setup.sh` ごとに CLI から再生成されるため、古いものがコミットされることはありません。
 
 ## ナレッジベース
 
@@ -188,6 +204,8 @@ push し、`devrig.toml` の `repos` に追加、ここのフォルダを削除�
 - **setup 後に `semble` や `uv` が見つからない** — 新しいシェルを開き（PATH が更新されています）、`./setup.sh` を再実行。
 - **Claude に課題管理ツールが表示されない** — `/mcp` を実行して `linear` または `atlassian` サーバーの OAuth フローを完了。
 - **rtk が効かない** — Claude Code を再起動し、`rtk gain` でコマンドがプロキシされているか確認。
+- **`graphify query` がグラフがないと言う** — そのリポジトリのルートで一度 `graphify update .` を実行。フックは既存のグラフを更新するだけです。
+- **コミットでグラフ再構築が走らない** — そのリポジトリで `graphify hook status` を実行し、`~/.cache/graphify-rebuild.log` を確認。`GRAPHIFY_SKIP_HOOK=1` で 1 コマンドだけ抑止できます。
 - **リポジトリが更新されない** — `setup.sh` はローカル変更があるリポジトリやタスクブランチ上のリポジトリには触れません。クリーンなデフォルトブランチのチェックアウトだけを fast-forward します。
 - **setup.sh が何も聞いてこず "edit devrig.toml first" と言う** — 対話式端末に接続している場合のみプロンプトが出ます。スクリプトや CI から実行する場合は `devrig.toml` を事前に埋めておく必要があります。
 - **Jira や「その他」を選んだ** — `atlassian`（Jira）MCP サーバーは自動で設定されますが、`/start-task`、`/raise-pr`、`/create-ticket` は依然として Linear の MCP ツール名を呼び出します — これらのスキルを調整するまで、`setup.sh` は実行のたびに末尾でこの点を警告します。
