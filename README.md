@@ -27,7 +27,7 @@ stay untracked. Everything is configured from a single **`devrig.toml`** file.
 
 | | What you get |
 |---|---|
-| 🧠 | **AI workflow skills** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (agent-agnostic in `.agents/skills/`, symlinked for Claude Code, opencode configured too) |
+| 🧠 | **AI workflow skills** — `/start-task`, `/plan-task`, `/verify-change`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (agent-agnostic in `.agents/skills/`, symlinked for Claude Code, opencode configured too) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — semantic code search agents use via MCP instead of grep-and-read |
 | 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — a knowledge graph per repo that agents query instead of grepping, kept fresh by git hooks |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — token-optimizing command proxy for Claude Code |

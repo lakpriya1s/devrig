@@ -10,7 +10,12 @@ This workspace also configures Claude-Code-only tooling not covered by `AGENTS.m
   `AGENTS.md`): use these for the corresponding workflows instead of
   reinventing them ad hoc.
   - `/start-task <TICKET-ID>` — fetch the ticket, assign it, move it to
-    In Progress, sync the default branch
+    In Progress, sync the default branch, and gather context (systems, ADRs,
+    designs, likely files, risks, test plan)
+  - `/plan-task` — turn gathered context into a written plan (goal, systems,
+    files, proposed changes, risks, test strategy) before implementing
+  - `/verify-change` — run tests/lint/typecheck/build/security checks and
+    report evidence per `POLICY.md`, before `/raise-pr`
   - `/raise-pr` — branch, commit, push, and open PRs for every affected repo
   - `/code-review` — review a PR, branch, or local diff (full or light mode)
   - `/write-doc` — write design docs, as-builts, ADRs, and runbooks into the

@@ -19,6 +19,10 @@ description: Raise pull requests for the current task — detects which workspac
 
 Detects which workspace repos have changes for the current task, creates the task branch where needed, commits and pushes, then creates a PR on GitHub for every affected repo.
 
+If `/verify-change` hasn't run yet this session, run it first — per
+`POLICY.md`'s Definition of Done, a PR shouldn't go up with unverified or
+failing checks. Include its evidence block in the PR description (Step 8).
+
 ---
 
 ## Step 1 — Recall the ticket context
