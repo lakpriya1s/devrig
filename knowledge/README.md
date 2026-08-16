@@ -16,6 +16,7 @@ of the workspace).
 | `runbooks/` | Operational guides: deploys, incident response, environment setup |
 | `product/` | Product context: personas, feature specs, terminology, UX audits |
 | `releases/` | Release notes and store submission notes |
+| `handoffs/` | Working state for an interrupted task — see [Handoffs](#handoffs) |
 
 ## Index
 
@@ -29,9 +30,18 @@ the status of any doc:
 node scripts/build-knowledge-index.mjs
 ```
 
-`/write-doc` runs this automatically as its last step. Agents doing broad
-"what do we know about X" retrieval should check `index.md` before searching,
-per the retrieval policy in `AGENTS.md`.
+`/write-doc` and `/capture-learning` run this automatically as their last
+step. Agents doing broad "what do we know about X" retrieval should check
+`index.md` before searching, per the retrieval policy in `AGENTS.md`.
+
+## Handoffs
+
+`handoffs/` holds working state for a task interrupted mid-flight — enough
+that a different agent (or the same one, in a fresh session) can pick it up
+without rediscovering everything. It is **not permanent knowledge**: once the
+task finishes, delete the handoff or set its `status: archived`. A handoff
+that's still `status: accepted` signals unfinished work — `knowledge/index.md`
+surfaces these so they don't get silently forgotten.
 
 ## Conventions
 
@@ -56,7 +66,7 @@ whole doc:
 ---
 id: <kebab-slug>                 # decisions/ use adr-NNNN; others use the filename stem
 title: <Title>
-type: architecture | design | decision | runbook | product | release
+type: architecture | design | decision | runbook | product | release | handoff
 status: draft | proposed | accepted | deprecated | superseded | archived
 authority: canonical | supporting | generated | historical
 systems: [<system-name>, ...]    # names from AGENTS.md's Systems table; [] if workspace-wide
@@ -68,8 +78,15 @@ last_reviewed: YYYY-MM-DD
 tags: [<tag>, ...]                # optional
 related: [<doc-id>, ...]           # optional
 superseded_by: <doc-id>            # optional — only when status: superseded
+review_interval: 180d              # optional — how often this doc should be re-checked
 ---
 ```
+
+`review_interval` (optional, e.g. `90d`, `180d`, `365d`) drives the freshness
+warning in `scripts/detect-doc-drift.mjs`: if `last_reviewed` plus the
+interval is in the past, the doc surfaces as stale. Add it to anything whose
+accuracy decays — architecture, runbooks, product behavior — skip it on docs
+that don't go stale the same way (most ADRs, once accepted, don't need one).
 
 ### Status — is it current?
 

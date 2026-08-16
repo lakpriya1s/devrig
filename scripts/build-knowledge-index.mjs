@@ -84,7 +84,8 @@ const designs = withFm.filter((d) => d.type === "design" && ["draft", "proposed"
 const decisions = withFm.filter((d) => d.type === "decision" && d.status === "accepted");
 const runbooks = withFm.filter((d) => d.type === "runbook" && !["deprecated", "superseded", "archived"].includes(d.status));
 const product = withFm.filter((d) => d.type === "product" && !["deprecated", "superseded", "archived"].includes(d.status));
-const deprecated = withFm.filter((d) => ["deprecated", "superseded", "archived"].includes(d.status));
+const handoffs = withFm.filter((d) => d.type === "handoff" && d.status !== "archived");
+const deprecated = withFm.filter((d) => d.type !== "handoff" && ["deprecated", "superseded", "archived"].includes(d.status));
 
 const recent = [...withFm]
   .filter((d) => d.last_reviewed || d.created)
@@ -101,6 +102,7 @@ ${section("Active Designs", designs, link)}
 ${section("Accepted Decisions", decisions, link)}
 ${section("Operational Runbooks", runbooks, link)}
 ${section("Product Knowledge", product, link)}
+${section("Active Handoffs (unfinished work)", handoffs, link)}
 ${section("Recently Reviewed", recent, link)}
 ${section("Deprecated / Superseded / Archived", deprecated, link)}
 ${missing.length > 0 ? `## Missing frontmatter\n\nThese docs have no frontmatter and are excluded from the sections above — add it (see \`knowledge/README.md\`):\n\n${missing.map((d) => `- ${d.path}`).join("\n")}\n` : ""}`;

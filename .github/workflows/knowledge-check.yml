@@ -27,3 +27,6 @@ jobs:
           node scripts/check-adr-requirement.mjs \
             "${{ github.event.pull_request.base.sha }}" \
             "${{ github.event.pull_request.head.sha }}"
+
+      - name: Surface documentation drift (informational — never fails)
+        run: node scripts/detect-doc-drift.mjs

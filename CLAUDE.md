@@ -18,8 +18,13 @@ This workspace also configures Claude-Code-only tooling not covered by `AGENTS.m
     report evidence per `POLICY.md`, before `/raise-pr`
   - `/raise-pr` — branch, commit, push, and open PRs for every affected repo
   - `/code-review` — review a PR, branch, or local diff (full or light mode)
-  - `/write-doc` — write design docs, as-builts, ADRs, and runbooks into the
-    knowledge base
+  - `/write-doc` — write design docs, as-builts, ADRs, runbooks, and handoffs
+    into the knowledge base
+  - `/capture-learning` — after a PR merges, decide what permanent knowledge
+    (ADR, runbook, `.ai/` config) should be preserved, then clean up the
+    task's handoff/context files
+  - `/check-knowledge-consistency` — compare knowledge/`.ai/` against actual
+    repo state (commands, ownership, architecture, runbooks, API contracts, ADRs)
   - `/create-ticket` — file well-formed epics, stories, tasks, and bugs
   - `/graphify` — build or query a repo's knowledge graph (see the
     **Knowledge graph** section in `AGENTS.md` for when to reach for it)

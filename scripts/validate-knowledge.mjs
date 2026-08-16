@@ -15,7 +15,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const KNOWLEDGE_DIR = join(ROOT, "knowledge");
 const SKIP_FILES = new Set(["README.md", "index.md", "0000-template.md"]);
 
-const VALID_TYPES = ["architecture", "design", "decision", "runbook", "product", "release"];
+const VALID_TYPES = ["architecture", "design", "decision", "runbook", "product", "release", "handoff"];
 const VALID_STATUS = ["draft", "proposed", "accepted", "deprecated", "superseded", "archived"];
 const VALID_AUTHORITY = ["canonical", "supporting", "generated", "historical"];
 const VALID_AUTHORSHIP = ["human", "ai-assisted", "generated"];

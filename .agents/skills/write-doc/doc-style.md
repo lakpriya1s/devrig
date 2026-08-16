@@ -20,7 +20,7 @@ Every field is required unless marked optional. See `knowledge/README.md` for th
 ---
 id: <kebab-slug>                 # decisions/ use adr-NNNN; others use the filename stem
 title: <Title>
-type: architecture | design | decision | runbook | product | release
+type: architecture | design | decision | runbook | product | release | handoff
 status: draft | proposed | accepted | deprecated | superseded | archived
 authority: canonical | supporting | generated | historical
 systems: [<system-name>, ...]    # from AGENTS.md's Systems table; [] if workspace-wide
@@ -32,6 +32,7 @@ last_reviewed: YYYY-MM-DD
 tags: [<tag>, ...]                # optional
 related: [<doc-id>, ...]           # optional — ids of related docs/ADRs
 superseded_by: <doc-id>            # optional — only when status: superseded
+review_interval: 180d              # optional — see knowledge/README.md
 ---
 ```
 

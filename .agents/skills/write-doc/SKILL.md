@@ -21,6 +21,7 @@ its `README.md`). Output always lands on a task branch and is handed to
 - `/write-doc <what>` — e.g. `/write-doc how invite links work`, `/write-doc runbook for deploying the api`
 - `/write-doc <TICKET-ID>` — design doc from a Linear ticket
 - `/write-doc adr <decision>` — record an architecture decision
+- `/write-doc handoff` — write a handoff doc for unfinished work (see `knowledge/README.md#handoffs`)
 - `/write-doc fill` — gap-fill mode: inventory missing docs and propose what to write next
 
 ## Doc-type decision table
@@ -33,6 +34,7 @@ its `README.md`). Output always lands on a task branch and is handed to
 | Record/justify a decision ("we chose X over Y") | `decisions/` | copy `decisions/0000-template.md` | `NNNN-<short-title>.md` (next number) |
 | Operational procedure (deploy, restore, incident) | `runbooks/` | [templates/runbook.md](templates/runbook.md) | `<verb-slug>.md` (e.g. `deploy-api.md`) |
 | Product behavior, personas, terminology, plan rules | `product/` | [templates/product-doc.md](templates/product-doc.md) | `<topic-slug>.md` |
+| Handing off unfinished work to another session/agent | `handoffs/` | [templates/handoff.md](templates/handoff.md) | `<ticket-id>.md` |
 | "Fill missing docs" / "what's undocumented" | (varies) | [Gap-fill mode](#gap-fill-mode) | (per pick) |
 
 Tie-breakers: not-yet-built → design doc; already shipped → as-built; "why did/should we" → ADR; "how do I operate/recover" → runbook. **If the intent is ambiguous between design (future) and as-built (present), ask the user one question before writing — the two land in different folders and must not be mixed.**

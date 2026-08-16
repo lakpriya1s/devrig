@@ -22,7 +22,10 @@ text; on agent tools without a native plan mode, print it directly.
 ## Step 1 — Ensure context exists
 
 If `/start-task`'s "Context gathered" block is already in this session, use it.
-Otherwise run its Step 4 (Gather context) now — don't plan on a guess.
+Otherwise check for a persisted bundle at `.ai/context/<ISSUE-ID>.json` (from
+a prior `/start-task` run, possibly in an earlier session) and use that. If
+neither exists, run `/start-task`'s Step 4 (Gather context) now — don't plan
+on a guess.
 
 ## Step 2 — Read what retrieval found
 

@@ -156,3 +156,29 @@ Test plan: <suite(s) to run>
 Suggest `/plan-task` next for anything non-trivial (multi-repo, schema/auth
 changes, or unclear scope); small, well-scoped tasks can go straight to
 implementation.
+
+### 5. Persist the context bundle
+
+Write the same information as JSON to `.ai/context/<ISSUE-ID>.json` (uppercase
+ticket id, e.g. `.ai/context/AC-143.json`), so `/plan-task` and any other
+agent picking up this ticket later in the same session or a fresh one can
+reuse it instead of re-running retrieval:
+
+```json
+{
+  "ticket": "<ISSUE-ID>",
+  "title": "<title>",
+  "systems": ["<system>", ...],
+  "documents": ["<relevant design doc paths>"],
+  "decisions": ["<related ADR paths>"],
+  "likely_files": ["<repo/path>", ...],
+  "dependencies": ["<external factors>"],
+  "risk": "low | medium | high | critical",
+  "test_plan": ["<suite(s)>"]
+}
+```
+
+This is working state for the task's branch, not permanent knowledge — it's
+fine to commit alongside the task's other changes, and there's no need to
+clean it up specially (it becomes stale/irrelevant once the branch merges,
+same as the branch itself).

@@ -27,7 +27,7 @@ stay untracked. Everything is configured from a single **`devrig.toml`** file.
 
 | | What you get |
 |---|---|
-| 🧠 | **AI workflow skills** — `/start-task`, `/plan-task`, `/verify-change`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (agent-agnostic in `.agents/skills/`, symlinked for Claude Code, opencode configured too) |
+| 🧠 | **AI workflow skills** — `/start-task`, `/plan-task`, `/verify-change`, `/raise-pr`, `/code-review`, `/write-doc`, `/capture-learning`, `/check-knowledge-consistency`, `/create-ticket` (agent-agnostic in `.agents/skills/`, symlinked for Claude Code, opencode configured too) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — semantic code search agents use via MCP instead of grep-and-read |
 | 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — a knowledge graph per repo that agents query instead of grepping, kept fresh by git hooks |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — token-optimizing command proxy for Claude Code |
@@ -196,7 +196,7 @@ directly and re-run `./setup.sh`.
 | `setup.sh` | Idempotent bootstrap/update script |
 | `AGENTS.md` | Agent-agnostic source of truth (systems, commands, branch rules, retrieval policy) |
 | `POLICY.md` | Definition of Done, ADR requirement, risk/data/role policy, verification/confidence reporting |
-| `.ai/` | Machine-readable mirror of the above (`systems.yaml`, `commands.yaml`, `ownership.yaml`, `policies.yaml`, `risk-levels.yaml`) plus their JSON Schemas in `.ai/schemas/` |
+| `.ai/` | Machine-readable mirror of the above (`systems.yaml`, `commands.yaml`, `ownership.yaml`, `policies.yaml`, `risk-levels.yaml`), their JSON Schemas in `.ai/schemas/`, and per-task context bundles in `.ai/context/` (written by `/start-task`) |
 | `.github/workflows/` | CI: validates `.ai/*.yaml` against its schemas, and validates `knowledge/` (frontmatter, links, ADR ids, index freshness, protected-path ADR requirement) |
 | `CLAUDE.md` | Claude Code specifics; imports `AGENTS.md` |
 | `.agents/skills/` | Canonical workflow skills (agent-agnostic) |
@@ -205,7 +205,7 @@ directly and re-run `./setup.sh`.
 | `.mcp.json` / `opencode.json` | MCP servers (issue tracker, semble) |
 | `git-hooks/` | Shared hooks for every repo (`core.hooksPath`): protected-branch pre-commit / pre-push, plus the graphify graph rebuilds |
 | `knowledge/` | Markdown knowledge base (architecture, decisions, design, runbooks, product, releases) — see `knowledge/index.md` |
-| `scripts/` | Workspace maintenance scripts (e.g. `build-knowledge-index.mjs`) |
+| `scripts/` | Workspace maintenance scripts — `build-knowledge-index.mjs`, `validate-knowledge.mjs`, `validate-ai-config.mjs`, `detect-doc-drift.mjs`, `check-adr-requirement.mjs` |
 | `<repo>/` (untracked) | Your project repos, cloned by `setup.sh` |
 
 ## Adding a skill
