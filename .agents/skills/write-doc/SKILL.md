@@ -78,7 +78,7 @@ Run independent lookups in parallel.
 ## Step 4 — Draft
 
 1. Copy the matching template and fill every section; delete the HTML guidance comments; drop genuinely empty optional sections rather than writing "N/A".
-2. Apply [doc-style.md](doc-style.md) — no frontmatter, blockquote status line, Mermaid for diagrams, path+symbol citations, honest treatment of known gaps.
+2. Apply [doc-style.md](doc-style.md) — YAML frontmatter, Mermaid for diagrams, path+symbol citations, honest treatment of known gaps.
 3. For design docs, the **Cross-repo impact**, **Privacy & security**, and **Rollout & sequencing** sections are required for anything touching sensitive data, notifications, or billing/plans.
 
 ---
@@ -98,10 +98,11 @@ git checkout -b <branch>
 
 Branch name: `<ticket-id>-docs-<slug>` when a ticket exists (e.g. `ac-301-docs-invite-links`), otherwise `docs-<slug>`.
 
-1. Write the doc file(s) to the target folder from the decision table.
-2. Make the index edits in the same change: check off the matching `architecture/overview.md` "To document" item, and add a cross-link from the most closely related existing doc if one exists.
-3. Show the user the doc (or a summary + path) for review.
-4. Finish by suggesting `/raise-pr` — it detects the changes, commits, pushes, and opens the PR. Do not duplicate its logic here.
+1. Write the doc file(s) to the target folder from the decision table, with frontmatter filled in per [doc-style.md](doc-style.md) (`authorship: ai-assisted`, `human_reviewed: false` unless a human is actively co-authoring in this session).
+2. Make the index edits in the same change: check off the matching `architecture/overview.md` "To document" item, and add a cross-link (`related:` frontmatter and/or a "Related docs" section) from the most closely related existing doc if one exists.
+3. Regenerate the generated index: `node scripts/build-knowledge-index.mjs`.
+4. Show the user the doc (or a summary + path) for review.
+5. Finish by suggesting `/raise-pr` — it detects the changes, commits, pushes, and opens the PR. Do not duplicate its logic here.
 
 ---
 

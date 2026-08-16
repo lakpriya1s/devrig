@@ -1,7 +1,24 @@
+---
+id: adr-0000
+title: Title
+type: decision
+status: proposed
+authority: canonical
+systems: [<system-name>, ...]
+owners: []
+authorship: human
+human_reviewed: false
+created: <YYYY-MM-DD>
+last_reviewed: <YYYY-MM-DD>
+tags: []
+related: []
+superseded_by: null
+---
+
 # ADR-0000: Title
 
-- **Status**: Proposed | Accepted | Superseded by ADR-XXXX
-- **Date**: YYYY-MM-DD
+> Status and date live in the frontmatter above — keep them in sync.
+
 - **Deciders**: who was involved
 
 ## Context

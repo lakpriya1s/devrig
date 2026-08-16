@@ -1,6 +1,21 @@
+---
+id: <feature-slug>
+title: <Feature / topic name>
+type: architecture
+status: accepted
+authority: supporting
+systems: [<system-name>, ...]
+owners: []
+authorship: ai-assisted
+human_reviewed: false
+created: <YYYY-MM-DD>
+last_reviewed: <YYYY-MM-DD>
+tags: []
+---
+
 # <Feature / topic name>
 
-> As-built documentation, derived from code — <YYYY-MM-DD>. Items marked `TODO(verify: ...)` are unconfirmed.
+> As-built documentation, derived from code. Items marked `TODO(verify: ...)` are unconfirmed.
 
 ## Overview
 

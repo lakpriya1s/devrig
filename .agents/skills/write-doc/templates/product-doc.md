@@ -1,6 +1,19 @@
-# <Topic>
+---
+id: <topic-slug>
+title: <Topic>
+type: product
+status: accepted
+authority: supporting
+systems: [<system-name>, ...]
+owners: []
+authorship: ai-assisted
+human_reviewed: false
+created: <YYYY-MM-DD>
+last_reviewed: <YYYY-MM-DD>
+tags: []
+---
 
-> Product doc — <YYYY-MM-DD>.
+# <Topic>
 
 ## What it is
 

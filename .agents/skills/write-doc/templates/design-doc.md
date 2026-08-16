@@ -1,6 +1,22 @@
+---
+id: <feature-slug>
+title: <Feature title>
+type: design
+status: draft
+authority: supporting
+systems: [<system-name>, ...]
+owners: []
+authorship: ai-assisted
+human_reviewed: false
+created: <YYYY-MM-DD>
+last_reviewed: <YYYY-MM-DD>
+tags: []
+related: []
+---
+
 # <Feature title>
 
-> Status: Draft — <YYYY-MM-DD>. Ticket: <TICKET-ID or "none">.
+> Ticket: <TICKET-ID or "none">.
 
 ## Summary
 

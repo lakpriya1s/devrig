@@ -1,6 +1,21 @@
+---
+id: <task-slug>
+title: "Runbook: <task name>"
+type: runbook
+status: accepted
+authority: supporting
+systems: [<system-name>, ...]
+owners: []
+authorship: ai-assisted
+human_reviewed: false
+created: <YYYY-MM-DD>
+last_reviewed: <YYYY-MM-DD>
+tags: []
+---
+
 # Runbook: <task name>
 
-> Last verified: <YYYY-MM-DD> by <who>.
+> Last verified by <who> — see `last_reviewed` above.
 
 ## When to use this
 
