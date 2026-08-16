@@ -319,3 +319,9 @@ Print the full PR URL for every affected repo:
 > - repo-b: https://github.com/<owner>/repo-b/pull/<number>"
 
 If the CLI returned a URL, use that directly. If only a PR number was returned, construct the URL from the known owner/repo/number.
+
+---
+
+## Step 11 — Record changed files
+
+For each affected repo, append `git diff --stat $(git merge-base HEAD origin/<BASE>)..HEAD` to `.ai/runs/<ISSUE-ID>/changed-files.txt` (one section per repo, headed by the repo name) — the next entry in that ticket's observability trail (see `.ai/README.md`).

@@ -1,0 +1,34 @@
+# Architecture understanding, historical decisions, and impact analysis.
+# Fill in expected_sources with real paths once your knowledge base has
+# real content. See evals/README.md for how to run and score these.
+
+evals:
+  - id: architecture-001
+    category: architecture-understanding
+    question: "Why was this architecture selected?"
+    expected_sources:
+      - knowledge/architecture/overview.md
+      - knowledge/decisions/
+    notes: "TODO: needs at least one accepted ADR explaining a real architectural choice."
+
+  - id: architecture-002
+    category: historical-decisions
+    question: "Which ADR controls authentication, and is it still followed?"
+    expected_sources:
+      - knowledge/decisions/
+    notes: "Good answer checks the ADR's status (accepted/superseded) and spot-checks the code, per /check-knowledge-consistency."
+
+  - id: architecture-003
+    category: impact-analysis
+    question: "What happens if I change the location payload?"
+    expected_sources:
+      - knowledge/architecture/
+      - knowledge/design/
+    notes: "TODO: replace 'location payload' with a real shared data model in your system. Good answer names every consumer, not just the producer."
+
+  - id: architecture-004
+    category: impact-analysis
+    question: "What must I do before modifying the database schema?"
+    expected_sources:
+      - POLICY.md
+    notes: "Good answer cites POLICY.md's ADR requirement and Definition of Done, not just 'write a migration'."

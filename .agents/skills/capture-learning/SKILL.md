@@ -59,10 +59,18 @@ For each confirmed item, follow `/write-doc`'s normal flow (template, frontmatte
 - If `knowledge/handoffs/<TICKET-ID>.md` exists, delete it (the task is done, not interrupted) or set `status: archived` if the team prefers keeping history.
 - If `.ai/context/<TICKET-ID>.json` exists, delete it — it's no longer useful once the task is merged.
 
-## Step 6 — Regenerate and land
+## Step 6 — Close the observability trail
 
-1. `node scripts/build-knowledge-index.mjs`.
-2. Land all changes from this run on **one** branch (`<ticket-id>-docs-capture-learning`) and suggest `/raise-pr` — do not commit to the default branch.
+Write `.ai/runs/<TICKET-ID>/summary.md` — the final entry in that ticket's
+observability trail (see `.ai/README.md`): what was captured as permanent
+knowledge (with paths), what was skipped and why, and what was cleaned up.
+This closes the run; nothing else writes to `.ai/runs/<TICKET-ID>/` after this.
+
+## Step 7 — Regenerate and land
+
+1. If `.ai/systems.yaml` or `.ai/ownership.yaml` changed: `node scripts/generate-architecture-views.mjs`.
+2. `node scripts/build-knowledge-index.mjs`.
+3. Land all changes from this run on **one** branch (`<ticket-id>-docs-capture-learning`) and suggest `/raise-pr` — do not commit to the default branch.
 
 ## Output
 

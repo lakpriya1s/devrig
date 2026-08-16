@@ -182,3 +182,8 @@ This is working state for the task's branch, not permanent knowledge — it's
 fine to commit alongside the task's other changes, and there's no need to
 clean it up specially (it becomes stale/irrelevant once the branch merges,
 same as the branch itself).
+
+Also write the identical JSON to `.ai/runs/<ISSUE-ID>/context.json` — this
+starts that ticket's observability trail (see `.ai/README.md`), which
+`/plan-task`, `/verify-change`, `/raise-pr`, and `/capture-learning` each add
+to as the task progresses.

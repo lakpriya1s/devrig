@@ -77,6 +77,23 @@ Prefer `authority: canonical` docs over `supporting`, `generated`, or
 `historical` ones when they conflict (see `knowledge/README.md`). Never treat
 a `deprecated`, `superseded`, or `archived` doc as current guidance.
 
+## Context efficiency
+
+- Search before recursively reading — grep-and-read a whole repo is a last
+  resort, not a first move.
+- Read only the files retrieval actually surfaced as relevant.
+- Prefer narrow ranges on very large files instead of reading the whole thing.
+- Don't reread a file you haven't changed since you last read it this session.
+- Summarize large logs/command output rather than pasting it verbatim into
+  later reasoning.
+- Reuse previously gathered task context — check `.ai/context/<TICKET-ID>.json`
+  (written by `/start-task`) before re-running retrieval from scratch.
+- Avoid loading generated/vendor files (`graphify-out/`, build output,
+  `node_modules/`, lockfiles) unless specifically debugging them.
+
+If the `rtk` toggle in `devrig.toml` is on, `rtk gain` shows measured token
+savings from this discipline — see the root `README.md`'s rtk section for setup/usage.
+
 ## Knowledge graph (graphify)
 
 Enabled by the `graphify` toggle in `devrig.toml`. There is no single

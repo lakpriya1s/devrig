@@ -6,6 +6,8 @@
 ## Architecture
 
 - [System Overview](architecture/overview.md) — draft
+- [Ownership Map (generated)](generated/ownership-map.md) — accepted
+- [System Map (generated)](generated/system-map.md) — accepted
 
 ## Active Designs
 
@@ -29,6 +31,8 @@ _None yet._
 
 ## Recently Reviewed
 
+- [Ownership Map (generated)](generated/ownership-map.md) — accepted
+- [System Map (generated)](generated/system-map.md) — accepted
 - [System Overview](architecture/overview.md) — draft
 
 ## Deprecated / Superseded / Archived

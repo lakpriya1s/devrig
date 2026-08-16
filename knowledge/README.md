@@ -17,6 +17,7 @@ of the workspace).
 | `product/` | Product context: personas, feature specs, terminology, UX audits |
 | `releases/` | Release notes and store submission notes |
 | `handoffs/` | Working state for an interrupted task — see [Handoffs](#handoffs) |
+| `generated/` | Views generated from `.ai/*.yaml` (system map, ownership map) — `authority: generated`, never hand-edited |
 
 ## Index
 
@@ -33,6 +34,10 @@ node scripts/build-knowledge-index.mjs
 `/write-doc` and `/capture-learning` run this automatically as their last
 step. Agents doing broad "what do we know about X" retrieval should check
 `index.md` before searching, per the retrieval policy in `AGENTS.md`.
+
+Similarly, `generated/`'s contents come from `scripts/generate-architecture-views.mjs`
+— run it after editing `.ai/systems.yaml` or `.ai/ownership.yaml`, then
+regenerate `index.md` since the generated docs are new inputs to it.
 
 ## Handoffs
 

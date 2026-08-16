@@ -204,8 +204,9 @@ directly and re-run `./setup.sh`.
 | `.opencode/` | opencode agents and plugin config |
 | `.mcp.json` / `opencode.json` | MCP servers (issue tracker, semble) |
 | `git-hooks/` | Shared hooks for every repo (`core.hooksPath`): protected-branch pre-commit / pre-push, plus the graphify graph rebuilds |
-| `knowledge/` | Markdown knowledge base (architecture, decisions, design, runbooks, product, releases) — see `knowledge/index.md` |
-| `scripts/` | Workspace maintenance scripts — `build-knowledge-index.mjs`, `validate-knowledge.mjs`, `validate-ai-config.mjs`, `detect-doc-drift.mjs`, `check-adr-requirement.mjs` |
+| `knowledge/` | Markdown knowledge base (architecture, decisions, design, runbooks, product, releases, handoffs, generated) — see `knowledge/index.md` |
+| `evals/` | Questions with known-good answers, for measuring retrieval accuracy/hallucination rate over time — see `evals/README.md` |
+| `scripts/` | Workspace maintenance scripts — `build-knowledge-index.mjs`, `validate-knowledge.mjs`, `validate-ai-config.mjs`, `detect-doc-drift.mjs`, `check-adr-requirement.mjs`, `generate-architecture-views.mjs` |
 | `<repo>/` (untracked) | Your project repos, cloned by `setup.sh` |
 
 ## Adding a skill

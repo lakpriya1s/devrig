@@ -10,6 +10,30 @@ function stripComments(text) {
     .filter((line) => line.trim() !== "" && !line.trim().startsWith("#"));
 }
 
+// "- key: value" list items (a block sequence of mappings, e.g. evals/*.yaml)
+// need their sibling keys (on following lines, indented to align with "key:")
+// recognized as part of the SAME mapping. Splitting "- key: value" into a
+// bare "-" line plus a "key: value" line at the aligned indent lets the
+// normal mapping-parse path pick up those siblings, instead of the sequence
+// loop bailing out after the first line (whose content indent is deeper than
+// the "-" it's attached to).
+function expandDashKeyValueLines(lines) {
+  const out = [];
+  for (const line of lines) {
+    const m = line.match(/^(\s*)-\s+(.*)$/);
+    if (m) {
+      const [, indent, rest] = m;
+      if (splitKeyValue(rest)) {
+        out.push(`${indent}-`);
+        out.push(`${indent}  ${rest}`);
+        continue;
+      }
+    }
+    out.push(line);
+  }
+  return out;
+}
+
 function indentOf(line) {
   return line.match(/^ */)[0].length;
 }
@@ -40,7 +64,7 @@ function splitKeyValue(content) {
 }
 
 export function parseYamlLite(text) {
-  const rawLines = stripComments(text);
+  const rawLines = expandDashKeyValueLines(stripComments(text));
   const lines = rawLines.map((line) => ({ indent: indentOf(line), content: line.trim() }));
 
   function parseBlock(pos, indent) {

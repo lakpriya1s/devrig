@@ -109,6 +109,10 @@ Present the plan and wait for the user to approve, edit, or redirect before
 implementing. Treat this as a real gate, not a formality — a plan the user
 hasn't seen is not an approved plan.
 
+Once approved, write the final plan (as approved, including any edits the
+user made) to `.ai/runs/<ISSUE-ID>/plan.md` — the next entry in that ticket's
+observability trail (see `.ai/README.md`).
+
 ## Step 5 — Hand off
 
 Once approved, implement against the plan directly, or note that

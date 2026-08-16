@@ -92,6 +92,11 @@ Any line that isn't PASS must show the actual failure output (or a short
 excerpt of it), not just "FAIL" — the next step is fixing it, not re-asserting
 success.
 
+Once every affected repo passes, append the full evidence (all repos) to
+`.ai/runs/<ISSUE-ID>/verification.md` — the next entry in that ticket's
+observability trail (see `.ai/README.md`). Don't write a failing run to it;
+only the passing result that actually gates `/raise-pr`.
+
 ## Step 6 — Stop on failure
 
 If anything fails, fix it and re-run this skill from Step 2 for that repo —
