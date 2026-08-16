@@ -163,8 +163,11 @@ the knowledge only you have — the generated README's **"Customize this
 workspace"** section carries this same checklist into your workspace:
 
 - [ ] `AGENTS.md` — fill the **Systems** table (one row per repo: what it is,
-      stack) and the **Testing** section. This is the source of truth every
-      skill reads. Keep the generated README's "What's inside" table in sync.
+      stack, what it depends on), the **Commands** table, and the **Testing**
+      section. This is the source of truth every skill reads. Keep the
+      generated README's "What's inside" table in sync.
+- [ ] `POLICY.md` — adjust the Definition of Done and ADR triggers to match
+      your team's actual bar (e.g. add a security-review requirement).
 - [ ] `.agents/skills/code-review/references/` and
       `.agents/skills/write-doc/references/` — one reference file per repo
       (copy `_example-repo.md`). The skills work without them but get much
@@ -186,14 +189,16 @@ directly and re-run `./setup.sh`.
 |---|---|
 | `devrig.toml` | Your project config — the one file every tool reads |
 | `setup.sh` | Idempotent bootstrap/update script |
-| `AGENTS.md` | Agent-agnostic source of truth (systems, branch rules, conventions) |
+| `AGENTS.md` | Agent-agnostic source of truth (systems, commands, branch rules, retrieval policy) |
+| `POLICY.md` | Definition of Done, ADR requirement, verification/confidence reporting |
 | `CLAUDE.md` | Claude Code specifics; imports `AGENTS.md` |
 | `.agents/skills/` | Canonical workflow skills (agent-agnostic) |
 | `.claude/` | Claude Code settings, agents, skill symlinks |
 | `.opencode/` | opencode agents and plugin config |
 | `.mcp.json` / `opencode.json` | MCP servers (issue tracker, semble) |
 | `git-hooks/` | Shared hooks for every repo (`core.hooksPath`): protected-branch pre-commit / pre-push, plus the graphify graph rebuilds |
-| `knowledge/` | Markdown knowledge base (architecture, decisions, design, runbooks, product, releases) |
+| `knowledge/` | Markdown knowledge base (architecture, decisions, design, runbooks, product, releases) — see `knowledge/index.md` |
+| `scripts/` | Workspace maintenance scripts (e.g. `build-knowledge-index.mjs`) |
 | `<repo>/` (untracked) | Your project repos, cloned by `setup.sh` |
 
 ## Adding a skill
