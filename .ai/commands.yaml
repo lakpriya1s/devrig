@@ -1,0 +1,21 @@
+# Structured mirror of AGENTS.md's Commands table. Agents should read this
+# (or the table) instead of guessing a system's test/lint/build commands.
+# Validate against .ai/schemas/commands.schema.json.
+#
+# TODO: fill in real commands per system; leave a key empty (or omit it) if
+# that system genuinely has no such step (e.g. no typecheck on a plain JS repo).
+
+systems:
+  api:
+    install: npm ci
+    test: npm test
+    lint: npm run lint
+    typecheck: npm run typecheck
+    build: npm run build
+
+  web:
+    install: npm ci
+    test: npm test
+    lint: npm run lint
+    typecheck: npm run typecheck
+    build: npm run build

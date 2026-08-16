@@ -191,10 +191,12 @@ Examples:
 
 ### Description
 
-Write a description aimed at an engineer reviewer. Structure it as follows:
+Write a description aimed at an engineer reviewer, evidence-based per
+`POLICY.md`'s Definition of Done — not just an assertion that it works.
+Structure it as follows:
 
 ```
-## What
+## What & why
 
 [1–3 sentence summary of what this PR does and why. Include the motivation or ticket context if inferable from commits.]
 
@@ -202,19 +204,41 @@ Write a description aimed at an engineer reviewer. Structure it as follows:
 
 [Bullet list of the key implementation decisions — what was changed, added, or removed and the reasoning. Be specific: name files, functions, or APIs touched where helpful.]
 
-## How to test
+## Systems affected
 
-[Step-by-step instructions a reviewer can follow to verify the changes work. Include:
-- Setup steps if any (migrations, env vars, seed data)
-- The specific flows to exercise (happy path and at least one edge case)
-- What the expected outcome looks like]
+[Rows from AGENTS.md's Systems table that this PR touches, plus anything depending on them. One repo, one line if this is single-repo.]
+
+## Testing
+
+[Step-by-step instructions a reviewer can follow to verify the changes work — setup steps, the flows to exercise (happy path + at least one edge case), expected outcome. Then the /verify-change evidence block if it was run this session:]
+
+Unit tests: PASS — `<command>`
+Lint: PASS — `<command>`
+Typecheck: PASS — `<command>`
+Build: PASS — `<command>`
+
+## Risks
+
+[Breaking changes, cross-repo coordination, migration/deploy ordering, rollback difficulty — per POLICY.md's risk levels. "None identified" only if you actually checked and none apply.]
+
+## Documentation
+
+[knowledge/ docs added or updated, with paths — or "Not required: <reason>".]
+
+## ADR
+
+[knowledge/decisions/NNNN-<slug>.md if POLICY.md's ADR requirement applies — or "Not required: <reason>".]
+
+## Rollback
+
+[How to revert if this ships a problem — usually "revert this PR", but call out anything that makes rollback harder (irreversible migration, a mobile client that can't be force-upgraded).]
 
 ## Concerns / notes
 
-[Any risks, trade-offs, known limitations, or things the reviewer should pay special attention to. If there are none, omit this section entirely.]
+[Any trade-offs, known limitations, or things the reviewer should pay special attention to that don't fit above. If there are none, omit this section entirely.]
 ```
 
-Populate each section from the commit messages, diff, and any context available. Do not leave placeholder text — if a section has nothing meaningful to say, omit it rather than filling it with filler.
+Populate each section from the commit messages, diff, `/verify-change`'s evidence (if run this session), and any context available. Do not leave placeholder text — if a section has nothing meaningful to say, write the explicit "Not required"/"None identified" form shown above rather than omitting it silently (the reviewer should see that it was considered, not guess). `Concerns / notes` is the one section that's fine to omit entirely when empty.
 
 ---
 

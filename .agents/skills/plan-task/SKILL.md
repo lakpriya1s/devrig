@@ -76,6 +76,24 @@ this task should add.>
 
 <which knowledge/ docs need creating/updating, and whether this crosses
 POLICY.md's ADR-required list. "None" only if genuinely nothing changes.>
+
+## Confidence
+
+<High | Medium | Low — per POLICY.md's confidence/uncertainty reporting.>
+
+## Assumptions
+
+<anything taken as given without direct verification.>
+
+## Unverified
+
+<anything not directly checked — e.g. a config only readable in production.>
+
+## Human attention required
+
+<anything risky enough (per POLICY.md's risk levels) that a human should
+look closely before/while it's implemented — "none" only if the risk level
+is genuinely Low.>
 ```
 
 Every claim in the plan should trace back to something actually read this

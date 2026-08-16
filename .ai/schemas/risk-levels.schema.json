@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devrig/.ai/schemas/risk-levels.schema.json",
+  "title": "risk-levels.yaml",
+  "type": "object",
+  "required": ["low", "medium", "high", "critical"],
+  "additionalProperties": false,
+  "properties": {
+    "low": { "$ref": "#/$defs/level" },
+    "medium": { "$ref": "#/$defs/level" },
+    "high": { "$ref": "#/$defs/level" },
+    "critical": { "$ref": "#/$defs/level" }
+  },
+  "$defs": {
+    "level": {
+      "type": "object",
+      "required": ["examples"],
+      "additionalProperties": false,
+      "properties": {
+        "examples": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

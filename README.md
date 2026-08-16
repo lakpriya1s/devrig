@@ -168,6 +168,11 @@ workspace"** section carries this same checklist into your workspace:
       generated README's "What's inside" table in sync.
 - [ ] `POLICY.md` — adjust the Definition of Done and ADR triggers to match
       your team's actual bar (e.g. add a security-review requirement).
+- [ ] `.ai/systems.yaml`, `.ai/commands.yaml`, `.ai/ownership.yaml` — replace
+      the example entries with your real systems/commands/owners (mirrors
+      `AGENTS.md`'s tables; `node scripts/validate-ai-config.mjs` checks the shape).
+- [ ] `.ai/policies.yaml`, `.ai/risk-levels.yaml` — adjust protected paths,
+      forbidden/approval-required actions, and risk examples for your project.
 - [ ] `.agents/skills/code-review/references/` and
       `.agents/skills/write-doc/references/` — one reference file per repo
       (copy `_example-repo.md`). The skills work without them but get much
@@ -190,7 +195,9 @@ directly and re-run `./setup.sh`.
 | `devrig.toml` | Your project config — the one file every tool reads |
 | `setup.sh` | Idempotent bootstrap/update script |
 | `AGENTS.md` | Agent-agnostic source of truth (systems, commands, branch rules, retrieval policy) |
-| `POLICY.md` | Definition of Done, ADR requirement, verification/confidence reporting |
+| `POLICY.md` | Definition of Done, ADR requirement, risk/data/role policy, verification/confidence reporting |
+| `.ai/` | Machine-readable mirror of the above (`systems.yaml`, `commands.yaml`, `ownership.yaml`, `policies.yaml`, `risk-levels.yaml`) plus their JSON Schemas in `.ai/schemas/` |
+| `.github/workflows/` | CI: validates `.ai/*.yaml` against its schemas, and validates `knowledge/` (frontmatter, links, ADR ids, index freshness, protected-path ADR requirement) |
 | `CLAUDE.md` | Claude Code specifics; imports `AGENTS.md` |
 | `.agents/skills/` | Canonical workflow skills (agent-agnostic) |
 | `.claude/` | Claude Code settings, agents, skill symlinks |

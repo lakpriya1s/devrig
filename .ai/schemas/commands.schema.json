@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devrig/.ai/schemas/commands.schema.json",
+  "title": "commands.yaml",
+  "type": "object",
+  "required": ["systems"],
+  "additionalProperties": false,
+  "properties": {
+    "systems": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "install": { "type": "string" },
+          "test": { "type": "string" },
+          "lint": { "type": "string" },
+          "typecheck": { "type": "string" },
+          "build": { "type": "string" }
+        }
+      }
+    }
+  }
+}
