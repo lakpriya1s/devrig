@@ -1,0 +1,10 @@
+# Who owns what, by area rather than by repo (one area can span systems).
+# Complements .ai/systems.yaml (system -> repo) and can later be reconciled
+# against GitHub CODEOWNERS per repo.
+#
+# TODO: fill in your own areas/owners; delete the example below.
+
+areas:
+  authentication:
+    systems: [api, web]
+    owners: [backend-team]

@@ -4,13 +4,41 @@ Apply this checklist to every doc drafted for the knowledge base.
 
 ## Format
 
-- Plain markdown, **no YAML frontmatter** — a single `#` H1 title, then a `>` blockquote status/provenance line right under it (e.g. `> As-built, derived from code — 2026-07-05.`).
+- Every doc opens with **YAML frontmatter** (schema below), then a `#` H1 title, then optionally a short `>` blockquote framing line if the frontmatter alone doesn't convey the doc's provenance (e.g. `> Reverse-engineered from code — verify before treating as spec.`). Don't restate `status`/`created` in the blockquote — that's what the frontmatter is for.
 - Markdown tables for any mapping (repo → role, endpoint → consumer, plan → limits).
 - **Diagrams are Mermaid fenced blocks** — GitHub renders them natively; never image files:
   - `sequenceDiagram` for cross-repo/message flows (client → service → storage → push)
   - `flowchart TD` for logic/state
   - `erDiagram` for non-trivial data models
 - Delete the template's HTML guidance comments after filling; drop optional sections that are genuinely empty rather than writing "N/A".
+
+## Frontmatter schema
+
+Every field is required unless marked optional. See `knowledge/README.md` for the full definitions of status/authority/authorship.
+
+```yaml
+---
+id: <kebab-slug>                 # decisions/ use adr-NNNN; others use the filename stem
+title: <Title>
+type: architecture | design | decision | runbook | product | release | handoff
+status: draft | proposed | accepted | deprecated | superseded | archived
+authority: canonical | supporting | generated | historical
+systems: [<system-name>, ...]    # from AGENTS.md's Systems table; [] if workspace-wide
+owners: [<team-or-handle>, ...]
+authorship: human | ai-assisted | generated
+human_reviewed: true | false
+created: YYYY-MM-DD
+last_reviewed: YYYY-MM-DD
+tags: [<tag>, ...]                # optional
+related: [<doc-id>, ...]           # optional — ids of related docs/ADRs
+superseded_by: <doc-id>            # optional — only when status: superseded
+review_interval: 180d              # optional — see knowledge/README.md
+---
+```
+
+- `authorship: ai-assisted` + `human_reviewed: false` is the default for anything `/write-doc` generates that hasn't been read and confirmed by a person yet. Flip `human_reviewed` to `true` only when a human actually reviewed the content (e.g. approved the PR with a substantive review, not just merged it).
+- Never mark a doc `authority: canonical` with `human_reviewed: false` — canonical status is a claim a human is willing to stand behind.
+- Keep `last_reviewed` current when you materially edit a doc; leave `created` untouched.
 
 ## Citing code
 

@@ -1,0 +1,27 @@
+# Risk classification for changes. Requirements scale with risk — see
+# POLICY.md#risk-levels for what each level requires (tests only vs. tests +
+# ADR + human approval, etc). Validate against .ai/schemas/risk-levels.schema.json.
+
+low:
+  examples:
+    - documentation
+    - tests
+    - internal-refactor
+
+medium:
+  examples:
+    - dependency-upgrade
+    - api-behavior-change
+
+high:
+  examples:
+    - authentication
+    - database-migration
+    - billing
+    - production-infrastructure
+
+critical:
+  examples:
+    - secret-rotation
+    - destructive-data-change
+    - production-deployment

@@ -28,7 +28,7 @@ fichier **`devrig.toml`**.
 
 | | Ce que vous obtenez |
 |---|---|
-| 🧠 | **Skills de workflow IA** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (indépendantes de l'agent, dans `.agents/skills/`, avec des liens symboliques pour Claude Code ; opencode est aussi configuré) |
+| 🧠 | **Skills de workflow IA** — `/start-task`, `/plan-task`, `/verify-change`, `/raise-pr`, `/code-review`, `/write-doc`, `/capture-learning`, `/check-knowledge-consistency`, `/create-ticket` (indépendantes de l'agent, dans `.agents/skills/`, avec des liens symboliques pour Claude Code ; opencode est aussi configuré) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — recherche sémantique de code que les agents utilisent via MCP au lieu de grep et lecture de fichiers |
 | 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — un graphe de connaissances par dépôt que les agents interrogent au lieu de faire un grep, tenu à jour par des hooks git |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — proxy de commandes optimisant les tokens pour Claude Code |
@@ -150,7 +150,10 @@ votre projet). Ce qui reste, c'est la connaissance que vous seul possédez —
 la section **« Customize this workspace »** du README généré reprend cette
 même checklist dans votre workspace :
 
-- [ ] `AGENTS.md` — remplissez le tableau **Systems** (une ligne par dépôt : rôle, stack) et la section **Testing**. C'est la source de vérité que lit chaque skill. Gardez le tableau « What's inside » du README généré synchronisé.
+- [ ] `AGENTS.md` — remplissez le tableau **Systems** (une ligne par dépôt : rôle, stack, dépendances), le tableau **Commands**, et la section **Testing**. C'est la source de vérité que lit chaque skill. Gardez le tableau « What's inside » du README généré synchronisé.
+- [ ] `POLICY.md` — ajustez la Definition of Done et les déclencheurs d'ADR pour correspondre au niveau d'exigence réel de votre équipe (par ex. ajoutez une exigence de revue de sécurité).
+- [ ] `.ai/systems.yaml`, `.ai/commands.yaml`, `.ai/ownership.yaml` — remplacez les entrées d'exemple par vos systèmes/commandes/propriétaires réels (miroir des tableaux d'`AGENTS.md` ; `node scripts/validate-ai-config.mjs` vérifie la structure).
+- [ ] `.ai/policies.yaml`, `.ai/risk-levels.yaml` — ajustez les chemins protégés, les actions interdites/soumises à approbation, et les exemples de risques pour votre projet.
 - [ ] `.agents/skills/code-review/references/` et `.agents/skills/write-doc/references/` — un fichier de référence par dépôt (copiez `_example-repo.md`). Les skills fonctionnent sans, mais elles sont bien plus affûtées avec.
 - [ ] Si `issue_tracker` vaut `linear` : vérifiez le tableau des « Conventions » de `.agents/skills/create-ticket/SKILL.md` avec votre workspace Linear (équipes, projets, labels). S'il vaut `jira` ou `other` : adaptez les appels `mcp__linear__*` de `/start-task`, `/raise-pr` et `/create-ticket` aux outils MCP de votre gestionnaire (chaque skill le signale en haut de fichier).
 - [ ] Supprimez ou ajustez ce qu'une option a désactivé (par ex. retirez les notes semble de `CLAUDE.md` si vous ne l'utilisez pas).
@@ -164,14 +167,19 @@ ajouter un dépôt), éditez `devrig.toml` directement et relancez `./setup.sh`.
 |---|---|
 | `devrig.toml` | Votre configuration projet — le seul fichier que lit chaque outil |
 | `setup.sh` | Script de bootstrap/mise à jour idempotent |
-| `AGENTS.md` | Source de vérité indépendante de l'agent (systèmes, règles de branches, conventions) |
+| `AGENTS.md` | Source de vérité indépendante de l'agent (systèmes, commandes, règles de branches, politique de recherche) |
+| `POLICY.md` | Definition of Done, exigence d'ADR, politique risques/données/rôles, rapport de vérification/confiance |
+| `.ai/` | Miroir lisible par machine de ce qui précède (`systems.yaml`, `commands.yaml`, `ownership.yaml`, `policies.yaml`, `risk-levels.yaml`), leurs schémas JSON dans `.ai/schemas/`, et les paquets de contexte par tâche dans `.ai/context/` (écrits par `/start-task`) |
+| `.github/workflows/` | CI : valide les `.ai/*.yaml` par rapport à leurs schémas, et valide `knowledge/` (frontmatter, liens, ids d'ADR, fraîcheur de l'index, exigence d'ADR sur chemin protégé) |
 | `CLAUDE.md` | Spécificités Claude Code ; importe `AGENTS.md` |
 | `.agents/skills/` | Skills de workflow canoniques (indépendantes de l'agent) |
 | `.claude/` | Réglages Claude Code, agents, liens symboliques de skills |
 | `.opencode/` | Agents et configuration de plugin opencode |
 | `.mcp.json` / `opencode.json` | Serveurs MCP (gestionnaire de tickets, semble) |
 | `git-hooks/` | Hooks partagés par tous les dépôts (`core.hooksPath`) : pre-commit / pre-push de branches protégées, plus les reconstructions du graphe graphify |
-| `knowledge/` | Base de connaissances markdown (architecture, décisions, conception, runbooks, produit, releases) |
+| `knowledge/` | Base de connaissances markdown (architecture, décisions, conception, runbooks, produit, releases, handoffs, generated) — voir `knowledge/index.md` |
+| `evals/` | Questions avec réponses de référence, pour mesurer la précision de recherche/le taux d'hallucination dans le temps — voir `evals/README.md` |
+| `scripts/` | Scripts de maintenance du workspace — `build-knowledge-index.mjs`, `validate-knowledge.mjs`, `validate-ai-config.mjs`, `detect-doc-drift.mjs`, `check-adr-requirement.mjs`, `generate-architecture-views.mjs` |
 | `<repo>/` (non suivi) | Vos dépôts de projet, clonés par `setup.sh` |
 
 ## Ajouter une skill

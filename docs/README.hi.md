@@ -27,7 +27,7 @@ version करता है — आपके प्रोजेक्ट repos �
 
 | | आपको क्या मिलता है |
 |---|---|
-| 🧠 | **AI वर्कफ़्लो skills** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (agent-agnostic, `.agents/skills/` में, Claude Code के लिए symlink; opencode भी कॉन्फ़िगर है) |
+| 🧠 | **AI वर्कफ़्लो skills** — `/start-task`, `/plan-task`, `/verify-change`, `/raise-pr`, `/code-review`, `/write-doc`, `/capture-learning`, `/check-knowledge-consistency`, `/create-ticket` (agent-agnostic, `.agents/skills/` में, Claude Code के लिए symlink; opencode भी कॉन्फ़िगर है) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — semantic code search, जिसे agents grep-और-पढ़ने की जगह MCP के ज़रिए इस्तेमाल करते हैं |
 | 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — हर repo के लिए एक knowledge graph, जिसे agent grep के बजाय query करते हैं और git hooks उसे ताज़ा रखते हैं |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code के लिए token बचाने वाला command proxy |
@@ -145,7 +145,10 @@ devrig की टेम्पलेट फ़ाइलें हटाता ह
 **"Customize this workspace"** सेक्शन यही चेकलिस्ट आपके workspace में ले
 आता है:
 
-- [ ] `AGENTS.md` — **Systems** टेबल (हर repo की एक पंक्ति: क्या है, stack) और **Testing** सेक्शन भरें। यही वह source of truth है जिसे हर skill पढ़ती है। जनरेट किए गए README की "What's inside" टेबल को भी साथ में अपडेट रखें।
+- [ ] `AGENTS.md` — **Systems** टेबल (हर repo की एक पंक्ति: क्या है, stack, किस पर निर्भर है), **Commands** टेबल, और **Testing** सेक्शन भरें। यही वह source of truth है जिसे हर skill पढ़ती है। जनरेट किए गए README की "What's inside" टेबल को भी साथ में अपडेट रखें।
+- [ ] `POLICY.md` — Definition of Done और ADR triggers को अपनी टीम के असली मापदंड से मिलाएं (जैसे security-review की ज़रूरत जोड़ना)।
+- [ ] `.ai/systems.yaml`, `.ai/commands.yaml`, `.ai/ownership.yaml` — उदाहरण की entries को अपने असली systems/commands/owners से बदलें (यह `AGENTS.md` की टेबलों को mirror करता है; `node scripts/validate-ai-config.mjs` उसका ढांचा जांचता है)।
+- [ ] `.ai/policies.yaml`, `.ai/risk-levels.yaml` — protected paths, forbidden/approval-required actions, और risk के उदाहरण अपने प्रोजेक्ट के हिसाब से समायोजित करें।
 - [ ] `.agents/skills/code-review/references/` और `.agents/skills/write-doc/references/` — हर repo के लिए एक reference फ़ाइल (`_example-repo.md` कॉपी करें)। इनके बिना भी skills चलती हैं, पर इनके साथ कहीं तेज़ धार होती हैं।
 - [ ] अगर `issue_tracker` `linear` है: `.agents/skills/create-ticket/SKILL.md` की "Conventions" टेबल को अपने Linear workspace (teams, projects, labels) से सत्यापित करें। अगर `jira` या `other` है: `/start-task`, `/raise-pr`, और `/create-ticket` की `mcp__linear__*` calls को अपने tracker के MCP tool names में बदलें (हर skill इसे शुरुआत में बताती है)।
 - [ ] जो कुछ किसी toggle ने बंद किया है उसे हटाएँ या समायोजित करें (जैसे semble इस्तेमाल न करने पर `CLAUDE.md` से उसके नोट हटाएँ)।
@@ -159,14 +162,19 @@ devrig की टेम्पलेट फ़ाइलें हटाता ह
 |---|---|
 | `devrig.toml` | आपका प्रोजेक्ट कॉन्फ़िग — वह एक फ़ाइल जिसे हर टूल पढ़ता है |
 | `setup.sh` | Idempotent bootstrap/update स्क्रिप्ट |
-| `AGENTS.md` | Agent-agnostic source of truth (systems, branch नियम, conventions) |
+| `AGENTS.md` | Agent-agnostic source of truth (systems, commands, branch नियम, retrieval policy) |
+| `POLICY.md` | Definition of Done, ADR requirement, risk/data/role policy, verification/confidence reporting |
+| `.ai/` | ऊपर वाली फ़ाइलों का machine-readable mirror (`systems.yaml`, `commands.yaml`, `ownership.yaml`, `policies.yaml`, `risk-levels.yaml`), उनके JSON Schemas `.ai/schemas/` में, और per-task context bundles `.ai/context/` में (`/start-task` द्वारा लिखे गए) |
+| `.github/workflows/` | CI: `.ai/*.yaml` को उसके schemas से validate करता है, और `knowledge/` को validate करता है (frontmatter, links, ADR ids, index freshness, protected-path ADR requirement) |
 | `CLAUDE.md` | Claude Code विशेष; `AGENTS.md` import करता है |
 | `.agents/skills/` | Canonical workflow skills (agent-agnostic) |
 | `.claude/` | Claude Code settings, agents, skill symlinks |
 | `.opencode/` | opencode agents और plugin config |
 | `.mcp.json` / `opencode.json` | MCP सर्वर (issue tracker, semble) |
 | `git-hooks/` | सभी repos के लिए साझा hooks (`core.hooksPath`): protected-branch pre-commit / pre-push, साथ ही graphify के graph rebuild |
-| `knowledge/` | Markdown नॉलेज बेस (architecture, decisions, design, runbooks, product, releases) |
+| `knowledge/` | Markdown नॉलेज बेस (architecture, decisions, design, runbooks, product, releases, handoffs, generated) — देखें `knowledge/index.md` |
+| `evals/` | जाने-पहचाने सही उत्तरों वाले सवाल, समय के साथ retrieval accuracy/hallucination rate मापने के लिए — देखें `evals/README.md` |
+| `scripts/` | Workspace maintenance scripts — `build-knowledge-index.mjs`, `validate-knowledge.mjs`, `validate-ai-config.mjs`, `detect-doc-drift.mjs`, `check-adr-requirement.mjs`, `generate-architecture-views.mjs` |
 | `<repo>/` (untracked) | आपके प्रोजेक्ट repos, `setup.sh` द्वारा cloned |
 
 ## नई skill जोड़ना

@@ -1,0 +1,27 @@
+# Direct retrieval and dependency questions. Fill in expected_sources with
+# real paths once your knowledge base / .ai config have real content.
+# See evals/README.md for how to run and score these.
+
+evals:
+  - id: retrieval-001
+    category: direct-retrieval
+    question: "Which repo owns authentication?"
+    expected_sources:
+      - .ai/ownership.yaml
+      - AGENTS.md
+    notes: "TODO: replace with your actual auth-owning system once ownership.yaml is filled in."
+
+  - id: retrieval-002
+    category: dependency-questions
+    question: "Which systems depend on the API?"
+    expected_sources:
+      - .ai/systems.yaml
+      - knowledge/generated/system-map.md
+    notes: "Answer should list every system whose depends_on includes the api system."
+
+  - id: retrieval-003
+    category: direct-retrieval
+    question: "Which ADR controls authentication?"
+    expected_sources:
+      - knowledge/decisions/
+    notes: "TODO: fill in once an auth ADR exists. Until then, the correct answer is 'none found'."

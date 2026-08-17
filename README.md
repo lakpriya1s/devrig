@@ -27,7 +27,7 @@ stay untracked. Everything is configured from a single **`devrig.toml`** file.
 
 | | What you get |
 |---|---|
-| 🧠 | **AI workflow skills** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (agent-agnostic in `.agents/skills/`, symlinked for Claude Code, opencode configured too) |
+| 🧠 | **AI workflow skills** — `/start-task`, `/plan-task`, `/verify-change`, `/raise-pr`, `/code-review`, `/write-doc`, `/capture-learning`, `/check-knowledge-consistency`, `/create-ticket` (agent-agnostic in `.agents/skills/`, symlinked for Claude Code, opencode configured too) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — semantic code search agents use via MCP instead of grep-and-read |
 | 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — a knowledge graph per repo that agents query instead of grepping, kept fresh by git hooks |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — token-optimizing command proxy for Claude Code |
@@ -163,8 +163,16 @@ the knowledge only you have — the generated README's **"Customize this
 workspace"** section carries this same checklist into your workspace:
 
 - [ ] `AGENTS.md` — fill the **Systems** table (one row per repo: what it is,
-      stack) and the **Testing** section. This is the source of truth every
-      skill reads. Keep the generated README's "What's inside" table in sync.
+      stack, what it depends on), the **Commands** table, and the **Testing**
+      section. This is the source of truth every skill reads. Keep the
+      generated README's "What's inside" table in sync.
+- [ ] `POLICY.md` — adjust the Definition of Done and ADR triggers to match
+      your team's actual bar (e.g. add a security-review requirement).
+- [ ] `.ai/systems.yaml`, `.ai/commands.yaml`, `.ai/ownership.yaml` — replace
+      the example entries with your real systems/commands/owners (mirrors
+      `AGENTS.md`'s tables; `node scripts/validate-ai-config.mjs` checks the shape).
+- [ ] `.ai/policies.yaml`, `.ai/risk-levels.yaml` — adjust protected paths,
+      forbidden/approval-required actions, and risk examples for your project.
 - [ ] `.agents/skills/code-review/references/` and
       `.agents/skills/write-doc/references/` — one reference file per repo
       (copy `_example-repo.md`). The skills work without them but get much
@@ -186,14 +194,19 @@ directly and re-run `./setup.sh`.
 |---|---|
 | `devrig.toml` | Your project config — the one file every tool reads |
 | `setup.sh` | Idempotent bootstrap/update script |
-| `AGENTS.md` | Agent-agnostic source of truth (systems, branch rules, conventions) |
+| `AGENTS.md` | Agent-agnostic source of truth (systems, commands, branch rules, retrieval policy) |
+| `POLICY.md` | Definition of Done, ADR requirement, risk/data/role policy, verification/confidence reporting |
+| `.ai/` | Machine-readable mirror of the above (`systems.yaml`, `commands.yaml`, `ownership.yaml`, `policies.yaml`, `risk-levels.yaml`), their JSON Schemas in `.ai/schemas/`, and per-task context bundles in `.ai/context/` (written by `/start-task`) |
+| `.github/workflows/` | CI: validates `.ai/*.yaml` against its schemas, and validates `knowledge/` (frontmatter, links, ADR ids, index freshness, protected-path ADR requirement) |
 | `CLAUDE.md` | Claude Code specifics; imports `AGENTS.md` |
 | `.agents/skills/` | Canonical workflow skills (agent-agnostic) |
 | `.claude/` | Claude Code settings, agents, skill symlinks |
 | `.opencode/` | opencode agents and plugin config |
 | `.mcp.json` / `opencode.json` | MCP servers (issue tracker, semble) |
 | `git-hooks/` | Shared hooks for every repo (`core.hooksPath`): protected-branch pre-commit / pre-push, plus the graphify graph rebuilds |
-| `knowledge/` | Markdown knowledge base (architecture, decisions, design, runbooks, product, releases) |
+| `knowledge/` | Markdown knowledge base (architecture, decisions, design, runbooks, product, releases, handoffs, generated) — see `knowledge/index.md` |
+| `evals/` | Questions with known-good answers, for measuring retrieval accuracy/hallucination rate over time — see `evals/README.md` |
+| `scripts/` | Workspace maintenance scripts — `build-knowledge-index.mjs`, `validate-knowledge.mjs`, `validate-ai-config.mjs`, `detect-doc-drift.mjs`, `check-adr-requirement.mjs`, `generate-architecture-views.mjs` |
 | `<repo>/` (untracked) | Your project repos, cloned by `setup.sh` |
 
 ## Adding a skill

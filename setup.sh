@@ -431,8 +431,13 @@ out += [
     "",
     "One-time steps after the first `setup.sh` run:",
     "",
-    "- [ ] Fill the **Systems** table above and in `AGENTS.md` (one row per repo:",
-    "      what it is, stack), plus `AGENTS.md`'s **Testing** section.",
+    "- [ ] Fill the **Systems** and **Commands** tables in `AGENTS.md` (one row per",
+    "      repo: what it is, stack, depends on; install/test/lint/typecheck/build),",
+    "      plus its **Testing** section.",
+    "- [ ] Mirror the same values into `.ai/systems.yaml`, `.ai/commands.yaml`, and",
+    "      `.ai/ownership.yaml` — `node scripts/validate-ai-config.mjs` checks the shape.",
+    "- [ ] Adjust `POLICY.md` / `.ai/policies.yaml` and `.ai/risk-levels.yaml` (Definition",
+    "      of Done, ADR triggers, protected paths) to match your team's actual bar.",
     "- [ ] Add one reference file per repo in `.agents/skills/code-review/references/`",
     "      and `.agents/skills/write-doc/references/` (copy `_example-repo.md`).",
 ]
@@ -927,11 +932,15 @@ EOF
   cat <<EOF
 
 Workflow skills available inside Claude Code:
-  /start-task $TICKET_PREFIX-123    fetch ticket, assign it, sync $DEFAULT_BRANCH
-  /raise-pr                 branch, commit, push and open PRs for all affected repos
-  /code-review              review a PR, branch, or local diff
-  /write-doc                write design docs / ADRs / runbooks into knowledge/
-  /create-ticket            file well-formed epics, stories, tasks, bugs
+  /start-task $TICKET_PREFIX-123    fetch ticket, assign it, sync $DEFAULT_BRANCH, gather context
+  /plan-task                 turn gathered context into a written plan before implementing
+  /verify-change             run tests/lint/typecheck/build, report evidence per POLICY.md
+  /raise-pr                  branch, commit, push and open PRs for all affected repos
+  /code-review               review a PR, branch, or local diff
+  /write-doc                 write design docs / ADRs / runbooks / handoffs into knowledge/
+  /capture-learning          after a merge, decide what permanent knowledge to preserve
+  /check-knowledge-consistency   compare knowledge/.ai/ against actual repo state
+  /create-ticket             file well-formed epics, stories, tasks, bugs
 
 VS Code:
   Open $PROJECT_NAME.code-workspace to work across all repos in one window

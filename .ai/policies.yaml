@@ -1,0 +1,64 @@
+# Machine-readable policy. POLICY.md is the human-readable explanation of
+# these same rules — keep both in sync. Validate against
+# .ai/schemas/policies.schema.json.
+#
+# This file describes intent; nothing in this repo currently enforces it
+# automatically beyond .github/workflows/knowledge-check.yml's protected-path
+# ADR check. CLI/CI enforcement of forbidden_actions/approval_required is a
+# gap — see the note in POLICY.md.
+
+forbidden_actions:
+  - commit_secrets
+  - force_push_default_branch
+  - disable_security_checks
+  - bypass_required_tests
+  - delete_audit_logs
+  - modify_production_data_directly
+
+approval_required:
+  - production_deployment
+  - authentication_change
+  - billing_change
+  - database_migration
+  - secret_rotation
+  - destructive_data_change
+
+# Reading is always permitted; modifying anything under these paths requires
+# human approval regardless of an agent's assigned role. Glob syntax.
+protected_paths:
+  - "infrastructure/production/**"
+  - "migrations/**"
+  - "auth/**"
+  - "billing/**"
+  - ".github/workflows/release.yml"
+
+# What data classification may go to which kind of model. "external_ai" means
+# a hosted third-party model API; "local models" means self-hosted/on-prem.
+data_handling:
+  public:
+    external_ai: allowed
+  internal:
+    external_ai: allowed
+    note: secrets and credentials stripped first
+  confidential:
+    external_ai: approved-providers-or-local-only
+  restricted:
+    external_ai: prohibited
+    note: agents should not access RESTRICTED data at all
+
+never_expose:
+  - api_keys
+  - passwords
+  - access_tokens
+  - private_keys
+  - production_db_exports
+  - customer_secrets
+  - sensitive_pii
+
+# Read-only vs read-write scope per agent role. See POLICY.md#agent-roles.
+agent_roles:
+  planner: read_only
+  implementer: read_write_task_scoped
+  reviewer: read_only
+  documenter: knowledge_write
+  release_agent: approval_required

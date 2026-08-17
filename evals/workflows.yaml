@@ -1,0 +1,27 @@
+# Operational questions — the kind a new contributor asks in their first
+# week. Fill in expected_sources with real paths once your knowledge base
+# and .ai config have real content. See evals/README.md for how to run and
+# score these.
+
+evals:
+  - id: workflows-001
+    category: operational
+    question: "How do I run mobile tests?"
+    expected_sources:
+      - AGENTS.md
+      - .ai/commands.yaml
+    notes: "TODO: replace 'mobile' with a real system name from your Systems table. Good answer gives the exact command, not 'check the README'."
+
+  - id: workflows-002
+    category: operational
+    question: "Where is the production deployment process documented?"
+    expected_sources:
+      - knowledge/runbooks/
+    notes: "TODO: needs at least one deploy runbook. Until then, the correct answer is 'not yet documented' — flagging that gap is itself a correct answer."
+
+  - id: workflows-003
+    category: operational
+    question: "What must I do before modifying the database schema?"
+    expected_sources:
+      - POLICY.md
+    notes: "Duplicate of architecture-004 by design — a good answer should be consistent regardless of how the question is framed."

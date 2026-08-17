@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devrig/.ai/schemas/systems.schema.json",
+  "title": "systems.yaml",
+  "type": "object",
+  "required": ["systems"],
+  "additionalProperties": false,
+  "properties": {
+    "systems": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["repo", "purpose"],
+        "additionalProperties": false,
+        "properties": {
+          "repo": { "type": "string", "minLength": 1 },
+          "purpose": { "type": "string", "minLength": 1 },
+          "stack": { "type": "array", "items": { "type": "string" } },
+          "depends_on": { "type": "array", "items": { "type": "string" } },
+          "owns": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

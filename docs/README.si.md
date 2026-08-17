@@ -28,7 +28,7 @@ devrig යනු *meta-repo* එකකි: ඔබේ ව්‍යාපෘති
 
 | | ඔබට ලැබෙන දේ |
 |---|---|
-| 🧠 | **AI workflow skills** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (agent-agnostic ලෙස `.agents/skills/` තුළ, Claude Code සඳහා symlink කර ඇත; opencode ද වින්‍යාස කර ඇත) |
+| 🧠 | **AI workflow skills** — `/start-task`, `/plan-task`, `/verify-change`, `/raise-pr`, `/code-review`, `/write-doc`, `/capture-learning`, `/check-knowledge-consistency`, `/create-ticket` (agent-agnostic ලෙස `.agents/skills/` තුළ, Claude Code සඳහා symlink කර ඇත; opencode ද වින්‍යාස කර ඇත) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — grep කර ගොනු කියවීම වෙනුවට agents MCP හරහා භාවිත කරන semantic code search |
 | 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — repo එකකට එකක් වන knowledge graph; agents grep කිරීම වෙනුවට එය query කරයි, git hooks එය නැවුම්ව තබා ගනී |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code සඳහා token ඉතිරි කරන command proxy |
@@ -148,7 +148,10 @@ Help me go from this description to a working workspace:
 **"Customize this workspace"** කොටස මෙම පිරික්සුම් ලැයිස්තුවම ඔබේ workspace
 එකට ගෙන එයි:
 
-- [ ] `AGENTS.md` — **Systems** වගුව (repo එකකට එක පේළියක්: එය කුමක්ද, stack) සහ **Testing** කොටස පුරවන්න. සෑම skill එකක්ම කියවන source of truth මෙයයි. generate වූ README හි "What's inside" වගුවද යාවත්කාලීනව තබා ගන්න.
+- [ ] `AGENTS.md` — **Systems** වගුව (repo එකකට එක පේළියක්: එය කුමක්ද, stack, කුමක් මත රඳා පවතීද), **Commands** වගුව, සහ **Testing** කොටස පුරවන්න. සෑම skill එකක්ම කියවන source of truth මෙයයි. generate වූ README හි "What's inside" වගුවද යාවත්කාලීනව තබා ගන්න.
+- [ ] `POLICY.md` — ඔබේ කණ්ඩායමේ සැබෑ ප්‍රමිතියට ගැලපෙන පරිදි Definition of Done සහ ADR trigger සකසන්න (උදා: security-review අවශ්‍යතාවක් එකතු කිරීම).
+- [ ] `.ai/systems.yaml`, `.ai/commands.yaml`, `.ai/ownership.yaml` — උදාහරණ ඇතුළත් කිරීම් ඔබේ සැබෑ systems/commands/owners වලින් ප්‍රතිස්ථාපනය කරන්න (`AGENTS.md` හි වගු පිළිබිඹු කරයි; `node scripts/validate-ai-config.mjs` මගින් හැඩය පරීක්ෂා කරයි).
+- [ ] `.ai/policies.yaml`, `.ai/risk-levels.yaml` — ඔබේ ව්‍යාපෘතිය සඳහා protected paths, forbidden/approval-required actions, සහ risk උදාහරණ සකසන්න.
 - [ ] `.agents/skills/code-review/references/` සහ `.agents/skills/write-doc/references/` — repo එකකට එක reference ගොනුවක් (`_example-repo.md` copy කරන්න). ඒවා නැතිවත් skills ක්‍රියා කරයි, නමුත් ඒවා සමඟ බෙහෙවින් තියුණුයි.
 - [ ] `issue_tracker` `linear` නම්: `.agents/skills/create-ticket/SKILL.md` හි "Conventions" වගුව ඔබේ Linear workspace එක (teams, projects, labels) සමඟ තහවුරු කරන්න. `jira` හෝ `other` නම්: `/start-task`, `/raise-pr`, සහ `/create-ticket` හි `mcp__linear__*` calls ඔබේ tracker එකේ MCP tool නම් වලට ගැලපෙන ලෙස සකසන්න (එය සෑම skill එකකම මුලින්ම සඳහන් වේ).
 - [ ] Toggle එකකින් අක්‍රීය කළ දේ ඉවත් කරන්න හෝ සකසන්න (උදා: semble භාවිත නොකරන්නේ නම් `CLAUDE.md` වෙතින් ඒ පිළිබඳ සටහන් ඉවත් කරන්න).
@@ -162,14 +165,19 @@ Help me go from this description to a working workspace:
 |---|---|
 | `devrig.toml` | ඔබේ ව්‍යාපෘති වින්‍යාසය — සෑම මෙවලමක්ම කියවන එකම ගොනුව |
 | `setup.sh` | Idempotent bootstrap/update script |
-| `AGENTS.md` | Agent-agnostic source of truth (systems, branch නීති, conventions) |
+| `AGENTS.md` | Agent-agnostic source of truth (systems, commands, branch නීති, retrieval policy) |
+| `POLICY.md` | Definition of Done, ADR අවශ්‍යතාව, risk/data/role policy, verification/confidence reporting |
+| `.ai/` | ඉහත සඳහන් දේවල machine-readable පිළිබිඹුව (`systems.yaml`, `commands.yaml`, `ownership.yaml`, `policies.yaml`, `risk-levels.yaml`), ඒවායේ JSON Schemas `.ai/schemas/` හි, සහ `.ai/context/` හි task-context bundles (`/start-task` මගින් ලියනු ලැබේ) |
+| `.github/workflows/` | CI: `.ai/*.yaml` එහි schemas අනුව validate කරයි, සහ `knowledge/` validate කරයි (frontmatter, links, ADR ids, index freshness, protected-path ADR requirement) |
 | `CLAUDE.md` | Claude Code විශේෂිත; `AGENTS.md` import කරයි |
 | `.agents/skills/` | සම්මත workflow skills (agent-agnostic) |
 | `.claude/` | Claude Code settings, agents, skill symlinks |
 | `.opencode/` | opencode agents සහ plugin config |
 | `.mcp.json` / `opencode.json` | MCP servers (issue tracker, semble) |
 | `git-hooks/` | සියලු repos බෙදාගන්නා hooks (`core.hooksPath`): protected-branch pre-commit / pre-push, සහ graphify graph නැවත ගොඩනැඟීම් |
-| `knowledge/` | Markdown දැනුම් පදනම (architecture, decisions, design, runbooks, product, releases) |
+| `knowledge/` | Markdown දැනුම් පදනම (architecture, decisions, design, runbooks, product, releases, handoffs, generated) — `knowledge/index.md` බලන්න |
+| `evals/` | කාලයත් සමඟ retrieval accuracy/hallucination rate මැනීම සඳහා දන්නා-නිවැරදි පිළිතුරු සහිත ප්‍රශ්න — `evals/README.md` බලන්න |
+| `scripts/` | Workspace maintenance scripts — `build-knowledge-index.mjs`, `validate-knowledge.mjs`, `validate-ai-config.mjs`, `detect-doc-drift.mjs`, `check-adr-requirement.mjs`, `generate-architecture-views.mjs` |
 | `<repo>/` (untracked) | `setup.sh` මගින් clone වන ඔබේ ව්‍යාපෘති repos |
 
 ## Skill එකක් එකතු කිරීම

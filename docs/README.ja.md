@@ -28,7 +28,7 @@ devrig は*メタリポジトリ*です。プロジェクトのすべてのリ�
 
 | | 含まれるもの |
 |---|---|
-| 🧠 | **AI ワークフロースキル** — `/start-task`、`/raise-pr`、`/code-review`、`/write-doc`、`/create-ticket`（エージェント非依存で `.agents/skills/` に配置、Claude Code 用に symlink、opencode も設定済み） |
+| 🧠 | **AI ワークフロースキル** — `/start-task`、`/plan-task`、`/verify-change`、`/raise-pr`、`/code-review`、`/write-doc`、`/capture-learning`、`/check-knowledge-consistency`、`/create-ticket`（エージェント非依存で `.agents/skills/` に配置、Claude Code 用に symlink、opencode も設定済み） |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — grep とファイル読みの代わりにエージェントが MCP 経由で使うセマンティックコード検索 |
 | 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — リポジトリごとのナレッジグラフ。エージェントは grep の代わりにこれを問い合わせ、git フックが常に最新に保つ |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code のトークンを節約するコマンドプロキシ |
@@ -146,7 +146,10 @@ devrig のテンプレートファイルの削除、プロジェクト README �
 **「Customize this workspace」** セクションが、このチェックリストをそのまま
 あなたのワークスペースに引き継ぎます：
 
-- [ ] `AGENTS.md` — **Systems** テーブル（リポジトリごとに1行：役割、スタック）と **Testing** セクションを記入。すべてのスキルが読む唯一の情報源です。生成された README の「What's inside」テーブルも合わせて更新してください。
+- [ ] `AGENTS.md` — **Systems** テーブル（リポジトリごとに1行：役割、スタック、依存関係）、**Commands** テーブル、**Testing** セクションを記入。すべてのスキルが読む唯一の情報源です。生成された README の「What's inside」テーブルも合わせて更新してください。
+- [ ] `POLICY.md` — Definition of Done と ADR のトリガー条件を、あなたのチームの実際の基準に合わせて調整（例：セキュリティレビューの要件を追加）。
+- [ ] `.ai/systems.yaml`、`.ai/commands.yaml`、`.ai/ownership.yaml` — サンプルの内容を実際のシステム/コマンド/オーナーに置き換える（`AGENTS.md` のテーブルと対応します。形式は `node scripts/validate-ai-config.mjs` で検証できます）。
+- [ ] `.ai/policies.yaml`、`.ai/risk-levels.yaml` — protected paths、forbidden/approval-required actions、リスクの例を自分のプロジェクトに合わせて調整。
 - [ ] `.agents/skills/code-review/references/` と `.agents/skills/write-doc/references/` — リポジトリごとにリファレンスファイルを1つ（`_example-repo.md` をコピー）。なくても動きますが、あると格段に鋭くなります。
 - [ ] `issue_tracker` が `linear` の場合：`.agents/skills/create-ticket/SKILL.md` の「規約」テーブルを自分の Linear ワークスペース（チーム、プロジェクト、ラベル）と照合。`jira` や `other` の場合：`/start-task`、`/raise-pr`、`/create-ticket` の `mcp__linear__*` 呼び出しを自分のトラッカーの MCP ツール名に合わせて調整（各スキルの冒頭にその旨の記載あり）。
 - [ ] トグルで無効化したものを削除・調整（例：semble を使わないなら `CLAUDE.md` から関連記述を削除）。
@@ -160,14 +163,19 @@ devrig のテンプレートファイルの削除、プロジェクト README �
 |---|---|
 | `devrig.toml` | プロジェクト設定 — すべてのツールが読む唯一のファイル |
 | `setup.sh` | 冪等なブートストラップ/更新スクリプト |
-| `AGENTS.md` | エージェント非依存の唯一の情報源（システム、ブランチルール、規約） |
+| `AGENTS.md` | エージェント非依存の唯一の情報源（システム、コマンド、ブランチルール、リトリーバルポリシー） |
+| `POLICY.md` | Definition of Done、ADR の要件、リスク/データ/ロールに関するポリシー、検証/確信度レポートの形式 |
+| `.ai/` | 上記の機械可読なミラー（`systems.yaml`、`commands.yaml`、`ownership.yaml`、`policies.yaml`、`risk-levels.yaml`）と、`.ai/schemas/` の JSON Schema、`.ai/context/` のタスクごとのコンテキストバンドル（`/start-task` が書き込む） |
+| `.github/workflows/` | CI：`.ai/*.yaml` をスキーマと照合して検証し、`knowledge/`（フロントマター、リンク、ADR の ID、インデックスの鮮度、protected path での ADR 要件）を検証 |
 | `CLAUDE.md` | Claude Code 固有の内容。`AGENTS.md` をインポート |
 | `.agents/skills/` | 正規のワークフロースキル（エージェント非依存） |
 | `.claude/` | Claude Code の設定、エージェント、スキルの symlink |
 | `.opencode/` | opencode のエージェントとプラグイン設定 |
 | `.mcp.json` / `opencode.json` | MCP サーバー（課題管理ツール、semble） |
 | `git-hooks/` | 全リポジトリ共有のフック（`core.hooksPath`）：保護ブランチ用 pre-commit / pre-push と、graphify のグラフ再構築 |
-| `knowledge/` | markdown ナレッジベース（アーキテクチャ、決定、設計、runbook、プロダクト、リリース） |
+| `knowledge/` | markdown ナレッジベース（アーキテクチャ、決定、設計、runbook、プロダクト、リリース、handoff、generated）— `knowledge/index.md` を参照 |
+| `evals/` | 検索精度/ハルシネーション率を継続的に測定するための、模範解答つきの質問集 — `evals/README.md` を参照 |
+| `scripts/` | ワークスペース保守用スクリプト — `build-knowledge-index.mjs`、`validate-knowledge.mjs`、`validate-ai-config.mjs`、`detect-doc-drift.mjs`、`check-adr-requirement.mjs`、`generate-architecture-views.mjs` |
 | `<repo>/`（未追跡） | `setup.sh` がクローンするプロジェクトリポジトリ |
 
 ## スキルの追加

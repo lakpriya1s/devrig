@@ -1,0 +1,22 @@
+# Structured mirror of AGENTS.md's Systems table — for scripts/CI to parse
+# reliably (Markdown tables aren't). AGENTS.md stays the human-readable
+# source; keep both in sync when you fill in your own systems. Validate
+# against .ai/schemas/systems.schema.json.
+#
+# TODO: replace the example systems below with your own (one per repo in
+# devrig.toml's `repos` list), then delete this comment block.
+
+systems:
+  api:
+    repo: example-api
+    purpose: Backend API
+    stack: [nestjs, postgresql]
+    depends_on: []
+    owns: []
+
+  web:
+    repo: example-web
+    purpose: Web frontend
+    stack: [nextjs, tailwind]
+    depends_on: [api]
+    owns: []

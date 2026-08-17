@@ -27,7 +27,7 @@ devrig는 *메타 레포*입니다. 프로젝트의 모든 저장소와 그 사�
 
 | | 제공되는 것 |
 |---|---|
-| 🧠 | **AI 워크플로우 스킬** — `/start-task`, `/raise-pr`, `/code-review`, `/write-doc`, `/create-ticket` (에이전트 독립적으로 `.agents/skills/`에 위치, Claude Code용 심볼릭 링크, opencode도 설정됨) |
+| 🧠 | **AI 워크플로우 스킬** — `/start-task`, `/plan-task`, `/verify-change`, `/raise-pr`, `/code-review`, `/write-doc`, `/capture-learning`, `/check-knowledge-consistency`, `/create-ticket` (에이전트 독립적으로 `.agents/skills/`에 위치, Claude Code용 심볼릭 링크, opencode도 설정됨) |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — grep과 파일 읽기 대신 에이전트가 MCP로 사용하는 시맨틱 코드 검색 |
 | 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — 레포마다 하나씩 생기는 지식 그래프. 에이전트가 grep 대신 이걸 질의하고, git 훅이 항상 최신으로 유지 |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — Claude Code의 토큰을 절약하는 명령어 프록시 |
@@ -143,7 +143,10 @@ Help me go from this description to a working workspace:
 — 생성된 README의 **"Customize this workspace"** 섹션이 이 체크리스트를
 그대로 워크스페이스로 옮겨 옵니다:
 
-- [ ] `AGENTS.md` — **Systems** 표(저장소마다 한 줄: 역할, 스택)와 **Testing** 섹션 작성. 모든 스킬이 읽는 단일 정보원입니다. 생성된 README의 "What's inside" 표도 함께 최신 상태로 유지하세요.
+- [ ] `AGENTS.md` — **Systems** 표(저장소마다 한 줄: 역할, 스택, 무엇에 의존하는지), **Commands** 표, **Testing** 섹션 작성. 모든 스킬이 읽는 단일 정보원입니다. 생성된 README의 "What's inside" 표도 함께 최신 상태로 유지하세요.
+- [ ] `POLICY.md` — Definition of Done과 ADR 트리거를 팀의 실제 기준에 맞게 조정하세요(예: 보안 검토 요구사항 추가).
+- [ ] `.ai/systems.yaml`, `.ai/commands.yaml`, `.ai/ownership.yaml` — 예시 항목을 실제 시스템/명령어/소유자로 교체하세요(`AGENTS.md`의 표를 그대로 반영; `node scripts/validate-ai-config.mjs`로 형식을 검증할 수 있습니다).
+- [ ] `.ai/policies.yaml`, `.ai/risk-levels.yaml` — 프로젝트에 맞게 보호 경로, 금지/승인 필요 작업, 위험 예시를 조정하세요.
 - [ ] `.agents/skills/code-review/references/`와 `.agents/skills/write-doc/references/` — 저장소마다 레퍼런스 파일 하나(`_example-repo.md` 복사). 없어도 동작하지만 있으면 훨씬 정밀해집니다.
 - [ ] `issue_tracker`가 `linear`라면: `.agents/skills/create-ticket/SKILL.md`의 "컨벤션" 표를 Linear 워크스페이스(팀, 프로젝트, 라벨)와 대조하세요. `jira`나 `other`라면: `/start-task`, `/raise-pr`, `/create-ticket`의 `mcp__linear__*` 호출을 트래커의 MCP 도구 이름에 맞게 조정하세요(각 스킬 상단에 안내가 있습니다).
 - [ ] 토글로 비활성화한 것들 삭제·조정(예: semble을 쓰지 않으면 `CLAUDE.md`에서 관련 내용 제거).
@@ -157,14 +160,19 @@ Help me go from this description to a working workspace:
 |---|---|
 | `devrig.toml` | 프로젝트 설정 — 모든 도구가 읽는 단 하나의 파일 |
 | `setup.sh` | 멱등한 부트스트랩/업데이트 스크립트 |
-| `AGENTS.md` | 에이전트 독립적 단일 정보원(시스템, 브랜치 규칙, 컨벤션) |
+| `AGENTS.md` | 에이전트 독립적 단일 정보원(시스템, 명령어, 브랜치 규칙, 검색 정책) |
+| `POLICY.md` | Definition of Done, ADR 요구사항, 위험/데이터/역할 정책, 검증/신뢰도 보고 |
+| `.ai/` | 위 내용의 기계 판독 가능한 사본(`systems.yaml`, `commands.yaml`, `ownership.yaml`, `policies.yaml`, `risk-levels.yaml`), `.ai/schemas/`의 JSON 스키마, `/start-task`가 작성하는 `.ai/context/`의 태스크별 컨텍스트 번들 |
+| `.github/workflows/` | CI: `.ai/*.yaml`을 스키마로 검증하고, `knowledge/`를 검증(프런트매터, 링크, ADR id, 인덱스 최신성, 보호 경로 ADR 요구사항) |
 | `CLAUDE.md` | Claude Code 전용 내용; `AGENTS.md`를 임포트 |
 | `.agents/skills/` | 표준 워크플로우 스킬(에이전트 독립적) |
 | `.claude/` | Claude Code 설정, 에이전트, 스킬 심볼릭 링크 |
 | `.opencode/` | opencode 에이전트 및 플러그인 설정 |
 | `.mcp.json` / `opencode.json` | MCP 서버(이슈 트래커, semble) |
 | `git-hooks/` | 모든 레포가 공유하는 훅(`core.hooksPath`): 보호 브랜치 pre-commit / pre-push, 그리고 graphify 그래프 재빌드 |
-| `knowledge/` | markdown 지식 베이스(아키텍처, 결정, 설계, 런북, 제품, 릴리스) |
+| `knowledge/` | markdown 지식 베이스(아키텍처, 결정, 설계, 런북, 제품, 릴리스, 인수인계, 생성물) — `knowledge/index.md` 참고 |
+| `evals/` | 검색 정확도/환각률을 시간에 따라 측정하기 위한, 정답이 있는 질문 모음 — `evals/README.md` 참고 |
+| `scripts/` | 워크스페이스 유지보수 스크립트 — `build-knowledge-index.mjs`, `validate-knowledge.mjs`, `validate-ai-config.mjs`, `detect-doc-drift.mjs`, `check-adr-requirement.mjs`, `generate-architecture-views.mjs` |
 | `<repo>/` (미추적) | `setup.sh`가 클론하는 프로젝트 저장소 |
 
 ## 스킬 추가하기

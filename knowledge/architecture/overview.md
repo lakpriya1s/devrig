@@ -1,3 +1,18 @@
+---
+id: overview
+title: System Overview
+type: architecture
+status: draft
+authority: supporting
+systems: []
+owners: []
+authorship: human
+human_reviewed: false
+created: <YYYY-MM-DD>
+last_reviewed: <YYYY-MM-DD>
+tags: []
+---
+
 # System Overview
 
 > Starter doc — fill in as the system takes shape. Items below marked unchecked are documentation gaps.

@@ -1,6 +1,6 @@
 ---
 name: start-task
-description: Start work on a Linear issue — verifies the issue exists, assigns it to you, moves it to In Progress, determines the task type, and syncs the default branch.
+description: Start work on a Linear issue — verifies the issue exists, assigns it to you, moves it to In Progress, determines the task type, syncs the default branch, and gathers context (affected systems, related ADRs/designs, likely files, risks, test plan) before any code changes.
 ---
 
 # Start a Linear Issue
@@ -109,3 +109,81 @@ git fetch origin <BASE> && git checkout -b <BASE> origin/<BASE>
 If that also fails, report the error and stop — do NOT fall back to `main` or any other branch.
 
 Confirm `<BASE>` is up to date.
+
+### 4. Gather context
+
+Before any code changes, collect enough context that `/plan-task` (or direct
+implementation, for small tasks) doesn't start from zero. Run these in
+parallel where possible — this follows the retrieval policy in `AGENTS.md`:
+
+1. **Systems** — from the issue title/description and labels, identify which
+   rows of `AGENTS.md`'s Systems table are affected, plus anything those
+   systems depend on.
+2. **Repositories** — the repos backing the affected systems.
+3. **Related ADRs** — search `knowledge/decisions/` (or check
+   `knowledge/index.md`'s Accepted Decisions section) for anything touching
+   the affected systems.
+4. **Relevant designs** — search `knowledge/design/` and `mcp__semble__search
+   --content docs` for the issue's terminology.
+5. **Related code** — `mcp__semble__search` in each affected repo for the
+   issue's terminology; note likely files, don't open every hit.
+6. **Dependencies** — anything outside this task's control the work relies on
+   (a third-party API, another team's in-flight change, a migration).
+7. **Risks** — flag if the issue touches auth, billing, schemas, or
+   production infra (see `POLICY.md`'s ADR requirement — these usually need one).
+8. **Tests** — which test suite(s) (per `AGENTS.md`'s Commands table) cover
+   the affected systems.
+
+Do not recursively read whole repos — if search surfaces nothing, say so
+rather than falling back to browsing everything.
+
+Report:
+
+```markdown
+## Context gathered
+
+Ticket: <ID> — <title>
+Systems: <affected systems>
+Repositories: <repos>
+Related ADRs: <paths, or "none found">
+Relevant designs: <paths, or "none found">
+Likely files: <repo/path, ...>
+Dependencies: <external factors, or "none identified">
+Risks: <flags, or "none identified">
+Test plan: <suite(s) to run>
+```
+
+Suggest `/plan-task` next for anything non-trivial (multi-repo, schema/auth
+changes, or unclear scope); small, well-scoped tasks can go straight to
+implementation.
+
+### 5. Persist the context bundle
+
+Write the same information as JSON to `.ai/context/<ISSUE-ID>.json` (uppercase
+ticket id, e.g. `.ai/context/AC-143.json`), so `/plan-task` and any other
+agent picking up this ticket later in the same session or a fresh one can
+reuse it instead of re-running retrieval:
+
+```json
+{
+  "ticket": "<ISSUE-ID>",
+  "title": "<title>",
+  "systems": ["<system>", ...],
+  "documents": ["<relevant design doc paths>"],
+  "decisions": ["<related ADR paths>"],
+  "likely_files": ["<repo/path>", ...],
+  "dependencies": ["<external factors>"],
+  "risk": "low | medium | high | critical",
+  "test_plan": ["<suite(s)>"]
+}
+```
+
+This is working state for the task's branch, not permanent knowledge — it's
+fine to commit alongside the task's other changes, and there's no need to
+clean it up specially (it becomes stale/irrelevant once the branch merges,
+same as the branch itself).
+
+Also write the identical JSON to `.ai/runs/<ISSUE-ID>/context.json` — this
+starts that ticket's observability trail (see `.ai/README.md`), which
+`/plan-task`, `/verify-change`, `/raise-pr`, and `/capture-learning` each add
+to as the task progresses.
