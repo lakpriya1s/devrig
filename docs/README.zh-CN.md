@@ -24,7 +24,7 @@ devrig 是一个*元仓库（meta-repo）*：一个文件夹容纳项目的所�
 
 | | 你将获得 |
 |---|---|
-| 🧠 | **AI 工作流技能** — `/start-task`、`/raise-pr`、`/code-review`、`/write-doc`、`/create-ticket`（与具体 agent 无关，存放于 `.agents/skills/`，为 Claude Code 建立符号链接，同时配置了 opencode） |
+| 🧠 | **AI 工作流技能** — `/start-task`、`/plan-task`、`/verify-change`、`/raise-pr`、`/code-review`、`/write-doc`、`/capture-learning`、`/check-knowledge-consistency`、`/create-ticket`（与具体 agent 无关，存放于 `.agents/skills/`，为 Claude Code 建立符号链接，同时配置了 opencode） |
 | 🔍 | **[semble](https://github.com/MinishLab/semble)** — 语义代码搜索，agent 通过 MCP 使用它替代 grep+逐个读取文件 |
 | 🕸️ | **[graphify](https://github.com/Graphify-Labs/graphify)** — 每个仓库一张知识图谱，agent 查询它而不是 grep，由 git 钩子保持最新 |
 | ⚡ | **[rtk](https://github.com/rtk-ai/rtk)** — 为 Claude Code 优化 token 消耗的命令代理 |
@@ -128,7 +128,10 @@ Help me go from this description to a working workspace:
 模板文件、生成你的项目 README）。剩下的是只有你才知道的信息 — 生成的 README
 中 **"Customize this workspace"** 一节把同样的清单带到了你的工作区里：
 
-- [ ] `AGENTS.md` — 填写 **Systems** 表（每个仓库一行：它是什么、技术栈）和 **Testing** 部分。这是所有技能读取的唯一信息源。同时保持生成的 README 中 "What's inside" 表的同步。
+- [ ] `AGENTS.md` — 填写 **Systems** 表（每个仓库一行：它是什么、技术栈、依赖什么）、**Commands** 表，以及 **Testing** 部分。这是所有技能读取的唯一信息源。同时保持生成的 README 中 "What's inside" 表的同步。
+- [ ] `POLICY.md` — 根据你团队的实际标准调整 Definition of Done 和 ADR 触发条件（例如加入安全审查要求）。
+- [ ] `.ai/systems.yaml`、`.ai/commands.yaml`、`.ai/ownership.yaml` — 用你真实的系统/命令/负责人替换示例条目（与 `AGENTS.md` 的表格对应；`node scripts/validate-ai-config.mjs` 会校验格式）。
+- [ ] `.ai/policies.yaml`、`.ai/risk-levels.yaml` — 为你的项目调整受保护路径、禁止/需审批的操作，以及风险等级示例。
 - [ ] `.agents/skills/code-review/references/` 和 `.agents/skills/write-doc/references/` — 每个仓库一个参考文件（复制 `_example-repo.md`）。没有它们技能也能用，但有了会锐利得多。
 - [ ] 若 `issue_tracker` 是 `linear`：对照你的 Linear 工作区核实 `.agents/skills/create-ticket/SKILL.md` 的"约定"表（团队、项目、标签）。若是 `jira` 或 `other`：把 `/start-task`、`/raise-pr`、`/create-ticket` 中的 `mcp__linear__*` 调用适配为你的工单系统的 MCP 工具名（每个技能文件顶部都有提示）。
 - [ ] 删除或调整被开关禁用的内容（例如不用 semble 就从 `CLAUDE.md` 删除相关说明）。
@@ -142,14 +145,19 @@ Help me go from this description to a working workspace:
 |---|---|
 | `devrig.toml` | 项目配置 — 所有工具读取的唯一文件 |
 | `setup.sh` | 幂等的引导/更新脚本 |
-| `AGENTS.md` | 与 agent 无关的唯一信息源（系统、分支规则、约定） |
+| `AGENTS.md` | 与 agent 无关的唯一信息源（系统、命令、分支规则、检索策略） |
+| `POLICY.md` | Definition of Done、ADR 要求、风险/数据/角色策略、验证证据与置信度报告 |
+| `.ai/` | 上述内容的机器可读镜像（`systems.yaml`、`commands.yaml`、`ownership.yaml`、`policies.yaml`、`risk-levels.yaml`），及 `.ai/schemas/` 中对应的 JSON Schema，以及 `.ai/context/` 中按任务生成的上下文包（由 `/start-task` 写入） |
+| `.github/workflows/` | CI：校验 `.ai/*.yaml` 是否符合其 schema，并校验 `knowledge/`（frontmatter、链接、ADR 编号、索引是否最新、受保护路径的 ADR 要求） |
 | `CLAUDE.md` | Claude Code 专属内容；导入 `AGENTS.md` |
 | `.agents/skills/` | 规范的工作流技能（与 agent 无关） |
 | `.claude/` | Claude Code 设置、agent、技能符号链接 |
 | `.opencode/` | opencode 的 agent 和插件配置 |
 | `.mcp.json` / `opencode.json` | MCP 服务器（工单系统、semble） |
 | `git-hooks/` | 所有仓库共享的钩子（`core.hooksPath`）：受保护分支的 pre-commit / pre-push，以及 graphify 的图谱重建 |
-| `knowledge/` | markdown 知识库（架构、决策、设计、运维手册、产品、发布） |
+| `knowledge/` | markdown 知识库（架构、决策、设计、运维手册、产品、发布、交接记录、生成内容）— 见 `knowledge/index.md` |
+| `evals/` | 带有已知正确答案的问题集，用于长期衡量检索准确率/幻觉率 — 见 `evals/README.md` |
+| `scripts/` | 工作区维护脚本 — `build-knowledge-index.mjs`、`validate-knowledge.mjs`、`validate-ai-config.mjs`、`detect-doc-drift.mjs`、`check-adr-requirement.mjs`、`generate-architecture-views.mjs` |
 | `<repo>/`（不跟踪） | 你的项目仓库，由 `setup.sh` 克隆 |
 
 ## 添加技能
