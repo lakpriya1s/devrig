@@ -163,10 +163,10 @@ devrig のテンプレートファイルの削除、プロジェクト README �
 |---|---|
 | `devrig.toml` | プロジェクト設定 — すべてのツールが読む唯一のファイル |
 | `setup.sh` | 冪等なブートストラップ/更新スクリプト |
-| `AGENTS.md` | エージェント非依存の唯一の情報源(システム、コマンド、ブランチルール、リトリーバルポリシー) |
+| `AGENTS.md` | エージェント非依存の唯一の情報源（システム、コマンド、ブランチルール、リトリーバルポリシー） |
 | `POLICY.md` | Definition of Done、ADR の要件、リスク/データ/ロールに関するポリシー、検証/確信度レポートの形式 |
-| `.ai/` | 上記の機械可読なミラー(`systems.yaml`、`commands.yaml`、`ownership.yaml`、`policies.yaml`、`risk-levels.yaml`)と、`.ai/schemas/` の JSON Schema、`.ai/context/` のタスクごとのコンテキストバンドル(`/start-task` が書き込む) |
-| `.github/workflows/` | CI：`.ai/*.yaml` をスキーマと照合して検証し、`knowledge/`(フロントマター、リンク、ADR の ID、インデックスの鮮度、protected path での ADR 要件)を検証 |
+| `.ai/` | 上記の機械可読なミラー（`systems.yaml`、`commands.yaml`、`ownership.yaml`、`policies.yaml`、`risk-levels.yaml`）と、`.ai/schemas/` の JSON Schema、`.ai/context/` のタスクごとのコンテキストバンドル（`/start-task` が書き込む） |
+| `.github/workflows/` | CI：`.ai/*.yaml` をスキーマと照合して検証し、`knowledge/`（フロントマター、リンク、ADR の ID、インデックスの鮮度、protected path での ADR 要件）を検証 |
 | `CLAUDE.md` | Claude Code 固有の内容。`AGENTS.md` をインポート |
 | `.agents/skills/` | 正規のワークフロースキル（エージェント非依存） |
 | `.claude/` | Claude Code の設定、エージェント、スキルの symlink |
